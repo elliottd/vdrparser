@@ -133,7 +133,7 @@ public class DependencyPipe
         System.out.println("Creating Feature Vector Instances: ");
         while (instance != null)
         {
-            System.out.print(num1 + " ");
+            System.out.print(depReader.getCount() + " ");
 
             FeatureVector fv = createFeatureVector(instance, num1);
 
@@ -159,8 +159,6 @@ public class DependencyPipe
 
             instance = depReader.getNext();
             depReader.incCount();
-
-
             num1++;
         }
 
@@ -269,6 +267,22 @@ public class DependencyPipe
                 addLabeledFeatures(instance, i, labs[i], attR, true, fv);
                 addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
             }
+        if (options.qg)
+        {
+            /*
+            We add features QG features from both the first and second
+            sentences to the model.
+            */
+
+            int first = depReader.getCount() * 2;
+            int second = first+1;
+            String distBool = "";
+            DependencyInstance firstSrc = sourceInstances.get(first);
+            DependencyInstance secondSrc = sourceInstances.get(second);
+            addQGFeatures(alignments.get(first), small, large, attR, distBool, instance, firstSrc, fv);
+            addQGFeatures(alignments.get(second), small, large, attR, distBool, instance, secondSrc, fv);
+        }
+
         }
 
         addExtendedFeatures(instance, fv);
@@ -317,28 +331,34 @@ public class DependencyPipe
             {
                 if (a != b)
                 {
-                    Alignment.Configuration c = a.getAlignmentConfiguration(b, target, source);
-                    if (c != Alignment.Configuration.NONE)
+                    if (a.getTargetIndex() == small && b.getTargetIndex() == large || a.getTargetIndex() == large && b.getTargetIndex() == small)
                     {
-                        int order = a.getAlignmentOrder(b, target, source);
-                        String head_word, arg_word;
-                        if (order == 1)
+                        Alignment.Configuration c = a.getAlignmentConfiguration(b, target, source);
+                        if (c != Alignment.Configuration.NONE)
                         {
-                            head_word = source.lemmas[a.getSourceIndex()+1];
-                            arg_word = source.lemmas[b.getSourceIndex()+1];
-                        }
-                        else
-                        {
-                            head_word = source.lemmas[b.getSourceIndex()+1];
-                            arg_word = source.lemmas[a.getSourceIndex()+1];
-                        }
-                        String full = String.format("w1=%s w2=%s cfg=%s dir=%s", head_word, arg_word, c.toString(), att);
-                        String cfg_backoff = String.format("w1=%s w2=%s dir=%s", head_word, arg_word, att);
-                        //String w2_backoff = String.format("w1=%s cfg=%s dir=%s", head_word, c.toString(), att);
+                            int order = a.getAlignmentOrder(b, target, source);
+                            String head_word, arg_word;
+                            if (order == 1)
+                            {
+                                head_word = source.lemmas[a.getSourceIndex()+1];
+                                arg_word = source.lemmas[b.getSourceIndex()+1];
 
-                        add(full, fv);
-                        add(cfg_backoff, fv);
-                        //add(w2_backoff, fv);
+                            }
+                            else
+                            {
+                                head_word = source.lemmas[b.getSourceIndex()+1];
+                                arg_word = source.lemmas[a.getSourceIndex()+1];
+                            }
+
+                            String words = String.format("w1=%s w2=%s", head_word, arg_word);
+                            String words_cfg = String.format("w1=%s w2=%s cfg=%s", head_word, arg_word, c.toString());
+                            String words_dir = String.format("w1=%s w2=%s dir=%s", head_word, arg_word, att);
+                            String words_cfg_dir = String.format("w1=%s w2=%s cfg=%s dir=%s", head_word, arg_word, c.toString(), att);
+                            add(words, fv);
+                            add(words_cfg, fv);
+                            add(words_dir, fv);
+                            add(words_cfg_dir, fv);
+                        }
                     }
                 }
             }
@@ -465,21 +485,6 @@ public class DependencyPipe
                     pos[childIndex],
                     attDist, hL, cL, fv);
             }
-        }
-
-        if (options.qg)
-        {
-            /*
-            We add features QG features from both the first and second
-            sentences to the model.
-            */
-
-            int first = depReader.getCount() * 2;
-            int second = first+1;
-            DependencyInstance firstSrc = sourceInstances.get(first);
-            DependencyInstance secondSrc = sourceInstances.get(second);
-            addQGFeatures(alignments.get(first), small, large, attR, distBool, instance, firstSrc, fv);
-            addQGFeatures(alignments.get(second), small, large, attR, distBool, instance, secondSrc, fv);
         }
 
     }
@@ -940,6 +945,21 @@ public class DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
                     addCoreFeatures(instance, w1, w2, attR, prodFV);
+        if (options.qg)
+        {
+            /*
+            We add features QG features from both the first and second
+            sentences to the model.
+            */
+
+            int first = depReader.getCount() * 2;
+            int second = first+1;
+            String distBool = "";
+            DependencyInstance firstSrc = sourceInstances.get(first);
+            DependencyInstance secondSrc = sourceInstances.get(second);
+            addQGFeatures(alignments.get(first), w1, w2, attR, distBool, instance, firstSrc, prodFV);
+            addQGFeatures(alignments.get(second), w1, w2, attR, distBool, instance, secondSrc, prodFV);
+        }
 
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
