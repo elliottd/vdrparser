@@ -167,7 +167,7 @@ public final class ParserOptions
             /* I have redirected the location of the tmp file since
                /tmp is not big enough to store large models on disk */
 
-            File tmpDir = new File("/scratch/tmp");
+            File tmpDir = new File("/exports/work/scratch/s0128959/MSTtmp/");
             if (null != trainfile)
             {
                 trainforest = File.createTempFile("train", ".forest", tmpDir);
