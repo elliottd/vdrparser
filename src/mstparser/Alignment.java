@@ -13,8 +13,8 @@ import java.util.Arrays;
  */
 public class Alignment
 {
-    private int sourceIndex;
-    private int targetIndex;
+    private int sourceIndex; // -1 denotes the ROOT of the linguistic parse
+    private int targetIndex; // 0 denotes the ROOT of the image parse
 
     public enum Configuration
     {
@@ -105,6 +105,13 @@ public class Alignment
         int head_source = head.getSourceIndex();
         int arg_source = argument.getSourceIndex();
 
+        //System.out.println(source);
+
+        if (arg_source == -1)
+        {
+            arg_source = 0;
+        }
+
         if (Arrays.asList(source.heads[arg_source]).contains(head_source))
         {
             return true;
@@ -118,6 +125,11 @@ public class Alignment
         int head_source = head.getSourceIndex();
         int arg_source = argument.getSourceIndex();
 
+        if (arg_source == -1)
+        {
+            arg_source = 0;
+        }
+
         if (Arrays.asList(source.heads[head_source]).contains(arg_source))
         {
             return true;
@@ -130,6 +142,11 @@ public class Alignment
     {
         int head_source = head.getSourceIndex();
         int arg_source = argument.getSourceIndex();
+
+        if (arg_source == -1)
+        {
+            arg_source = 0;
+        }
 
         int arg_head = source.heads[arg_source];
 
@@ -152,6 +169,11 @@ public class Alignment
     {
         int head_source = head.getSourceIndex();
         int arg_source = argument.getSourceIndex();
+
+        if (arg_source == -1)
+        {
+            arg_source = 0;
+        }
 
         int head_head = source.heads[head_source];
         int arg_head = source.heads[arg_source];
@@ -185,6 +207,11 @@ public class Alignment
     {
         int head_source_index = head.getSourceIndex();
         int arg_source_index = argument.getSourceIndex();
+
+        if (arg_source_index == -1)
+        {
+            arg_source_index = 0;
+        }
 
         int arg_head_index = source.heads[arg_source_index];
 
@@ -223,6 +250,10 @@ public class Alignment
     {
         int head_source_index = head.getSourceIndex();
         int arg_source_index = argument.getSourceIndex();
+        if (arg_source_index == -1)
+        {
+            arg_source_index = 0;
+        }
 
         int head_head_index = source.heads[head_source_index];
         int arg_head_index = source.heads[arg_source_index];

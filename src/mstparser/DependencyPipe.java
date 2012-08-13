@@ -354,10 +354,10 @@ public class DependencyPipe
                             String words_cfg = String.format("w1=%s w2=%s cfg=%s", head_word, arg_word, c.toString());
                             String words_dir = String.format("w1=%s w2=%s dir=%s", head_word, arg_word, att);
                             String words_cfg_dir = String.format("w1=%s w2=%s cfg=%s dir=%s", head_word, arg_word, c.toString(), att);
-                            add(words, fv);
-                            add(words_cfg, fv);
-                            add(words_dir, fv);
-                            add(words_cfg_dir, fv);
+                            add(words, 1.0, fv);
+                            add(words_cfg, 10.0, fv);
+                            add(words_dir, 100.0, fv);
+                            add(words_cfg_dir, 1000.0, fv);
                         }
                     }
                 }
