@@ -55,6 +55,7 @@ public final class ParserOptions
     public String testSourceFile = null;
     public String testAlignmentsFile = null;
     public boolean qg = false;
+    public boolean eddie = false;
 
     public ParserOptions(String[] args)
     {
@@ -159,6 +160,10 @@ public final class ParserOptions
             {
                 testSourceFile = pair[1];
             }
+            if (pair[0].equals("eddie"))
+            {
+                eddie = true;
+            }
         }
 
 
@@ -167,7 +172,16 @@ public final class ParserOptions
             /* I have redirected the location of the tmp file since
                /tmp is not big enough to store large models on disk */
 
-            File tmpDir = new File("/exports/work/scratch/s0128959/MSTtmp/");
+        	File tmpDir;
+        	if (eddie)
+        	{
+        		tmpDir = new File("/exports/work/scratch/s0128959/tmp/");
+        	}
+        	else
+        	{
+        		tmpDir = new File("/scratch/tmp");
+        	}
+        	
             if (null != trainfile)
             {
                 trainforest = File.createTempFile("train", ".forest", tmpDir);
