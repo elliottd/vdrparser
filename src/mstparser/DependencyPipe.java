@@ -13,7 +13,7 @@ public class DependencyPipe
 
     public Alphabet typeAlphabet;
 
-    private DependencyReader depReader;
+    protected DependencyReader depReader;
     private DependencyWriter depWriter;
 
     public String[] types;
@@ -30,7 +30,7 @@ public class DependencyPipe
 
         if (!options.format.equals("CONLL"))
         {
-            isCONLL = false;
+            setCONLL(false);
         }
 
         dataAlphabet = new Alphabet();
@@ -207,7 +207,7 @@ public class DependencyPipe
 
     // add with default 1.0
     public final void add(String feat, FeatureVector fv)
-    {
+    {        
         int num = dataAlphabet.lookupIndex(feat);
         if (num >= 0)
         {
@@ -217,6 +217,10 @@ public class DependencyPipe
 
     public final void add(String feat, double val, FeatureVector fv)
     {
+        if (options.verbose)
+        {
+            System.out.println("ADD: " + feat);
+        }
         int num = dataAlphabet.lookupIndex(feat);
         if (num >= 0)
         {
@@ -303,7 +307,7 @@ public class DependencyPipe
         addTwoObsFeatures("HC", forms[headIndex], pos[headIndex],
                 forms[childIndex], pos[childIndex], attDist, fv);
 
-        if (isCONLL)
+        if (isCONLL())
         {
 
             addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex],
@@ -997,7 +1001,7 @@ public class DependencyPipe
      * lexical items are greater than 5 before adding features.
      * 
      */
-    private final void addOldMSTStemFeatures(String hLemma, String headP,
+    protected final void addOldMSTStemFeatures(String hLemma, String headP,
             String cLemma, String childP, String attDist, int hL, int cL,
             FeatureVector fv)
     {
@@ -1041,14 +1045,24 @@ public class DependencyPipe
 
     }
 
-    public void readSourceInstances(String sourceFile)
+    public void readSourceInstances(String sourceFile) throws IOException
     {
         return;
     }
 
-    public void readAlignments(String alignmentsFile)
+    public void readAlignments(String alignmentsFile) throws IOException
     {
         return;
+    }
+
+    public boolean isCONLL()
+    {
+        return isCONLL;
+    }
+
+    public void setCONLL(boolean isCONLL)
+    {
+        this.isCONLL = isCONLL;
     }
 
 }

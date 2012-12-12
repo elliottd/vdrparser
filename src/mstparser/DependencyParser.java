@@ -364,15 +364,25 @@ public class DependencyParser
         if (options.train)
         {
 
-            DependencyPipe pipe = options.secondOrder ?
-                                  new DependencyPipe2O(options) : new DependencyPipe(options);
-
-            if (options.sourceFile != null)
+            DependencyPipe pipe;
+            if (options.secondOrder)
             {
-                pipe.readSourceInstances(options.sourceFile);
-                pipe.readAlignments(options.alignmentsFile);
+                pipe = new DependencyPipe2O(options);
             }
-
+            else if (options.visualMode)
+            {
+                pipe = new DependencyPipeVisual(options);
+                if (options.sourceFile != null)
+                {
+                    pipe.readSourceInstances(options.sourceFile);
+                    pipe.readAlignments(options.alignmentsFile);
+                }
+            }
+            else
+            {
+                pipe = new DependencyPipe(options);
+            }
+            
             int[] instanceLengths =
                 pipe.createInstances(options.trainfile, options.trainforest);
 
@@ -395,18 +405,28 @@ public class DependencyParser
 
         if (options.test)
         {
-            DependencyPipe pipe = options.secondOrder ?
-                                  new DependencyPipe2O(options) : new DependencyPipe(options);
-
-            if (options.testSourceFile != null)
+            DependencyPipe pipe;
+            if (options.secondOrder)
             {
-                pipe.readSourceInstances(options.testSourceFile);
-                pipe.readAlignments(options.testAlignmentsFile);
+                pipe = new DependencyPipe2O(options);
+            }
+            else if (options.visualMode)
+            {
+                pipe = new DependencyPipeVisual(options);                
+                if (options.testSourceFile != null)
+                {
+                    pipe.readSourceInstances(options.testSourceFile);
+                    pipe.readAlignments(options.testAlignmentsFile);
+                }
+            }
+            else
+            {
+                pipe = new DependencyPipe(options);
             }
 
             DependencyParser dp = new DependencyParser(pipe, options);
 
-            System.out.print("\tLoading model...");
+            System.out.print("Loading model...");
             dp.loadModel(options.modelName);
             System.out.println("done.");
 

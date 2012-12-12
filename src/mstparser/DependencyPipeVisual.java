@@ -8,81 +8,34 @@ import gnu.trove.*;
 
 import java.util.*;
 
-public class DependencyPipeVisual
+/**
+ * A DependencyPipe subclass for parsing Visual Dependency Representations.
+ * 
+ * The types of features needed for parsing these representations are so
+ * different from language that it warranted a new class. 
+ * 
+ * @author delliott
+ *
+ */
+public class DependencyPipeVisual extends DependencyPipe
 {
 
-    public Alphabet dataAlphabet;
-
-    public Alphabet typeAlphabet;
-
-    private DependencyReader depReader;
     private DependencyReader correspondingReader;
-    private DependencyWriter depWriter;
-
-    public String[] types;
-    public int[] typesInt;
-
-    public boolean labeled = false;
-    private boolean isCONLL = true;
 
     private ParserOptions options;
 
     private List<DependencyInstance> sourceInstances;
     private List<List<Alignment>> alignments;
 
-    public DependencyReader getReader()
-    {
-        return this.depReader;
-    }
-
     public DependencyPipeVisual(ParserOptions options) throws IOException
     {
+        super(options);
         this.options = options;
-
-        if (!options.format.equals("CONLL"))
-        {
-            isCONLL = false;
-        }
-
-        dataAlphabet = new Alphabet();
-        typeAlphabet = new Alphabet();
-
-        depReader = DependencyReader.createDependencyReader(options.format, options.discourseMode);
         correspondingReader = DependencyReader.createDependencyReader(options.format, options.discourseMode);
         sourceInstances = new LinkedList<DependencyInstance>();
     }
 
-    public void initInputFile(String file) throws IOException
-    {
-        labeled = depReader.startReading(file);
-    }
-
-    public void initOutputFile(String file) throws IOException
-    {
-        depWriter =
-            DependencyWriter.createDependencyWriter(options.format, labeled);
-        depWriter.startWriting(file);
-    }
-
-    public void outputInstance(DependencyInstance instance) throws IOException
-    {
-        depWriter.write(instance);
-    }
-
-    public void close() throws IOException
-    {
-        if (null != depWriter)
-        {
-            depWriter.finishWriting();
-        }
-    }
-
-    public String getType(int typeIndex)
-    {
-        return types[typeIndex];
-    }
-
-    protected final DependencyInstance nextInstance() throws IOException
+    /*protected final DependencyInstance nextInstance() throws IOException
     {
         DependencyInstance instance = depReader.getNext();
         if (instance == null || instance.forms == null)
@@ -105,7 +58,7 @@ public class DependencyPipeVisual
         instance.actParseTree = spans.substring(0, spans.length() - 1);
 
         return instance;
-    }
+    }*/
 
 
     public int[] createInstances(String file,
@@ -206,48 +159,6 @@ public class DependencyPipeVisual
         System.out.println("Done.");
     }
 
-    public void closeAlphabets()
-    {
-        dataAlphabet.stopGrowth();
-        typeAlphabet.stopGrowth();
-
-        types = new String[typeAlphabet.size()];
-        Object[] keys = typeAlphabet.toArray();
-        for (int i = 0; i < keys.length; i++)
-        {
-            int indx = typeAlphabet.lookupIndex(keys[i]);
-            types[indx] = (String) keys[i];
-        }
-
-        KBestParseForest.rootType = typeAlphabet.lookupIndex("<root-type>");
-    }
-
-
-    // add with default 1.0
-    public final void add(String feat, FeatureVector fv)
-    {
-    	if (options.verbose)
-    	{
-    		System.out.println("ADD: " + feat);
-    	}
-    	
-        int num = dataAlphabet.lookupIndex(feat);
-        if (num >= 0)
-        {
-            fv.add(num, 1.0);
-        }
-    }
-
-    public final void add(String feat, double val, FeatureVector fv)
-    {
-        int num = dataAlphabet.lookupIndex(feat);
-        if (num >= 0)
-        {
-            fv.add(num, val);
-        }
-    }
-
-
     public FeatureVector createFeatureVector(DependencyInstance instance)
     {
 
@@ -279,7 +190,7 @@ public class DependencyPipeVisual
 	            sentences to the model.
 	            */
 	
-	            int first = depReader.getCount() * 2;
+	            int first = super.depReader.getCount() * 2;
 	            int second = first+1;
 	            String distBool = "";
 	            DependencyInstance firstSrc = sourceInstances.get(first);
@@ -294,12 +205,6 @@ public class DependencyPipeVisual
 
         return fv;
     }
-
-    protected void addExtendedFeatures(DependencyInstance instance,
-                                       FeatureVector fv)
-    {
-    }
-
 
     /**
      * Add the Quasi-synchronous Grammar features to the model.
@@ -436,7 +341,7 @@ public class DependencyPipeVisual
         			forms[childIndex], pos[childIndex], attDist, fv);
         }
 
-        if (isCONLL)
+        if (super.isCONLL())
         {
 
         	if (options.useLinearFeatures || !options.useLinearFeatures)
@@ -1037,7 +942,7 @@ public class DependencyPipeVisual
 			            sentences to the model.
 			            */
 			
-			            int first = depReader.getCount() * 2;
+			            int first = super.depReader.getCount() * 2;
 			            int second = first+1;
 			            String distBool = "";
 			            DependencyInstance firstSrc = sourceInstances.get(first);
@@ -1082,231 +987,6 @@ public class DependencyPipeVisual
                 }
             }
         }
-    }
-
-    /**
-     * Write an instance to an output stream for later reading.
-     */
-    protected void writeInstance(DependencyInstance instance, ObjectOutputStream out)
-    {
-
-        int instanceLength = instance.length();
-
-        try
-        {
-
-            for (int w1 = 0; w1 < instanceLength; w1++)
-            {
-                for (int w2 = w1 + 1; w2 < instanceLength; w2++)
-                {
-                    for (int ph = 0; ph < 2; ph++)
-                    {
-                        boolean attR = ph == 0 ? true : false;
-                        FeatureVector prodFV = new FeatureVector();
-                        addCoreFeatures(instance, w1, w2, attR, prodFV);
-                        out.writeObject(prodFV.keys());
-                    }
-                }
-            }
-            out.writeInt(-3);
-
-            if (labeled)
-            {
-                for (int w1 = 0; w1 < instanceLength; w1++)
-                {
-                    for (int t = 0; t < types.length; t++)
-                    {
-                        String type = types[t];
-                        for (int ph = 0; ph < 2; ph++)
-                        {
-                            boolean attR = ph == 0 ? true : false;
-                            for (int ch = 0; ch < 2; ch++)
-                            {
-                                boolean child = ch == 0 ? true : false;
-                                FeatureVector prodFV = new FeatureVector();
-                                addLabeledFeatures(instance, w1,
-                                    type, attR, child, prodFV);
-                                out.writeObject(prodFV.keys());
-                            }
-                        }
-                    }
-                }
-                out.writeInt(-3);
-            }
-
-            writeExtendedFeatures(instance, out);
-
-            out.writeObject(instance.fv.keys());
-            out.writeInt(-4);
-
-            out.writeObject(instance);
-            out.writeInt(-1);
-
-            out.reset();
-
-        }
-        catch (IOException e)
-        {
-        }
-
-    }
-
-
-    /**
-     * Override this method if you have extra features that need to be
-     * written to disk. For the basic DependencyPipe, nothing happens.
-     */
-    protected void writeExtendedFeatures(DependencyInstance instance, ObjectOutputStream out)
-        throws IOException
-    {
-    }
-
-
-    /**
-     * Read an instance from an input stream.
-     */
-    public DependencyInstance readInstance(ObjectInputStream in,
-                                           int length,
-                                           FeatureVector[][][] fvs,
-                                           double[][][] probs,
-                                           FeatureVector[][][][] nt_fvs,
-                                           double[][][][] nt_probs,
-                                           Parameters params) throws IOException
-    {
-
-        try
-        {
-
-            // Get production crap.
-            for (int w1 = 0; w1 < length; w1++)
-            {
-                for (int w2 = w1 + 1; w2 < length; w2++)
-                {
-                    for (int ph = 0; ph < 2; ph++)
-                    {
-                        FeatureVector prodFV = new FeatureVector((int[]) in.readObject());
-                        double prodProb = params.getScore(prodFV);
-                        fvs[w1][w2][ph] = prodFV;
-                        probs[w1][w2][ph] = prodProb;
-                    }
-                }
-            }
-            int last = in.readInt();
-            if (last != -3)
-            {
-                System.out.println("Error reading file.");
-                System.exit(0);
-            }
-
-            if (labeled)
-            {
-                for (int w1 = 0; w1 < length; w1++)
-                {
-                    for (int t = 0; t < types.length; t++)
-                    {
-                        String type = types[t];
-
-                        for (int ph = 0; ph < 2; ph++)
-                        {
-                            for (int ch = 0; ch < 2; ch++)
-                            {
-                                FeatureVector prodFV = new FeatureVector((int[]) in.readObject());
-                                double nt_prob = params.getScore(prodFV);
-                                nt_fvs[w1][t][ph][ch] = prodFV;
-                                nt_probs[w1][t][ph][ch] = nt_prob;
-                            }
-                        }
-                    }
-                }
-                last = in.readInt();
-                if (last != -3)
-                {
-                    System.out.println("Error reading file.");
-                    System.exit(0);
-                }
-            }
-
-            FeatureVector nfv = new FeatureVector((int[]) in.readObject());
-            last = in.readInt();
-            if (last != -4)
-            {
-                System.out.println("Error reading file.");
-                System.exit(0);
-            }
-
-            DependencyInstance marshalledDI;
-            marshalledDI = (DependencyInstance) in.readObject();
-            marshalledDI.setFeatureVector(nfv);
-
-            last = in.readInt();
-            if (last != -1)
-            {
-                System.out.println("Error reading file.");
-                System.exit(0);
-            }
-
-            return marshalledDI;
-
-        }
-        catch (ClassNotFoundException e)
-        {
-            System.out.println("Error reading file.");
-            System.exit(0);
-        }
-
-        // this won't happen, but it takes care of compilation complaints
-        return null;
-    }
-
-    /**
-     * Get features for stems the old way. The only way this differs
-     * from calling addTwoObsFeatures() is that it checks the
-     * lengths of the full lexical items are greater than 5 before
-     * adding features.
-     */
-    private final void
-    addOldMSTStemFeatures(String hLemma, String headP,
-                          String cLemma, String childP, String attDist,
-                          int hL, int cL, FeatureVector fv)
-    {
-
-        String all = hLemma + " " + headP + " " + cLemma + " " + childP;
-        String hPos = headP + " " + cLemma + " " + childP;
-        String cPos = hLemma + " " + headP + " " + childP;
-        String hP = headP + " " + cLemma;
-        String cP = hLemma + " " + childP;
-        String oPos = headP + " " + childP;
-        String oLex = hLemma + " " + cLemma;
-
-        add("SA=" + all + attDist, fv); //this
-        add("SF=" + oLex + attDist, fv); //this
-        add("SAA=" + all, fv); //this
-        add("SFF=" + oLex, fv); //this
-
-        if (cL > 5)
-        {
-            add("SB=" + hPos + attDist, fv);
-            add("SD=" + hP + attDist, fv);
-            add("SK=" + cLemma + " " + childP + attDist, fv);
-            add("SM=" + cLemma + attDist, fv); //this
-            add("SBB=" + hPos, fv);
-            add("SDD=" + hP, fv);
-            add("SKK=" + cLemma + " " + childP, fv);
-            add("SMM=" + cLemma, fv); //this
-        }
-        if (hL > 5)
-        {
-            add("SC=" + cPos + attDist, fv);
-            add("SE=" + cP + attDist, fv);
-            add("SH=" + hLemma + " " + headP + attDist, fv);
-            add("SJ=" + hLemma + attDist, fv); //this
-
-            add("SCC=" + cPos, fv);
-            add("SEE=" + cP, fv);
-            add("SHH=" + hLemma + " " + headP, fv);
-            add("SJJ=" + hLemma, fv); //this
-        }
-
     }
 
     /**
