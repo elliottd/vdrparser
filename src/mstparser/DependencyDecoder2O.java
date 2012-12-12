@@ -139,7 +139,7 @@ public class DependencyDecoder2O extends DependencyDecoder
             inst.deprels[i] = pipe.getType(labs[i]);
         }
 
-        orig[0][0] = ((DependencyPipe2O) pipe).createFeatureVector(inst, -1);
+        orig[0][0] = ((DependencyPipe2O) pipe).createFeatureVector(inst);
         orig[0][1] = pars;
 
 
