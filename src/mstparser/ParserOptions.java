@@ -50,12 +50,17 @@ public final class ParserOptions
     public boolean useRelationalFeatures = false;
     public boolean discourseMode = false;
     public String confidenceEstimator = null;
+    
+    // These options are specific to my environment
     public String alignmentsFile = null;
     public String sourceFile = null;
     public String testSourceFile = null;
     public String testAlignmentsFile = null;
     public boolean qg = false;
     public boolean eddie = false;
+    public boolean useLinearFeatures = false;
+    public boolean verbose = false;
+    public boolean visualMode = false;
 
     public ParserOptions(String[] args)
     {
@@ -164,6 +169,18 @@ public final class ParserOptions
             {
                 eddie = true;
             }
+            if (pair[0].equals("linear"))
+            {
+            	useLinearFeatures = true;
+            }
+            if (pair[0].equals("verbose"))
+            {
+            	verbose = true;
+            }
+            if (pair[0].equals("visual"))
+            {
+                visualMode = true;
+            }
         }
 
 
@@ -207,51 +224,57 @@ public final class ParserOptions
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("FLAGS [");
+        sb.append("FLAGS\n[");
         sb.append("train-file: " + trainfile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("alignments-file: " + alignmentsFile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("source-file: " + sourceFile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("test-file: " + testfile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("test-alignments-file: " + testAlignmentsFile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("test-source-file: " + testSourceFile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("gold-file: " + goldfile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("output-file: " + outfile);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("model-name: " + modelName);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("train: " + train);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("qg: " + qg);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("test: " + test);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("eval: " + eval);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("loss-type: " + lossType);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("second-order: " + secondOrder);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("training-iterations: " + numIters);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("training-k: " + trainK);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("decode-type: " + decodeType);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("create-forest: " + createForest);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("format: " + format);
-        sb.append(" | ");
+        sb.append("\n");
         sb.append("relational-features: " + useRelationalFeatures);
-        sb.append(" | ");
+        sb.append("\n");
+        sb.append("use-linear-features: " + useLinearFeatures);
+        sb.append("\n");
+        sb.append("verbose: " + verbose);
+        sb.append("\n");
         sb.append("discourse-mode: " + discourseMode);
-        sb.append("]\n");
+        sb.append("\n");
+        sb.append("visual-mode: " + visualMode);       
+        sb.append("\n]\n");
         return sb.toString();
     }
 }
