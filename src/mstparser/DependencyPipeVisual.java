@@ -81,7 +81,6 @@ public class DependencyPipeVisual extends DependencyPipe
 
         DependencyInstance instance = depReader.getNext();
         depReader.resetCount();
-        int num1 = 0;
 
         System.out.println("Creating Feature Vector Instances: ");
         while (instance != null)
@@ -159,6 +158,9 @@ public class DependencyPipeVisual extends DependencyPipe
         System.out.println("Done.");
     }
 
+    /**
+     * This is where we calculate the features over an input
+     */
     public FeatureVector createFeatureVector(DependencyInstance instance)
     {
 
