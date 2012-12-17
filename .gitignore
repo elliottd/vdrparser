@@ -1,6 +1,3 @@
 output/*
 build/*
 .idea/*
-.classpath
-.project
-.settings/*
