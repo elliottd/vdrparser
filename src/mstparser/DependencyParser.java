@@ -372,11 +372,6 @@ public class DependencyParser
             else if (options.visualMode)
             {
                 pipe = new DependencyPipeVisual(options);
-                if (options.sourceFile != null)
-                {
-                    pipe.readSourceInstances(options.sourceFile);
-                    pipe.readAlignments(options.alignmentsFile);
-                }
             }
             else
             {
@@ -413,11 +408,6 @@ public class DependencyParser
             else if (options.visualMode)
             {
                 pipe = new DependencyPipeVisual(options);                
-                if (options.testSourceFile != null)
-                {
-                    pipe.readSourceInstances(options.testSourceFile);
-                    pipe.readAlignments(options.testAlignmentsFile);
-                }
             }
             else
             {
