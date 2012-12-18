@@ -207,7 +207,11 @@ public class DependencyPipe
 
     // add with default 1.0
     public final void add(String feat, FeatureVector fv)
-    {        
+    {
+        if (options.verbose)
+        {
+            System.out.println("ADD: " + feat);
+        }
         int num = dataAlphabet.lookupIndex(feat);
         if (num >= 0)
         {
@@ -230,7 +234,6 @@ public class DependencyPipe
 
     public FeatureVector createFeatureVector(DependencyInstance instance)
     {
-
         final int instanceLength = instance.length();
 
         String[] labs = instance.deprels;
