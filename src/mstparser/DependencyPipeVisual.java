@@ -111,7 +111,6 @@ public class DependencyPipeVisual extends DependencyPipe
 
             instance = depReader.getNext();
             depReader.incCount();
-            num1++;
         }
 
         System.out.println();
