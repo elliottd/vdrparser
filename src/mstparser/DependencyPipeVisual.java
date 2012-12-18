@@ -197,12 +197,27 @@ public class DependencyPipeVisual extends DependencyPipe
         feature = new StringBuilder("A=" + forms[argIndex] + " HA="+ label);
         this.add(feature.toString(), fv);
         
-        int numArgs = 0;
+        int argCounter = 0;
         
         for (int j=0; j < instance.length(); j++)
         {
-            continue;
+            if (heads[j] == headIndex)
+            {
+                argCounter++;
+            }
         }
+        
+        feature = new StringBuilder("H=" + headForm + " #A=" + argCounter);
+        this.add(feature.toString(), fv);
+        
+        feature = new StringBuilder("H=" + headForm + " #A=" + argCounter + " HA=" + label);
+        this.add(feature.toString(), fv);
+        
+        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1));
+        this.add(feature.toString(), fv);
+        
+        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+        this.add(feature.toString(), fv);
     }
 
     /**
