@@ -185,39 +185,81 @@ public class DependencyPipeVisual extends DependencyPipe
 
         StringBuilder feature;
 
+        //1. H=Head
         feature = new StringBuilder("H=" + headForm);
         this.add(feature.toString(), fv);
 
+        //2. A=Arg
         feature = new StringBuilder("A=" + forms[argIndex]);
         this.add(feature.toString(), fv);
 
+        //3. H=Head HA=labelhead−arg
         feature = new StringBuilder("H=" + headForm + " HA=" + label);
         this.add(feature.toString(), fv);
 
+        //4. A=Arg HA=labelhead−arg
         feature = new StringBuilder("A=" + forms[argIndex] + " HA="+ label);
         this.add(feature.toString(), fv);
         
         int argCounter = 0;
+        
+        List<String> siblings = new ArrayList<String>();
         
         for (int j=0; j < instance.length(); j++)
         {
             if (heads[j] == headIndex)
             {
                 argCounter++;
+                if (j != i)
+                {
+                    siblings.add(forms[j]);
+                }
             }
         }
         
+        //5. H=Head A#=no. args
         feature = new StringBuilder("H=" + headForm + " #A=" + argCounter);
         this.add(feature.toString(), fv);
         
+        //6. H=Head A#=no. args HA=labelhead−arg
         feature = new StringBuilder("H=" + headForm + " #A=" + argCounter + " HA=" + label);
         this.add(feature.toString(), fv);
         
+        //7. A=Arg S#=no. siblings
         feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1));
         this.add(feature.toString(), fv);
         
+        //8. A=Arg S#=no. siblings HA=labelhead−arg
         feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
         this.add(feature.toString(), fv);
+        
+        feature = new StringBuilder("A=" + forms[argIndex]);
+        
+        StringBuilder siblingForms = new StringBuilder();
+        
+        for (int k = 0; k < siblings.size(); k++)
+        {
+            siblingForms.append(" S" + k + "=" + siblings.get(k));
+        }
+        
+        //9. A=Arg S=Sibling1,...,N
+        feature = feature.append(siblingForms.toString());        
+        this.add(feature.toString(), fv);
+        
+        //10. A=Arg S=Sibling1,...,N HA=labelhead−arg
+        feature = new StringBuilder("A=" + forms[argIndex] + " HA=" + label);
+        feature = feature.append(siblingForms.toString());        
+        this.add(feature.toString(), fv);
+        
+        //11. A=Arg S#=no. siblings S=Sibling1,...,N
+        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1));
+        feature = feature.append(siblingForms.toString());        
+        this.add(feature.toString(), fv);
+        
+        //12. A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
+        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+        feature = feature.append(siblingForms.toString());        
+        this.add(feature.toString(), fv);        
     }
 
     /**
@@ -239,10 +281,133 @@ public class DependencyPipeVisual extends DependencyPipe
 
         StringBuilder feature;
 
+        //13. H=Head A=Arg
         feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex]);
         add(feature.toString(), fv);
 
+        //14. H=Head A=Arg HA=labelhead−arg
         feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " HA=" + label);
+        add(feature.toString(), fv);
+        
+        int argCounter = 0;
+        
+        for (int j=0; j < instance.length(); j++)
+        {
+            if (heads[j] == headIndex)
+            {
+                argCounter++;
+            }
+        }
+        
+        //15. H=Head A=Arg A#=no. args
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #A=" + argCounter);
+        add(feature.toString(), fv);
+
+        //16. H=Head A=Arg A#=no. args HA=labelhead−arg
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #A=" + argCounter + " HA=" + label);
+        add(feature.toString(), fv);
+    }
+    
+    /**
+     * Add features to the model based on Grandparent-Grandchild relationships.
+     * 
+     * @param instance
+     * @param i
+     * @param headIndex
+     * @param argIndex
+     * @param label
+     * @param fv
+     */
+    public void addLinguisticGrandparentGrandchildFeatures(DependencyInstance instance, 
+                                                 int i, int headIndex, 
+                                                 int argIndex, String label, 
+                                                 FeatureVector fv)
+    {
+        int[] heads = instance.heads;
+        String[] forms = instance.forms;
+        
+        String headForm = heads[headIndex] == 0 ? "ROOT" : forms[headIndex];
+
+        String gpForm = heads[headIndex] == -1 ? "<root>" : forms[heads[headIndex]];
+        String gpRel = heads[headIndex] == -1 ? "<no-type>" : instance.deprels[heads[headIndex]];
+        
+        StringBuilder feature;
+
+        //17. GP=Grandparent H=Head A=Arg
+        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex]);
+        add(feature.toString(), fv);
+        
+        //18. GP=Grandparent H=Head A=Arg GH=labelgrandparent−head
+        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex] + " GH=" + gpRel);
+        add(feature.toString(), fv);
+
+        //19. GP=Grandparent H=Head A=Arg HA=labelhead−arg
+        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex] + " HA=" + label);
+        add(feature.toString(), fv);
+                
+        //20. GP=Grandparent H=Head A=Arg GH=labelgrandparent−head HA=labelhead−arg
+        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex] + " GH=" + gpRel + " HA=" + label);
+        add(feature.toString(), fv);
+    }
+    
+    /**
+     * Adds bigram features based on the siblings of the argument.
+     * 
+     * @param instance
+     * @param i
+     * @param headIndex
+     * @param argIndex
+     * @param label
+     * @param fv
+     */
+    public void addLinguisticBigramSiblingFeatures(DependencyInstance instance, 
+                                                    int i, int headIndex, 
+                                                    int argIndex, String label, 
+                                                    FeatureVector fv)
+    {
+        int[] heads = instance.heads;
+        String[] forms = instance.forms;
+
+        String headForm = heads[headIndex] == 0 ? "ROOT" : forms[headIndex];
+
+        StringBuilder feature;
+        StringBuilder siblingForms = new StringBuilder();
+
+        int argCounter = 0;
+                
+        for (int j=0; j < instance.length(); j++)
+        {
+            if (heads[j] == headIndex)
+            {
+                argCounter++;
+                if (j != i)
+                {
+                    siblingForms.append(" S" + (argCounter-1) + "=" + forms[j]);
+                }
+            }
+        }
+                
+        //21. H=Head A=Arg S#=no. siblings
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
+        add(feature.toString(), fv);
+        
+        //22. H=Head A=Arg S=Sibling1,...,N
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex]);
+        feature.append(siblingForms.toString());
+        add(feature.toString(), fv);
+        
+        //23. H=Head A=Arg S#=no. siblings S=Sibling1,...,N
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
+        feature.append(siblingForms.toString());
+        add(feature.toString(), fv);
+        
+        //24. H=Head A=Arg S#=no. siblings HA=labelhead−arg
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+        add(feature.toString(), fv);
+        
+        //25. H=Head A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
+        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+        feature.append(siblingForms.toString());
         add(feature.toString(), fv);
     }
     
@@ -410,10 +575,16 @@ public class DependencyPipeVisual extends DependencyPipe
             }
 
             this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);         
-        }
+            this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
-        // addExtendedFeatures(instance, fv);
+            /*if (labeled)
+            {
+                addLabeledFeatures(instance, i, labs[i], attR, true, fv);
+                addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
+            }*/
+        }
 
         return fv;
     }
@@ -442,14 +613,46 @@ public class DependencyPipeVisual extends DependencyPipe
                     FeatureVector prodFV = new FeatureVector();
 
                     this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
-                    this.addLinguisticBigramFeatures(instance, w1, w1, w2,  "null", prodFV);
+                    this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                    this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                    this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
                     probs[w1][w2][ph] = prodProb;
                 }
             }
         }
+        
+        /*if (labeled)
+        {
+            for (int w1 = 0; w1 < instanceLength; w1++)
+            {
+                for (int t = 0; t < types.length; t++)
+                {
+                    String type = types[t];
+                    for (int ph = 0; ph < 2; ph++)
+                    {
 
+                        boolean attR = ph == 0 ? true : false;
+                        for (int ch = 0; ch < 2; ch++)
+                        {
+
+                            boolean child = ch == 0 ? true : false;
+
+                            FeatureVector prodFV = new FeatureVector();
+                            addLabeledFeatures(instance, w1, type, attR, child,
+                                    prodFV);
+
+                            double nt_prob = params.getScore(prodFV);
+                            nt_fvs[w1][t][ph][ch] = prodFV;
+                            nt_probs[w1][t][ph][ch] = nt_prob;
+
+                        }
+                    }
+                }
+            }
+        }*/  
     }
          
     @Override
@@ -476,12 +679,40 @@ public class DependencyPipeVisual extends DependencyPipe
                         FeatureVector prodFV = new FeatureVector();
 
                         this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
-                        this.addLinguisticBigramFeatures(instance, w1, w1, w2, "null", prodFV);
+                        this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+
                         out.writeObject(prodFV.keys());
                     }
                 }
             }
             out.writeInt(-3);
+            
+            /*if (labeled)
+            {
+                for (int w1 = 0; w1 < instanceLength; w1++)
+                {
+                    for (int t = 0; t < types.length; t++)
+                    {
+                        String type = types[t];
+                        for (int ph = 0; ph < 2; ph++)
+                        {
+                            boolean attR = ph == 0 ? true : false;
+                            for (int ch = 0; ch < 2; ch++)
+                            {
+                                boolean child = ch == 0 ? true : false;
+                                FeatureVector prodFV = new FeatureVector();
+                                addLabeledFeatures(instance, w1, type, attR,
+                                        child, prodFV);
+                                out.writeObject(prodFV.keys());
+                            }
+                        }
+                    }
+                }
+                out.writeInt(-3);
+            }*/
+            
             out.writeObject(instance.fv.keys());
             out.writeInt(-4);
 
@@ -531,18 +762,33 @@ public class DependencyPipeVisual extends DependencyPipe
                 System.exit(0);
             }
 
-            /*
-             * if (labeled) { for (int w1 = 0; w1 < length; w1++) { for (int t =
-             * 0; t < types.length; t++) { String type = types[t];
-             * 
-             * for (int ph = 0; ph < 2; ph++) { for (int ch = 0; ch < 2; ch++) {
-             * FeatureVector prodFV = new FeatureVector( (int[])
-             * in.readObject()); double nt_prob = params.getScore(prodFV);
-             * nt_fvs[w1][t][ph][ch] = prodFV; nt_probs[w1][t][ph][ch] =
-             * nt_prob; } } } } last = in.readInt(); if (last != -3) {
-             * System.out.println("Error reading file."); System.exit(0); } }
-             */
-
+            /*if (labeled) 
+            { 
+                for (int w1 = 0; w1 < length; w1++) 
+                { 
+                    for (int t = 0; t < types.length; t++) 
+                    { 
+                        String type = types[t];              
+                        for (int ph = 0; ph < 2; ph++) 
+                        { 
+                            for (int ch = 0; ch < 2; ch++) 
+                            {
+                                FeatureVector prodFV = new FeatureVector( (int[])in.readObject()); 
+                                double nt_prob = params.getScore(prodFV);
+                                nt_fvs[w1][t][ph][ch] = prodFV; 
+                                nt_probs[w1][t][ph][ch] = nt_prob;
+                            } 
+                        }
+                    } 
+                } 
+                last = in.readInt(); 
+                if (last != -3) 
+                {
+                    System.out.println("Error reading file."); 
+                    System.exit(0); 
+                } 
+            }*/
+             
             FeatureVector nfv = new FeatureVector((int[]) in.readObject());
             last = in.readInt();
             if (last != -4)
