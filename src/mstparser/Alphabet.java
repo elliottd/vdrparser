@@ -22,6 +22,20 @@ public class Alphabet implements Serializable
     int numEntries;
     boolean growthStopped = false;
 
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Data Alphabet");
+        sb.append("\n");
+        
+        for (Object s: map.keys())
+        {
+            sb.append(s);
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+    
     public Alphabet(int capacity)
     {
         this.map = new gnu.trove.TObjectIntHashMap(capacity);

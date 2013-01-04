@@ -575,9 +575,9 @@ public class DependencyPipeVisual extends DependencyPipe
             }
 
             this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
             /*if (labeled)
             {
