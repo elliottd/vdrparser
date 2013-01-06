@@ -18,7 +18,8 @@
     <property name="optimize" value="off"/>
     <property name="deprecation" value="on"/>
 
-    <property name="src.dir" value="./"/>
+    <property name="src.dir" value="./src"/>
+    <property name="test.dir" value="./test"/>
     <property name="lib.dir" value="./lib"/>
     <property name="packages" value="mstparser.*"/>
 
@@ -79,12 +80,13 @@
   <target name="compile" 
           depends="prepare"
           description="compiles the source code  (default)">
-    <javac srcdir="${src.dir}"
-           destdir="${build.dest}"
+    <javac destdir="${build.dest}"
            debug="${debug}"
            deprecation="${deprecation}"
            classpathref="build.classpath"
            optimize="${optimize}">
+     	<src path="${src.dir}"/>
+	<exclude name="mstparser/test/**"/>
 <!--	   <compilerarg line="-Xlint:unchecked"/> -->
     </javac>
   </target>
