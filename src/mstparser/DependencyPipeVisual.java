@@ -180,9 +180,18 @@ public class DependencyPipeVisual extends DependencyPipe
     {
         int[] heads = instance.heads;
         String[] forms = instance.forms;
-
-        String headForm = heads[headIndex] == 0 ? "ROOT" : forms[headIndex];
-
+        
+        String headForm;
+        String argForm = forms[argIndex];
+        if (heads[headIndex] == -1)
+        {
+        	headForm = "ROOT";
+        }
+        else
+        {
+        	headForm = forms[headIndex];
+        }
+        
         StringBuilder feature;
 
         //1. H=Head
@@ -216,6 +225,8 @@ public class DependencyPipeVisual extends DependencyPipe
                 }
             }
         }
+        String[] sortedSiblings = siblings.toArray(new String[0]);
+        Arrays.sort(sortedSiblings);
         
         //5. H=Head A#=no. args
         feature = new StringBuilder("H=" + headForm + " #A=" + argCounter);
@@ -226,20 +237,21 @@ public class DependencyPipeVisual extends DependencyPipe
         this.add(feature.toString(), fv);
         
         //7. A=Arg S#=no. siblings
-        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1));
+        feature = new StringBuilder("A=" + argForm + " #S=" + (argCounter-1));
         this.add(feature.toString(), fv);
         
         //8. A=Arg S#=no. siblings HA=labelhead−arg
-        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+        feature = new StringBuilder("A=" + argForm + " #S=" + (argCounter-1) + " HA=" + label);
         this.add(feature.toString(), fv);
         
-        feature = new StringBuilder("A=" + forms[argIndex]);
+        feature = new StringBuilder("A=" + argForm);
+        
         
         StringBuilder siblingForms = new StringBuilder();
         
-        for (int k = 0; k < siblings.size(); k++)
+        for (int k = 0; k < sortedSiblings.length; k++)
         {
-            siblingForms.append(" S" + k + "=" + siblings.get(k));
+            siblingForms.append(" S=" + sortedSiblings[k]);
         }
         
         //9. A=Arg S=Sibling1,...,N
@@ -247,17 +259,17 @@ public class DependencyPipeVisual extends DependencyPipe
         this.add(feature.toString(), fv);
         
         //10. A=Arg S=Sibling1,...,N HA=labelhead−arg
-        feature = new StringBuilder("A=" + forms[argIndex] + " HA=" + label);
+        feature = new StringBuilder("A=" + argForm + " HA=" + label);
         feature = feature.append(siblingForms.toString());        
         this.add(feature.toString(), fv);
         
         //11. A=Arg S#=no. siblings S=Sibling1,...,N
-        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1));
+        feature = new StringBuilder("A=" + argForm + " #S=" + (argCounter-1));
         feature = feature.append(siblingForms.toString());        
         this.add(feature.toString(), fv);
         
         //12. A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
-        feature = new StringBuilder("A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+        feature = new StringBuilder("A=" + argForm + " #S=" + (argCounter-1) + " HA=" + label);
         feature = feature.append(siblingForms.toString());        
         this.add(feature.toString(), fv);        
     }
@@ -277,8 +289,17 @@ public class DependencyPipeVisual extends DependencyPipe
         int[] heads = instance.heads;
         String[] forms = instance.forms;
 
-        String headForm = heads[headIndex] == 0 ? "ROOT" : forms[headIndex];
-
+        String headForm;
+        String argForm = forms[argIndex];
+        if (heads[headIndex] == -1)
+        {
+        	headForm = "ROOT";
+        }
+        else
+        {
+        	headForm = forms[headIndex];
+        }
+        
         StringBuilder feature;
 
         //13. H=Head A=Arg
@@ -326,10 +347,20 @@ public class DependencyPipeVisual extends DependencyPipe
         int[] heads = instance.heads;
         String[] forms = instance.forms;
         
-        String headForm = heads[headIndex] == 0 ? "ROOT" : forms[headIndex];
+        int gpIndex = heads[headIndex];
 
-        String gpForm = heads[headIndex] == -1 ? "<root>" : forms[heads[headIndex]];
-        String gpRel = heads[headIndex] == -1 ? "<no-type>" : instance.deprels[heads[headIndex]];
+        if (gpIndex == -1)
+        {
+        	// This is the dummy <root> node
+        	return;
+        }
+        
+        String headForm;
+        String argForm = forms[argIndex];
+        headForm = forms[headIndex];
+        
+        String gpForm = gpIndex == 0 ? "ROOT" : forms[gpIndex];
+        String gpRel = gpIndex == 0 ? "-" : instance.deprels[headIndex];
         
         StringBuilder feature;
 
@@ -368,10 +399,20 @@ public class DependencyPipeVisual extends DependencyPipe
         int[] heads = instance.heads;
         String[] forms = instance.forms;
 
-        String headForm = heads[headIndex] == 0 ? "ROOT" : forms[headIndex];
-
+        String headForm;
+        String argForm = forms[argIndex];
+        if (heads[headIndex] == -1)
+        {
+        	headForm = "ROOT";
+        }
+        else
+        {
+        	headForm = forms[headIndex];
+        }
+        
         StringBuilder feature;
         StringBuilder siblingForms = new StringBuilder();
+        List<String> siblingFormsList = new ArrayList<String>();
 
         int argCounter = 0;
                 
@@ -382,9 +423,18 @@ public class DependencyPipeVisual extends DependencyPipe
                 argCounter++;
                 if (j != i)
                 {
-                    siblingForms.append(" S" + (argCounter-1) + "=" + forms[j]);
+                	siblingFormsList.add(forms[j]);
                 }
             }
+        }
+        
+        String[] sortedSiblings = siblingFormsList.toArray(new String[0]);
+        
+        Arrays.sort(sortedSiblings);
+        
+        for (int k=0; k < sortedSiblings.length; k++)
+        {
+            siblingForms.append(" S=" + sortedSiblings[k]);
         }
                 
         //21. H=Head A=Arg S#=no. siblings
@@ -575,9 +625,9 @@ public class DependencyPipeVisual extends DependencyPipe
             }
 
             this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            //this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
             /*if (labeled)
             {
