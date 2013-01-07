@@ -543,6 +543,16 @@ public class DependencyPipeVisual extends DependencyPipe
         }
     }
 
+    /**
+     * Adds features that allow for labelled parsing.
+     * 
+     * @param instance
+     * @param word
+     * @param type
+     * @param attR
+     * @param childFeatures
+     * @param fv
+     */
     public void addLabeledFeatures(DependencyInstance instance, int word,
             String type, boolean attR, boolean childFeatures, FeatureVector fv)
     {
@@ -563,10 +573,6 @@ public class DependencyPipeVisual extends DependencyPipe
         else
         {
             att = "LA";
-        }
-        if (!options.useLinearFeatures)
-        {
-            att = "";
         }
 
         att += "&" + childFeatures;
@@ -624,7 +630,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
 
-            this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -662,7 +668,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
+                    //this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
                     this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                     this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                     this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
@@ -728,7 +734,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                         FeatureVector prodFV = new FeatureVector();
 
-                        this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
+                        //this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
                         this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
