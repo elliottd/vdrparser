@@ -629,11 +629,11 @@ public class DependencyPipeVisual extends DependencyPipe
             this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
-            /*if (labeled)
+            if (labeled)
             {
                 addLabeledFeatures(instance, i, labs[i], attR, true, fv);
                 addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
-            }*/
+            }
         }
 
         return fv;
@@ -674,7 +674,7 @@ public class DependencyPipeVisual extends DependencyPipe
             }
         }
         
-        /*if (labeled)
+        if (labeled)
         {
             for (int w1 = 0; w1 < instanceLength; w1++)
             {
@@ -702,7 +702,7 @@ public class DependencyPipeVisual extends DependencyPipe
                     }
                 }
             }
-        }*/  
+        }  
     }
          
     @Override
@@ -739,7 +739,7 @@ public class DependencyPipeVisual extends DependencyPipe
             }
             out.writeInt(-3);
             
-            /*if (labeled)
+            if (labeled)
             {
                 for (int w1 = 0; w1 < instanceLength; w1++)
                 {
@@ -761,7 +761,7 @@ public class DependencyPipeVisual extends DependencyPipe
                     }
                 }
                 out.writeInt(-3);
-            }*/
+            }
             
             out.writeObject(instance.fv.keys());
             out.writeInt(-4);
@@ -812,7 +812,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 System.exit(0);
             }
 
-            /*if (labeled) 
+            if (labeled) 
             { 
                 for (int w1 = 0; w1 < length; w1++) 
                 { 
@@ -837,7 +837,7 @@ public class DependencyPipeVisual extends DependencyPipe
                     System.out.println("Error reading file."); 
                     System.exit(0); 
                 } 
-            }*/
+            }
              
             FeatureVector nfv = new FeatureVector((int[]) in.readObject());
             last = in.readInt();
