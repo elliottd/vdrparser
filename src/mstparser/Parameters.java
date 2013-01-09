@@ -6,6 +6,8 @@ import java.util.ListIterator;
 
 import gnu.trove.*;
 
+//TODO: Write code to inspect the weight of parameters. Could be here or in Alphabet.
+
 public class Parameters
 {
 
