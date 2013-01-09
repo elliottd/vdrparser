@@ -56,7 +56,14 @@ public class DependencyParser
         }
 
         params.averageParams(i * instanceLengths.length);
-
+    }
+    
+    
+    public String topTenParametersByWeight()
+    {
+        StringBuilder sb = new StringBuilder();
+        
+        return sb.toString();
     }
 
     private void trainingIter(int[] instanceLengths, String trainfile,
