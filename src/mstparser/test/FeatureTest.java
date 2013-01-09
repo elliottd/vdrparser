@@ -49,6 +49,7 @@ public class FeatureTest
         try
         {
             pipe = new DependencyPipeVisual(options);
+            pipe.labeled = false;
             pipe.createInstances(options.trainfile, options.trainforest);
         }
         catch (IOException e)
@@ -146,53 +147,97 @@ public class FeatureTest
     	
     }
 
+    /**
+     * Test the unigram head features of the trained model on the input
+     * data in data/visualtrain.lab
+     * 
+     * There should be 26 features in the model at this stage.
+     */
     @Test
     public void testUnigramHeadFeatures()
     {
         assertTrue(pipe.dataAlphabet.contains("H=ROOT"));
         assertTrue(pipe.dataAlphabet.contains("H=man"));
         assertTrue(pipe.dataAlphabet.contains("H=bike"));
-        assertFalse(pipe.dataAlphabet.contains("H=road"));
+        assertTrue(pipe.dataAlphabet.contains("H=road"));
+        assertTrue(pipe.dataAlphabet.contains("H=river"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree"));
         
         assertTrue(pipe.dataAlphabet.contains("H=ROOT HA=-"));
         assertTrue(pipe.dataAlphabet.contains("H=man HA=above"));
+        assertTrue(pipe.dataAlphabet.contains("H=man HA=beside"));
         assertTrue(pipe.dataAlphabet.contains("H=bike HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("H=road HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("H=river HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree HA=on"));
         
         assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=2"));
-        assertTrue(pipe.dataAlphabet.contains("H=man #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=man #A=2"));
         assertTrue(pipe.dataAlphabet.contains("H=bike #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=road #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=river #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree #A=1"));
         
         assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=2 HA=-"));
-        assertTrue(pipe.dataAlphabet.contains("H=man #A=1 HA=above"));
+        assertTrue(pipe.dataAlphabet.contains("H=man #A=2 HA=above"));
+        assertTrue(pipe.dataAlphabet.contains("H=man #A=2 HA=beside"));
         assertTrue(pipe.dataAlphabet.contains("H=bike #A=1 HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("H=road #A=1 HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("H=river #A=1 HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree #A=1 HA=on"));
+        
     }
     
+    /**
+     * Test the unigram argument features in the model. 
+     * Expect 36 features in the model at this stage.
+     * 
+     * @throws IOException
+     */
     @Test
-    public void testUnigramArgFeatures() throws IOException
+    public void testUnigramArgFeatures()
     {
 
         assertTrue(pipe.dataAlphabet.contains("A=man"));
         assertTrue(pipe.dataAlphabet.contains("A=bike"));
         assertTrue(pipe.dataAlphabet.contains("A=road"));
         assertTrue(pipe.dataAlphabet.contains("A=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=house"));
+        assertTrue(pipe.dataAlphabet.contains("A=river"));
+        assertTrue(pipe.dataAlphabet.contains("A=forest"));
+        assertTrue(pipe.dataAlphabet.contains("A=field"));
 
         assertTrue(pipe.dataAlphabet.contains("A=man HA=-"));
         assertTrue(pipe.dataAlphabet.contains("A=bike HA=above"));
         assertTrue(pipe.dataAlphabet.contains("A=road HA=on"));
         assertTrue(pipe.dataAlphabet.contains("A=tree HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("A=house HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("A=river HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("A=forest HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("A=field HA=on"));
         
         assertTrue(pipe.dataAlphabet.contains("A=man #S=1"));
-        assertTrue(pipe.dataAlphabet.contains("A=bike #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike #S=1"));
+        assertTrue(pipe.dataAlphabet.contains("A=house #S=1")); 
         assertTrue(pipe.dataAlphabet.contains("A=tree #S=1"));
+        assertTrue(pipe.dataAlphabet.contains("A=road #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=river #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=forest #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=field #S=0"));
         
         assertTrue(pipe.dataAlphabet.contains("A=man S=tree"));
         assertTrue(pipe.dataAlphabet.contains("A=tree S=man"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike S=house"));
+        assertTrue(pipe.dataAlphabet.contains("A=house S=bike"));
         
         assertTrue(pipe.dataAlphabet.contains("A=man #S=1 S=tree"));
         assertTrue(pipe.dataAlphabet.contains("A=tree #S=1 S=man"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike #S=1 S=house"));
+        assertTrue(pipe.dataAlphabet.contains("A=house #S=1 S=bike"));
         
         assertTrue(pipe.dataAlphabet.contains("A=man #S=1 HA=- S=tree"));
         assertTrue(pipe.dataAlphabet.contains("A=tree #S=1 HA=- S=man"));
-        
+        assertTrue(pipe.dataAlphabet.contains("A=bike #S=1 HA=above S=house"));
+        assertTrue(pipe.dataAlphabet.contains("A=house #S=1 HA=beside S=bike"));
     }
 }

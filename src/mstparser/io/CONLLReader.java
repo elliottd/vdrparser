@@ -144,7 +144,7 @@ public class CONLLReader extends DependencyReader
         String line = in.readLine();
         in.close();
 
-        if (line.trim().length() > 0)
+        if (line.split("\t").length > 9)
         {
             return true;
         }
