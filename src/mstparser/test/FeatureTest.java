@@ -77,74 +77,145 @@ public class FeatureTest
     @Test
     public void testGeneralFeatureProperties()
     {
-        assertEquals(pipe.dataAlphabet.size(), 72);
+        assertEquals(pipe.dataAlphabet.size(), 175);
     }
     
+    /**
+     * Expects 24 features.
+     */
     @Test
     public void testLinguisticGrandparents()
     {
     	assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike"));
-    	assertTrue(pipe.dataAlphabet.contains("GP=man H=bike A=road"));
-    	
-    	assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike GH=-"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike GH=-"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike HA=above"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike GH=- HA=above"));
+
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=house"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=house GH=-"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=house HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=house GH=- HA=beside"));
+
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=tree A=field"));    
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=tree A=field GH=-"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=tree A=field HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=tree A=field GH=- HA=on"));
+        
+    	assertTrue(pipe.dataAlphabet.contains("GP=man H=bike A=road"));   	
     	assertTrue(pipe.dataAlphabet.contains("GP=man H=bike A=road GH=above"));
-
-    	assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike HA=above"));
     	assertTrue(pipe.dataAlphabet.contains("GP=man H=bike A=road HA=on"));
-
-    	assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike GH=- HA=above"));
     	assertTrue(pipe.dataAlphabet.contains("GP=man H=bike A=road GH=above HA=on"));
+
+        assertTrue(pipe.dataAlphabet.contains("GP=bike H=road A=river"));     
+        assertTrue(pipe.dataAlphabet.contains("GP=bike H=road A=river GH=on"));
+        assertTrue(pipe.dataAlphabet.contains("GP=bike H=road A=river HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("GP=bike H=road A=river GH=on HA=opposite")); 
+        
+        assertTrue(pipe.dataAlphabet.contains("GP=road H=river A=forest"));     
+        assertTrue(pipe.dataAlphabet.contains("GP=road H=river A=forest GH=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("GP=road H=river A=forest HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("GP=road H=river A=forest GH=opposite HA=beside"));        
     }
     
+    /*
+     * Expects 32 features.
+     */
     @Test
     public void testLinguisticArgumentSiblings()
     {
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=1"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=1"));
-    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike #S=0"));
+    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=2"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man S=sky S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=2 HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=2 S=sky S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=2 HA=- S=sky S=tree"));
+        
+    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=2"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree S=man S=sky"));       
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=2 HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=2 S=man S=sky"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=2 HA=- S=man S=sky"));
+ 
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky #S=2"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky S=man S=tree"));       
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky #S=2 HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky #S=2 S=man S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky #S=2 HA=- S=man S=tree"));
+        
+    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike #S=1"));
+    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike S=house"));       
+        assertTrue(pipe.dataAlphabet.contains("H=man A=bike #S=1 HA=above"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=bike #S=1 S=house"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=bike #S=1 HA=above S=house"));
+        
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house #S=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house S=bike"));       
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house #S=1 HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house #S=1 S=bike"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house #S=1 HA=beside S=bike"));
+        
     	assertTrue(pipe.dataAlphabet.contains("H=bike A=road #S=0"));
-
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=1 HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=1 HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike #S=0 HA=above"));
     	assertTrue(pipe.dataAlphabet.contains("H=bike A=road #S=0 HA=on"));
+    	
+        assertTrue(pipe.dataAlphabet.contains("H=road A=river #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("H=road A=river #S=0 HA=opposite"));
 
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man S=tree"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree S=man"));
-    	
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=1 S=tree"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=1 S=man"));
-    	
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=1 HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=1 HA=-"));
-    	
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=1 HA=- S=tree"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #S=1 HA=- S=man"));
+        assertTrue(pipe.dataAlphabet.contains("H=river A=forest #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("H=river A=forest #S=0 HA=beside"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=tree A=field #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree A=field #S=0 HA=on"));
     }
     
+    /**
+     * Expects 32 features.
+     */
     @Test
     public void testLinguisticBigrams()
     {
     	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #A=3"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #A=3 HA=-"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #A=3"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #A=3 HA=-"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky #A=3"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT A=sky #A=3 HA=-"));
+        
     	assertTrue(pipe.dataAlphabet.contains("H=man A=bike"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=bike HA=above"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=bike #A=2"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=bike #A=2 HA=above"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house #A=2"));
+        assertTrue(pipe.dataAlphabet.contains("H=man A=house #A=2 HA=beside"));
+
     	assertTrue(pipe.dataAlphabet.contains("H=bike A=road"));
+      	assertTrue(pipe.dataAlphabet.contains("H=bike A=road HA=on"));
+    	assertTrue(pipe.dataAlphabet.contains("H=bike A=road #A=1"));    	
+    	assertTrue(pipe.dataAlphabet.contains("H=bike A=road #A=1 HA=on"));   
     	
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike HA=above"));
-    	assertTrue(pipe.dataAlphabet.contains("H=bike A=road HA=on"));
-    	
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #A=2"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #A=2"));
-    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike #A=1"));
-    	assertTrue(pipe.dataAlphabet.contains("H=bike A=road #A=1"));
-    	
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #A=2 HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=tree #A=2 HA=-"));
-    	assertTrue(pipe.dataAlphabet.contains("H=man A=bike #A=1 HA=above"));
-    	assertTrue(pipe.dataAlphabet.contains("H=bike A=road #A=1 HA=on"));
-    	
+    	assertTrue(pipe.dataAlphabet.contains("H=road A=river"));
+        assertTrue(pipe.dataAlphabet.contains("H=road A=river HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("H=road A=river #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=road A=river #A=1 HA=opposite"));
+        
+        assertTrue(pipe.dataAlphabet.contains("H=river A=forest"));
+        assertTrue(pipe.dataAlphabet.contains("H=river A=forest HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("H=river A=forest #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=river A=forest #A=1 HA=beside"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=tree A=field"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree A=field HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree A=field #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree A=field #A=1 HA=on"));      
     }
 
     /**
@@ -157,40 +228,42 @@ public class FeatureTest
     public void testUnigramHeadFeatures()
     {
         assertTrue(pipe.dataAlphabet.contains("H=ROOT"));
-        assertTrue(pipe.dataAlphabet.contains("H=man"));
-        assertTrue(pipe.dataAlphabet.contains("H=bike"));
-        assertTrue(pipe.dataAlphabet.contains("H=road"));
-        assertTrue(pipe.dataAlphabet.contains("H=river"));
-        assertTrue(pipe.dataAlphabet.contains("H=tree"));
-        
         assertTrue(pipe.dataAlphabet.contains("H=ROOT HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=3"));
+        assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=3 HA=-"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=man"));
         assertTrue(pipe.dataAlphabet.contains("H=man HA=above"));
         assertTrue(pipe.dataAlphabet.contains("H=man HA=beside"));
-        assertTrue(pipe.dataAlphabet.contains("H=bike HA=on"));
-        assertTrue(pipe.dataAlphabet.contains("H=road HA=opposite"));
-        assertTrue(pipe.dataAlphabet.contains("H=river HA=beside"));
-        assertTrue(pipe.dataAlphabet.contains("H=tree HA=on"));
-        
-        assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=2"));
         assertTrue(pipe.dataAlphabet.contains("H=man #A=2"));
-        assertTrue(pipe.dataAlphabet.contains("H=bike #A=1"));
-        assertTrue(pipe.dataAlphabet.contains("H=road #A=1"));
-        assertTrue(pipe.dataAlphabet.contains("H=river #A=1"));
-        assertTrue(pipe.dataAlphabet.contains("H=tree #A=1"));
-        
-        assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=2 HA=-"));
         assertTrue(pipe.dataAlphabet.contains("H=man #A=2 HA=above"));
         assertTrue(pipe.dataAlphabet.contains("H=man #A=2 HA=beside"));
-        assertTrue(pipe.dataAlphabet.contains("H=bike #A=1 HA=on"));
-        assertTrue(pipe.dataAlphabet.contains("H=road #A=1 HA=opposite"));
-        assertTrue(pipe.dataAlphabet.contains("H=river #A=1 HA=beside"));
+        
+        assertTrue(pipe.dataAlphabet.contains("H=tree"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("H=tree #A=1"));
         assertTrue(pipe.dataAlphabet.contains("H=tree #A=1 HA=on"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=bike"));
+        assertTrue(pipe.dataAlphabet.contains("H=bike HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("H=bike #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=bike #A=1 HA=on"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=road"));
+        assertTrue(pipe.dataAlphabet.contains("H=road HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("H=road #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=road #A=1 HA=opposite"));
+
+        assertTrue(pipe.dataAlphabet.contains("H=river"));       
+        assertTrue(pipe.dataAlphabet.contains("H=river HA=beside"));        
+        assertTrue(pipe.dataAlphabet.contains("H=river #A=1"));
+        assertTrue(pipe.dataAlphabet.contains("H=river #A=1 HA=beside"));
         
     }
     
     /**
      * Test the unigram argument features in the model. 
-     * Expect 36 features in the model at this stage.
+     * Expect 48 features in the model at this stage.
      * 
      * @throws IOException
      */
@@ -199,45 +272,69 @@ public class FeatureTest
     {
 
         assertTrue(pipe.dataAlphabet.contains("A=man"));
-        assertTrue(pipe.dataAlphabet.contains("A=bike"));
-        assertTrue(pipe.dataAlphabet.contains("A=road"));
-        assertTrue(pipe.dataAlphabet.contains("A=tree"));
-        assertTrue(pipe.dataAlphabet.contains("A=house"));
-        assertTrue(pipe.dataAlphabet.contains("A=river"));
-        assertTrue(pipe.dataAlphabet.contains("A=forest"));
-        assertTrue(pipe.dataAlphabet.contains("A=field"));
-
         assertTrue(pipe.dataAlphabet.contains("A=man HA=-"));
-        assertTrue(pipe.dataAlphabet.contains("A=bike HA=above"));
-        assertTrue(pipe.dataAlphabet.contains("A=road HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("A=man #S=2"));
+        assertTrue(pipe.dataAlphabet.contains("A=man S=sky S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=man HA=- S=sky S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=man #S=2 S=sky S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=man #S=2 HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("A=man #S=2 HA=- S=sky S=tree"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=tree"));
         assertTrue(pipe.dataAlphabet.contains("A=tree HA=-"));
-        assertTrue(pipe.dataAlphabet.contains("A=house HA=beside"));
-        assertTrue(pipe.dataAlphabet.contains("A=river HA=opposite"));
-        assertTrue(pipe.dataAlphabet.contains("A=forest HA=beside"));
-        assertTrue(pipe.dataAlphabet.contains("A=field HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("A=tree #S=2"));
+        assertTrue(pipe.dataAlphabet.contains("A=tree S=man S=sky"));
+        assertTrue(pipe.dataAlphabet.contains("A=tree HA=- S=man S=sky"));
+        assertTrue(pipe.dataAlphabet.contains("A=tree #S=2 S=man S=sky"));
+        assertTrue(pipe.dataAlphabet.contains("A=tree #S=2 HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("A=tree #S=2 HA=- S=man S=sky"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=sky"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky #S=2"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky S=man S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky HA=- S=man S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky #S=2 S=man S=tree"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky #S=2 HA=-"));
+        assertTrue(pipe.dataAlphabet.contains("A=sky #S=2 HA=- S=man S=tree"));
         
-        assertTrue(pipe.dataAlphabet.contains("A=man #S=1"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike HA=above"));
         assertTrue(pipe.dataAlphabet.contains("A=bike #S=1"));
-        assertTrue(pipe.dataAlphabet.contains("A=house #S=1")); 
-        assertTrue(pipe.dataAlphabet.contains("A=tree #S=1"));
-        assertTrue(pipe.dataAlphabet.contains("A=road #S=0"));
-        assertTrue(pipe.dataAlphabet.contains("A=river #S=0"));
-        assertTrue(pipe.dataAlphabet.contains("A=forest #S=0"));
-        assertTrue(pipe.dataAlphabet.contains("A=field #S=0"));
-        
-        assertTrue(pipe.dataAlphabet.contains("A=man S=tree"));
-        assertTrue(pipe.dataAlphabet.contains("A=tree S=man"));
         assertTrue(pipe.dataAlphabet.contains("A=bike S=house"));
-        assertTrue(pipe.dataAlphabet.contains("A=house S=bike"));
-        
-        assertTrue(pipe.dataAlphabet.contains("A=man #S=1 S=tree"));
-        assertTrue(pipe.dataAlphabet.contains("A=tree #S=1 S=man"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike HA=above S=house"));
         assertTrue(pipe.dataAlphabet.contains("A=bike #S=1 S=house"));
-        assertTrue(pipe.dataAlphabet.contains("A=house #S=1 S=bike"));
-        
-        assertTrue(pipe.dataAlphabet.contains("A=man #S=1 HA=- S=tree"));
-        assertTrue(pipe.dataAlphabet.contains("A=tree #S=1 HA=- S=man"));
+        assertTrue(pipe.dataAlphabet.contains("A=bike #S=1 HA=above"));
         assertTrue(pipe.dataAlphabet.contains("A=bike #S=1 HA=above S=house"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=house"));
+        assertTrue(pipe.dataAlphabet.contains("A=house HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("A=house #S=1")); 
+        assertTrue(pipe.dataAlphabet.contains("A=house S=bike"));
+        assertTrue(pipe.dataAlphabet.contains("A=house HA=beside S=bike"));        
+        assertTrue(pipe.dataAlphabet.contains("A=house #S=1 S=bike"));        
+        assertTrue(pipe.dataAlphabet.contains("A=house #S=1 HA=beside"));        
         assertTrue(pipe.dataAlphabet.contains("A=house #S=1 HA=beside S=bike"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=road"));
+        assertTrue(pipe.dataAlphabet.contains("A=road HA=on"));
+        assertTrue(pipe.dataAlphabet.contains("A=road #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=road #S=0 HA=on"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=river"));
+        assertTrue(pipe.dataAlphabet.contains("A=river HA=opposite"));
+        assertTrue(pipe.dataAlphabet.contains("A=river #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=river #S=0 HA=opposite"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=forest"));
+        assertTrue(pipe.dataAlphabet.contains("A=forest HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("A=forest #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=forest #S=0 HA=beside"));
+
+        assertTrue(pipe.dataAlphabet.contains("A=field"));
+        assertTrue(pipe.dataAlphabet.contains("A=field HA=on"));      
+        assertTrue(pipe.dataAlphabet.contains("A=field #S=0"));
+        assertTrue(pipe.dataAlphabet.contains("A=field #S=0 HA=on"));    
+
     }
 }
