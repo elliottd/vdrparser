@@ -12,9 +12,12 @@
 
 package mstparser;
 
-import java.util.ArrayList;
-import java.io.*;
-import java.util.Iterator;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public class Alphabet implements Serializable
 {
@@ -47,6 +50,46 @@ public class Alphabet implements Serializable
     public Alphabet()
     {
         this(10000);
+    }
+    
+    private static double maxValue(double[] chars) {
+        double max = chars[0];
+        for (int ktr = 0; ktr < chars.length; ktr++) {
+            if (chars[ktr] > max) {
+                max = chars[ktr];
+            }
+        }
+        return max;
+    }
+    
+    public String topNFeaturesByWeight(Parameters params, int n)
+    {
+        StringBuilder sb = new StringBuilder();
+        
+        Object[] keys = map.keys();
+                
+        double[][] paramIndices = new double[keys.length][2];
+                
+        for (int i = 0; i < keys.length; i++)
+        {
+            paramIndices[i][0] = map.get(keys[i]);
+            paramIndices[i][1] = params.parameters[map.get(keys[i])];
+        }
+        
+        Arrays.sort(paramIndices, new Comparator<double[]>(){
+            public int compare(double[] a, double[] b)
+            {
+                return -Double.compare(a[1], b[1]);
+            }
+        });
+        
+        for (int j = 0; j < n-1; j++)
+        {
+            int idx = (int)paramIndices[j][0];
+            sb.append(keys[idx] + " " + paramIndices[j][1] + "\n" );
+        }
+                
+        return sb.toString();
     }
 
 
