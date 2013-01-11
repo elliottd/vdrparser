@@ -13,7 +13,7 @@ public class DependencyParser
     private DependencyDecoder decoder;
     private Parameters params;
 
-    Parameters getParams()
+    public Parameters getParams()
     {
         return params;
     }
@@ -56,14 +56,8 @@ public class DependencyParser
         }
 
         params.averageParams(i * instanceLengths.length);
-    }
-    
-    
-    public String topTenParametersByWeight()
-    {
-        StringBuilder sb = new StringBuilder();
-        
-        return sb.toString();
+
+        System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 10));
     }
 
     private void trainingIter(int[] instanceLengths, String trainfile,

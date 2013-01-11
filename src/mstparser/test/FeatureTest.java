@@ -21,6 +21,7 @@ public class FeatureTest
 
     protected static ParserOptions options;
     protected static DependencyPipe pipe;
+    protected static DependencyParser dp;
     
     @BeforeClass 
     public static void testSetup()
@@ -51,6 +52,7 @@ public class FeatureTest
             pipe = new DependencyPipeVisual(options);
             pipe.labeled = false;
             pipe.createInstances(options.trainfile, options.trainforest);
+            dp = new DependencyParser(pipe, options);
         }
         catch (IOException e)
         {
@@ -63,7 +65,9 @@ public class FeatureTest
         int numTypes = pipe.typeAlphabet.size();
         System.out.print("Num Feats: " + numFeats);
         System.out.println(".\tNum Edge Labels: " + numTypes);
-        System.out.println(pipe.dataAlphabet.toString());
+        //System.out.println(pipe.dataAlphabet.toString());
+        System.out.println("Top Features:" + pipe.dataAlphabet.topNFeaturesByWeight(dp.getParams(), 10));
+        
     }
     
     @AfterClass 

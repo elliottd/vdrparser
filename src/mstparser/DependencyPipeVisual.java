@@ -222,7 +222,7 @@ public class DependencyPipeVisual extends DependencyPipe
         StringBuilder feature;
 
         //1. H=Head
-        /*feature = new StringBuilder("H=" + headForm);
+        feature = new StringBuilder("H=" + headForm);
         this.add(feature.toString(), fv);
         
         //3. H=Head HA=labelhead−arg
@@ -235,7 +235,7 @@ public class DependencyPipeVisual extends DependencyPipe
         
         //6. H=Head A#=no. args HA=labelhead−arg
         feature = new StringBuilder("H=" + headForm + " #A=" + argCounter + " HA=" + label);
-        this.add(feature.toString(), fv);*/
+        this.add(feature.toString(), fv);
 
         //2. A=Arg
         feature = new StringBuilder("A=" + forms[argIndex]);
@@ -564,7 +564,7 @@ public class DependencyPipeVisual extends DependencyPipe
             return;
         }
         
-        String[] forms = instance.forms;
+        /*String[] forms = instance.forms;
         String[] pos = instance.postags;
 
         String att = "";
@@ -598,7 +598,7 @@ public class DependencyPipeVisual extends DependencyPipe
             add("NTIB=" + wP + " " + wPp1 + suff, fv);
             add("NTIC=" + wPm1 + " " + wP + " " + wPp1 + suff, fv);
             add("NTJ=" + w + suff, fv); // this
-        }
+        }*/
     }
     
 
