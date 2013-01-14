@@ -546,7 +546,7 @@ public class DependencyPipeVisual extends DependencyPipe
     /**
      * Adds features that allow for labelled parsing.
      * 
-     * TODO: Rewrite this code.
+     * TODO: Rewrite this code because it uses position-based features.
      * 
      * @param instance
      * @param wordIndex
