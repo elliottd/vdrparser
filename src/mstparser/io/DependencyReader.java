@@ -88,6 +88,7 @@ public abstract class DependencyReader
     public boolean startReading(String file) throws IOException
     {
         labeled = fileContainsLabels(file);
+        System.out.println("Labelled parsing: " + labeled + "\n");
         inputReader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"));
         return labeled;
     }
