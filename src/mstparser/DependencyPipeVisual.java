@@ -91,10 +91,10 @@ public class DependencyPipeVisual extends DependencyPipe
         System.out.println("Creating Feature Vector Instances: ");
         while (instance != null)
         {            
-            if (options.verbose)
+            /*if (options.verbose)
             {
                 System.out.println(instance.toString());
-            }
+            }*/
             System.out.print(depReader.getCount() + " ");
 
             FeatureVector fv = this.createFeatureVector(instance);
@@ -179,7 +179,7 @@ public class DependencyPipeVisual extends DependencyPipe
     public void addLinguisticUnigramFeatures(DependencyInstance instance,
             int i, int headIndex, int argIndex, String label, FeatureVector fv)
     {
-        int[] heads = instance.heads;
+        /*int[] heads = instance.heads;
         String[] forms = instance.forms;
         
         String headForm;
@@ -272,7 +272,7 @@ public class DependencyPipeVisual extends DependencyPipe
         //12. A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
         feature = new StringBuilder("A=" + argForm + " #S=" + (argCounter-1) + " HA=" + label);
         feature = feature.append(siblingForms.toString());        
-        this.add(feature.toString(), fv);       
+        this.add(feature.toString(), fv);*/
     }
 
     /**
@@ -558,13 +558,55 @@ public class DependencyPipeVisual extends DependencyPipe
     public void addLabeledFeatures(DependencyInstance instance, int word,
             String type, boolean attR, boolean childFeatures, FeatureVector fv)
     {
+    	if (!labeled)
+        {
+            return;
+        }
+        
+        String[] forms = instance.forms;
+        String[] pos = instance.postags;
 
+        String att = "";
+        if (attR)
+        {
+            att = "RA";
+        }
+        else
+        {
+            att = "LA";
+        }
+
+        att += "&" + childFeatures;
+
+        String w = forms[word];
+        String wP = pos[word];
+
+        String wPm1 = word > 0 ? pos[word - 1] : "STR";
+        String wPp1 = word < pos.length - 1 ? pos[word + 1] : "END";
+
+        add("NTS1=" + type + "&" + att, fv);
+        add("ANTS1=" + type, fv);
+        for (int i = 0; i < 2; i++)
+        {
+            String suff = i < 1 ? "&" + att : "";
+            suff = "&" + type + suff;
+
+            add("NTH=" + w + " " + wP + suff, fv);
+            add("NTI=" + wP + suff, fv);
+            add("NTIA=" + wPm1 + " " + wP + suff, fv);
+            add("NTIB=" + wP + " " + wPp1 + suff, fv);
+            add("NTIC=" + wPm1 + " " + wP + " " + wPp1 + suff, fv);
+            add("NTJ=" + w + suff, fv); // this
+        }
+    	
+
+        /* The original implementation
         if (!labeled)
         {
             return;
         }
         
-        /*String[] forms = instance.forms;
+        String[] forms = instance.forms;
         String[] pos = instance.postags;
 
         String att = "";

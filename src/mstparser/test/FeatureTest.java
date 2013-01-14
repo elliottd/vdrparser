@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import mstparser.DependencyParser;
 import mstparser.DependencyPipe;
-import mstparser.DependencyPipe2O;
 import mstparser.DependencyPipeVisual;
 import mstparser.ParserOptions;
 
@@ -65,7 +64,6 @@ public class FeatureTest
         int numTypes = pipe.typeAlphabet.size();
         System.out.print("Num Feats: " + numFeats);
         System.out.println(".\tNum Edge Labels: " + numTypes);
-        //System.out.println(pipe.dataAlphabet.toString());
         System.out.println("Top Features:" + pipe.dataAlphabet.topNFeaturesByWeight(dp.getParams(), 10));
         
     }
