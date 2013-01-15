@@ -35,6 +35,7 @@ public class FeatureTest
         options.decodeType = "non-proj";
         options.format = "CONLL";
         options.visualMode = true;
+        options.verbose = true;
         File tmpDir = new File("/scratch/tmp");
         try
         {
@@ -64,7 +65,7 @@ public class FeatureTest
         int numTypes = pipe.typeAlphabet.size();
         System.out.print("Num Feats: " + numFeats);
         System.out.println(".\tNum Edge Labels: " + numTypes);
-        System.out.println("Top Features:" + pipe.dataAlphabet.topNFeaturesByWeight(dp.getParams(), 10));
+        System.out.println("Top Features:" + pipe.dataAlphabet.topNFeaturesByWeight(dp.getParams(), 313));
         
     }
     

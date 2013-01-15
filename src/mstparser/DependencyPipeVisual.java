@@ -578,7 +578,7 @@ public class DependencyPipeVisual extends DependencyPipe
         }
 
         att += "&" + childFeatures; // attachment direction)
-        att = "";
+        //att = "";
 
         String w = forms[wordIndex]; // word
         String wP = pos[wordIndex]; // postag
@@ -633,10 +633,10 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
 
-            //this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
             if (labeled)
             {
@@ -671,10 +671,10 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    //this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
+                    this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
                     this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                     this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                    //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                    this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
 
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
@@ -737,10 +737,10 @@ public class DependencyPipeVisual extends DependencyPipe
 
                         FeatureVector prodFV = new FeatureVector();
 
-                        //this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
+                        this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
                         this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                        //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
 
                         out.writeObject(prodFV.keys());
                     }
