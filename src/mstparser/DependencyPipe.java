@@ -208,10 +208,10 @@ public class DependencyPipe
     // add with default 1.0
     public final void add(String feat, FeatureVector fv)
     {
-        /*if (options.verbose)
+        if (options.verbose)
         {
             System.out.println("ADD: " + feat);
-        }*/
+        }
         int num = dataAlphabet.lookupIndex(feat);
         if (num >= 0)
         {
@@ -221,10 +221,10 @@ public class DependencyPipe
 
     public final void add(String feat, double val, FeatureVector fv)
     {
-        /*if (options.verbose)
+        if (options.verbose)
         {
             System.out.println("ADD: " + feat);
-        }*/
+        }
         int num = dataAlphabet.lookupIndex(feat);
         if (num >= 0)
         {
