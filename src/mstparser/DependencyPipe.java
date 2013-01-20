@@ -1048,16 +1048,6 @@ public class DependencyPipe
 
     }
 
-    public void readSourceInstances(String sourceFile) throws IOException
-    {
-        return;
-    }
-
-    public void readAlignments(String alignmentsFile) throws IOException
-    {
-        return;
-    }
-
     public boolean isCONLL()
     {
         return isCONLL;
