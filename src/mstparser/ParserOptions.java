@@ -109,6 +109,10 @@ public final class ParserOptions
             {
                 trainK = Integer.parseInt(pair[1]);
             }
+            if (pair[0].equals("test-k"))
+            {
+                testK = Integer.parseInt(pair[1]);
+            }
             if (pair[0].equals("loss-type"))
             {
                 lossType = pair[1];
@@ -258,6 +262,8 @@ public final class ParserOptions
         sb.append("training-iterations: " + numIters);
         sb.append("\n");
         sb.append("training-k: " + trainK);
+        sb.append("\n");
+        sb.append("test-k: " + testK);
         sb.append("\n");
         sb.append("decode-type: " + decodeType);
         sb.append("\n");
