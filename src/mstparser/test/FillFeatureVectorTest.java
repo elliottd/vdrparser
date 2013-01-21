@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-public class FeatureTest
+public class FillFeatureVectorTest
 {
 
     protected static ParserOptions options;
