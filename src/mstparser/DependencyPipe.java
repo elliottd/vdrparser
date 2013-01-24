@@ -75,7 +75,7 @@ public class DependencyPipe
         return this.depReader;
     }
 
-    protected final DependencyInstance nextInstance() throws IOException
+    public final DependencyInstance nextInstance() throws IOException
     {
         DependencyInstance instance = depReader.getNext();
         if (instance == null || instance.forms == null)

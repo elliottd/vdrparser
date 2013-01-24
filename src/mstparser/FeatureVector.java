@@ -43,7 +43,7 @@ public final class FeatureVector extends TLinkedList
     public FeatureVector()
     {
     }
-
+    
     public FeatureVector(FeatureVector fv1)
     {
         subfv1 = fv1;

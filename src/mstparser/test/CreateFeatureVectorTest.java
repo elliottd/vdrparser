@@ -67,7 +67,6 @@ public class CreateFeatureVectorTest
         int numTypes = pipe.typeAlphabet.size();
         System.out.print("Num Feats: " + numFeats);
         System.out.println(".\tNum Edge Labels: " + numTypes);
-        //System.out.println("Top Features:" + pipe.dataAlphabet.topNFeaturesByWeight(dp.getParams(), 313));
         try
         {
             dp.train(iL, options.trainfile, options.trainforest);
