@@ -5,30 +5,45 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import mstparser.DependencyInstance;
 import mstparser.DependencyParser;
 import mstparser.DependencyPipe;
+import mstparser.DependencyPipe2O;
 import mstparser.DependencyPipeVisual;
+import mstparser.Feature;
+import mstparser.FeatureVector;
 import mstparser.ParserOptions;
 
 import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+/**
+ * This suite of tests cannot be run before CreateFeatureVectorTest, since this
+ * needs a trained parsing model.
+ * 
+ * @author delliott
+ *
+ */
 public class FillFeatureVectorTest
 {
 
     protected static ParserOptions options;
     protected static DependencyPipe pipe;
     protected static DependencyParser dp;
+    protected static FeatureVector[][][] fvs;
+    protected static int instanceLength;
     
     @BeforeClass 
     public static void testSetup()
     {
         // Preparation of the unit tests
         options = new ParserOptions(new String[0]);
-        options.train = true;
-        options.trainfile = "/home/delliott/src/workspace/mstparser/data/visualtrain.lab";
+        options.test = true;
+        options.testfile = "/home/delliott/src/workspace/mstparser/data/visualtrain.lab";
         options.modelName = "junit";
         options.numIters = 5;
         options.lossType = "nopunc";
@@ -36,36 +51,40 @@ public class FillFeatureVectorTest
         options.format = "CONLL";
         options.visualMode = true;
         options.verbose = true;
-        File tmpDir = new File("/scratch/tmp");
-        try
-        {
-            options.trainforest = File.createTempFile("train", ".forest", tmpDir);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        options.trainforest.deleteOnExit();
-               
+
         try
         {
             pipe = new DependencyPipeVisual(options);
-            pipe.labeled = false;
-            pipe.createInstances(options.trainfile, options.trainforest);
-            dp = new DependencyParser(pipe, options);
+            DependencyParser dp = new DependencyParser(pipe, options);
+
+            System.out.print("Loading model...");
+            dp.loadModel(options.modelName);
+            System.out.println("done.");
+
+            pipe.closeAlphabets();
+
+            pipe.initInputFile(options.testfile);
+            System.out.print("Processing Sentence: ");
+            DependencyInstance instance = pipe.nextInstance();
+            String[] forms = instance.forms;
+
+            instanceLength = forms.length;
+
+            fvs = new FeatureVector[forms.length][forms.length][2];
+            double[][][] probs = new double[forms.length][forms.length][2];
+            FeatureVector[][][][] nt_fvs = new FeatureVector[forms.length][pipe.types.length][2][2];
+            double[][][][] nt_probs = new double[forms.length][pipe.types.length][2][2];
+            FeatureVector[][][] fvs_trips = new FeatureVector[instanceLength][instanceLength][instanceLength];
+            double[][][] probs_trips = new double[instanceLength][instanceLength][instanceLength];
+            FeatureVector[][][] fvs_sibs = new FeatureVector[instanceLength][instanceLength][2];
+            double[][][] probs_sibs = new double[instanceLength][instanceLength][2];
+            System.out.println("Filling feature vector");
+            pipe.fillFeatureVectors(instance, fvs, probs, nt_fvs, nt_probs, dp.getParams());
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
-        
-        pipe.closeAlphabets();
-
-        int numFeats = pipe.dataAlphabet.size();
-        int numTypes = pipe.typeAlphabet.size();
-        System.out.print("Num Feats: " + numFeats);
-        System.out.println(".\tNum Edge Labels: " + numTypes);
-        System.out.println("Top Features:" + pipe.dataAlphabet.topNFeaturesByWeight(dp.getParams(), 313));
         
     }
     
@@ -80,7 +99,19 @@ public class FillFeatureVectorTest
     @Test
     public void testGeneralFeatureProperties()
     {
-        assertEquals(pipe.dataAlphabet.size(), 175);
+        int count = 0;
+        for (int i = 0; i < instanceLength; i++)
+        {
+            for (int j = i+1; j < instanceLength; j++)
+            {
+                for (int k = 0; k < 2; k++)
+                {
+                    System.out.println(fvs[i][j][k]);
+                    count += fvs[i][j][k].size();
+                }
+            }
+        }
+        assertEquals(count, 106);
     }
     
     /**
@@ -230,7 +261,15 @@ public class FillFeatureVectorTest
     @Test
     public void testUnigramHeadFeatures()
     {
-        assertTrue(pipe.dataAlphabet.contains("H=ROOT"));
+        List<String> features = new ArrayList<String>();
+        for (int i: fvs[1][6][0].keys())
+        {
+            features.add(pipe.dataAlphabet.getLexicalRepresentation(i));
+            
+        }
+        assertTrue(features.contains("H=bike"));
+        
+        /*assertTrue(pipe.dataAlphabet.contains("H=ROOT"));
         assertTrue(pipe.dataAlphabet.contains("H=ROOT HA=-"));
         assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=3"));
         assertTrue(pipe.dataAlphabet.contains("H=ROOT #A=3 HA=-"));
@@ -260,7 +299,7 @@ public class FillFeatureVectorTest
         assertTrue(pipe.dataAlphabet.contains("H=river"));       
         assertTrue(pipe.dataAlphabet.contains("H=river HA=beside"));        
         assertTrue(pipe.dataAlphabet.contains("H=river #A=1"));
-        assertTrue(pipe.dataAlphabet.contains("H=river #A=1 HA=beside"));
+        assertTrue(pipe.dataAlphabet.contains("H=river #A=1 HA=beside"));*/
         
     }
     

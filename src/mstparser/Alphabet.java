@@ -62,11 +62,29 @@ public class Alphabet implements Serializable
         return max;
     }
     
+    public String getLexicalRepresentation(int key)
+    {
+        Object[] keys = map.keys();
+        return (String)keys[key];
+    }
+    
+    /**
+     * TODO: Is is this method consistent? It seems that the keys() method from 
+     * a function is not guaranteed to return in any order.
+     * @param params
+     * @param n
+     * @return
+     */
     public String topNFeaturesByWeight(Parameters params, int n)
     {
         StringBuilder sb = new StringBuilder();
         
-        Object[] keys = map.keys();
+        Object[] okeys = map.keys();
+        String[] keys = new String[okeys.length];
+        for (int z = 0; z < okeys.length; z++)
+        {
+            keys[z] = okeys.toString();
+        }
                 
         double[][] paramIndices = new double[keys.length][2];
                 

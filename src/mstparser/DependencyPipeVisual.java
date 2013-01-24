@@ -559,7 +559,7 @@ public class DependencyPipeVisual extends DependencyPipe
             String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
     {    
         /* The original implementation */
-        if (!labeled)
+        /*if (!labeled)
         {
             return;
         }
@@ -599,7 +599,7 @@ public class DependencyPipeVisual extends DependencyPipe
             add("NTIB=" + wP + " " + wPp1 + suff, fv); // this pos and prev pos and suff
             add("NTIC=" + wPm1 + " " + wP + " " + wPp1 + suff, fv); // prev pos, this pos, next pos, suff
             add("NTJ=" + w + suff, fv); // word and suff
-        }
+        }*/
     }
     
 
@@ -648,6 +648,12 @@ public class DependencyPipeVisual extends DependencyPipe
         return fv;
     }
 
+    /**
+     * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
+     *            instance represents the features calculated between word i and 
+     *            word j in the DependencyInstance and k represents whether i or
+     *            j was the proposed head node.
+     */
     public void fillFeatureVectors(DependencyInstance instance,
             FeatureVector[][][] fvs, double[][][] probs,
             FeatureVector[][][][] nt_fvs, double[][][][] nt_probs,
@@ -671,10 +677,10 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
-                    this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                    this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                    this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                    this.addLinguisticUnigramFeatures(instance, w1, parInt, childInt, "null", prodFV);
+                    /*this.addLinguisticBigramFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
