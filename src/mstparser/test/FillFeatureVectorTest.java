@@ -253,6 +253,10 @@ public class FillFeatureVectorTest
     }
 
     /**
+     * TODO: Fix the unigram features added to the FeatureVector in the
+     * fillFeatureVectors method in DependencyPipeVisual because
+     * the FeatureVector at [1][6][0] _must_ contain H=bike.
+     * 
      * Test the unigram head features of the trained model on the input
      * data in data/visualtrain.lab
      * 
