@@ -8,6 +8,8 @@ import gnu.trove.*;
 
 import java.util.*;
 
+import com.googlecode.javacv.cpp.*;
+
 /**
  * A DependencyPipe subclass for parsing Visual Dependency Representations.
  * 
@@ -171,7 +173,8 @@ public class DependencyPipeVisual extends DependencyPipe
     }
 
     /**
-     * Add a set of unigram features over a DependencyInstance from .
+     * Add a set of unigram features for word i in a DependencyInstance
+     * 
      * 
      * @param instance
      * @param fv
@@ -331,6 +334,8 @@ public class DependencyPipeVisual extends DependencyPipe
     
     /**
      * Add features to the model based on Grandparent-Grandchild relationships.
+     *
+     * TODO: Correctly implement fillFeatureVectors before re-enabling this method.
      * 
      * @param instance
      * @param i
@@ -383,6 +388,8 @@ public class DependencyPipeVisual extends DependencyPipe
     
     /**
      * Adds bigram features based on the siblings of the argument.
+     * 
+     *  TODO: Correctly implement fillFeatureVectors before re-enabling this method.
      * 
      * @param instance
      * @param i
@@ -635,8 +642,8 @@ public class DependencyPipeVisual extends DependencyPipe
 
             this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
             if (labeled)
             {
@@ -649,6 +656,11 @@ public class DependencyPipeVisual extends DependencyPipe
     }
 
     /**
+     * 
+     * TODO: Rewrite all the methods that add features so they don't make naive
+     *       assumptions about the data. These fill methods really need to attempt
+     *       all possible combinations.
+     * 
      * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
      *            instance represents the features calculated between word i and 
      *            word j in the DependencyInstance and k represents whether i or
@@ -678,9 +690,9 @@ public class DependencyPipeVisual extends DependencyPipe
                     FeatureVector prodFV = new FeatureVector();
 
                     this.addLinguisticUnigramFeatures(instance, w1, parInt, childInt, "null", prodFV);
-                    /*this.addLinguisticBigramFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
-                    this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
-                    this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
+                    this.addLinguisticBigramFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
@@ -745,8 +757,8 @@ public class DependencyPipeVisual extends DependencyPipe
 
                         this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
                         this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                        this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                        this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
 
                         out.writeObject(prodFV.keys());
                     }
