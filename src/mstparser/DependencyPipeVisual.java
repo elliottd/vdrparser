@@ -566,7 +566,7 @@ public class DependencyPipeVisual extends DependencyPipe
             String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
     {    
         /* The original implementation */
-        /*if (!labeled)
+        if (!labeled)
         {
             return;
         }
@@ -606,7 +606,7 @@ public class DependencyPipeVisual extends DependencyPipe
             add("NTIB=" + wP + " " + wPp1 + suff, fv); // this pos and prev pos and suff
             add("NTIC=" + wPm1 + " " + wP + " " + wPp1 + suff, fv); // prev pos, this pos, next pos, suff
             add("NTJ=" + w + suff, fv); // word and suff
-        }*/
+        }
     }
     
 
@@ -640,7 +640,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
 
-            this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -689,7 +689,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    this.addLinguisticUnigramFeatures(instance, w1, parInt, childInt, "null", prodFV);
+                    //this.addLinguisticUnigramFeatures(instance, w1, parInt, childInt, "null", prodFV);
                     this.addLinguisticBigramFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
