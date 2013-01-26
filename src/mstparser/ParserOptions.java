@@ -56,6 +56,9 @@ public final class ParserOptions
     public String sourceFile = null;
     public String testSourceFile = null;
     public String testAlignmentsFile = null;
+    public String xmlFile = null;
+    public String imageDirectory = null;
+    public String testXmlFile = null;    		
     public boolean qg = false;
     public boolean eddie = false;
     public boolean useLinearFeatures = false;
