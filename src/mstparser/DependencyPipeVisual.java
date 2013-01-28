@@ -277,7 +277,7 @@ public class DependencyPipeVisual extends DependencyPipe
         feature = feature.append(siblingForms.toString());        
         this.add(feature.toString(), fv);
     }
-
+   
     /**
      * 
      * @param instance
@@ -608,7 +608,6 @@ public class DependencyPipeVisual extends DependencyPipe
             add("NTJ=" + w + suff, fv); // word and suff
         }
     }
-    
 
     /**
      * This is where we calculate the features over an input, which is
@@ -804,6 +803,7 @@ public class DependencyPipeVisual extends DependencyPipe
         }
     }
     
+    
     /**
      * Read an instance from an input stream.
      * 
@@ -943,7 +943,153 @@ public class DependencyPipeVisual extends DependencyPipe
         }
     }
 
-    public void oldfillFeatureVectors(DependencyInstance instance,
+    /**
+     * Add a set of unigram features for word at position index in a 
+     * DependencyInstance, depending on whether the word is a head or a child.
+     * 
+     * @param instance
+     * @param fv
+     */
+    public void newAddLinguisticUnigramFeatures(DependencyInstance instance,
+            int index, boolean isHead, FeatureVector fv)
+    {   
+        String wordForm = instance.forms[index];
+        
+        StringBuilder feature;
+
+        if (isHead)
+        {
+            //1. H=Head
+	        feature = new StringBuilder("H=" + wordForm);
+	        this.add(feature.toString(), fv);
+        }
+        else
+        {
+            //2. A=Arg
+            feature = new StringBuilder("A=" + wordForm);
+            this.add(feature.toString(), fv);	
+        }   
+    }    
+
+
+    /**
+     * Adds features that allow for labelled parsing.
+     * 
+     * TODO: Rewrite this code because it uses position-based features.
+     * 
+     * @param instance
+     * @param wordIndex
+     * @param dependencyType
+     * @param attR
+     * @param childFeatures
+     * @param fv
+     */
+    public void newAddLabeledFeatures(DependencyInstance instance, int wordIndex,
+            String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
+    {    
+        /* The original implementation */
+        if (!labeled)
+        {
+            return;
+        }
+        
+        String[] forms = instance.forms;
+        String[] pos = instance.postags;
+
+        String att = "";
+        if (attR)
+        {
+            att = "RA";
+        }
+        else
+        {
+            att = "LA";
+        }
+
+        att += "&" + childFeatures; // attachment direction)
+        //att = "";
+
+        String w = forms[wordIndex]; // word
+        String wP = pos[wordIndex]; // postag
+
+        String wPm1 = wordIndex > 0 ? pos[wordIndex - 1] : "STR"; // pos of proceeding word
+        String wPp1 = wordIndex < pos.length - 1 ? pos[wordIndex + 1] : "END"; // pos of the next word
+
+        add("NTS1=" + dependencyType + "&" + att, fv); // dependency relation label + direction
+        add("ANTS1=" + dependencyType, fv); // dependency relation label
+        for (int i = 0; i < 2; i++)
+        {
+            String suff = i < 1 ? "&" + att : ""; // attachment direction
+            suff = "&" + dependencyType + suff; // and dependency relation label
+
+            add("NTH=" + w + " " + wP + suff, fv); // word and pos and suff
+            add("NTI=" + wP + suff, fv); // pos tag and suff
+            add("NTIA=" + wPm1 + " " + wP + suff, fv); // prev pos tag and this pos tag and suff 
+            add("NTIB=" + wP + " " + wPp1 + suff, fv); // this pos and prev pos and suff
+            add("NTIC=" + wPm1 + " " + wP + " " + wPp1 + suff, fv); // prev pos, this pos, next pos, suff
+            add("NTJ=" + w + suff, fv); // word and suff
+        }
+    }    
+    
+    /**
+     * This is where we calculate the features over an input, which is
+     * represented as a DependencyInstance.
+     */
+    public FeatureVector newCreateFeatureVector(DependencyInstance instance)
+    {
+        final int instanceLength = instance.length();
+
+        String[] labs = instance.deprels;
+        int[] heads = instance.heads;
+
+        FeatureVector fv = new FeatureVector();
+        for (int i = 0; i < instanceLength; i++)
+        {
+            if (heads[i] == -1)
+            {
+                continue;
+            }
+
+            /* Figure out the head and argument indices */
+            int headIndex = i < heads[i] ? i : heads[i];
+            int argIndex = i > heads[i] ? i : heads[i];
+            boolean attR = i < heads[i] ? false : true;
+            if (!attR)
+            {
+                int tmp = headIndex;
+                headIndex = argIndex;
+                argIndex = tmp;
+            }
+            
+            boolean isHead = headIndex == i? true : false;
+
+            this.newAddLinguisticUnigramFeatures(instance, i, isHead, fv);
+            //this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+
+            /*if (labeled)
+            {
+                addLabeledFeatures(instance, i, labs[i], attR, true, fv);
+                addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
+            }*/
+        }
+
+        return fv;
+    }
+
+    /**
+     * 
+     * TODO: Rewrite all the methods that add features so they don't make naive
+     *       assumptions about the data. These fill methods really need to attempt
+     *       all possible combinations.
+     * 
+     * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
+     *            instance represents the features calculated between word i and 
+     *            word j in the DependencyInstance and k represents whether i or
+     *            j was the proposed head node.
+     */
+    public void newFillFeatureVectors(DependencyInstance instance,
             FeatureVector[][][] fvs, double[][][] probs,
             FeatureVector[][][][] nt_fvs, double[][][][] nt_probs,
             Parameters params)
@@ -965,26 +1111,11 @@ public class DependencyPipeVisual extends DependencyPipe
                     int parInt = attR ? w1 : w2;
 
                     FeatureVector prodFV = new FeatureVector();
-                    addCoreFeatures(instance, w1, w2, attR, prodFV);
-                    if (options.qg)
-                    {
-                        /*
-                         * We add features QG features from both the first and
-                         * second sentences to the model.
-                         */
 
-                        int first = super.depReader.getCount() * 2;
-                        int second = first + 1;
-                        String distBool = "";
-                        DependencyInstance firstSrc = sourceInstances
-                                .get(first);
-                        DependencyInstance secondSrc = sourceInstances
-                                .get(second);
-                        addQGFeatures(alignments.get(first), w1, w2, attR,
-                                distBool, instance, firstSrc, prodFV);
-                        addQGFeatures(alignments.get(second), w1, w2, attR,
-                                distBool, instance, secondSrc, prodFV);
-                    }
+                    this.newAddLinguisticUnigramFeatures(instance, w1, parInt == w1, prodFV);
+                    //this.addLinguisticBigramFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
@@ -992,7 +1123,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 }
             }
         }
-
+        
         if (labeled)
         {
             for (int w1 = 0; w1 < instanceLength; w1++)
@@ -1021,60 +1152,77 @@ public class DependencyPipeVisual extends DependencyPipe
                     }
                 }
             }
-        }
+        }  
     }
-
-    /**
-     * This is where we calculate the features over an input, which is
-     * represented as a DependencyInstance.
-     */
-    public FeatureVector oldCreateFeatureVector(DependencyInstance instance)
+    protected void newWriteInstance(DependencyInstance instance,
+            ObjectOutputStream out)
     {
-
-        final int instanceLength = instance.length();
-
-        String[] labs = instance.deprels;
-        int[] heads = instance.heads;
-
-        FeatureVector fv = new FeatureVector();
-        for (int i = 0; i < instanceLength; i++)
+        try
         {
-            if (heads[i] == -1)
+            final int instanceLength = instance.length();
+
+            // Get production crap.
+
+            for (int w1 = 0; w1 < instanceLength; w1++)
             {
-                continue;
+                for (int w2 = w1 + 1; w2 < instanceLength; w2++)
+                {
+                    for (int ph = 0; ph < 2; ph++)
+                    {
+                        boolean attR = ph == 0 ? true : false;
+
+                        int childInt = attR ? w2 : w1;
+                        int parInt = attR ? w1 : w2;
+
+                        FeatureVector prodFV = new FeatureVector();
+
+                        this.newAddLinguisticUnigramFeatures(instance, w1, w1 == parInt, prodFV);
+                        //this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+
+                        out.writeObject(prodFV.keys());
+                    }
+                }
             }
-            int small = i < heads[i] ? i : heads[i];
-            int large = i > heads[i] ? i : heads[i];
-            boolean attR = i < heads[i] ? false : true;
-            addCoreFeatures(instance, small, large, attR, fv);
+            out.writeInt(-3);
+            
             if (labeled)
             {
-                addLabeledFeatures(instance, i, labs[i], attR, true, fv);
-                addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
+                for (int w1 = 0; w1 < instanceLength; w1++)
+                {
+                    for (int t = 0; t < types.length; t++)
+                    {
+                        String type = types[t];
+                        for (int ph = 0; ph < 2; ph++)
+                        {
+                            boolean attR = ph == 0 ? true : false;
+                            for (int ch = 0; ch < 2; ch++)
+                            {
+                                boolean child = ch == 0 ? true : false;
+                                FeatureVector prodFV = new FeatureVector();
+                                addLabeledFeatures(instance, w1, type, attR,
+                                        child, prodFV);
+                                out.writeObject(prodFV.keys());
+                            }
+                        }
+                    }
+                }
+                out.writeInt(-3);
             }
-            if (options.qg)
-            {
-                /*
-                 * We add features QG features from both the first and second
-                 * sentences to the model.
-                 */
+            
+            out.writeObject(instance.fv.keys());
+            out.writeInt(-4);
 
-                int first = super.depReader.getCount() * 2;
-                int second = first + 1;
-                String distBool = "";
-                DependencyInstance firstSrc = sourceInstances.get(first);
-                DependencyInstance secondSrc = sourceInstances.get(second);
-                addQGFeatures(alignments.get(first), small, large, attR,
-                        distBool, instance, firstSrc, fv);
-                addQGFeatures(alignments.get(second), small, large, attR,
-                        distBool, instance, secondSrc, fv);
-            }
+            out.writeObject(instance);
+            out.writeInt(-1);
 
+            out.reset();
         }
-
-        addExtendedFeatures(instance, fv);
-
-        return fv;
-    }
-
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }        
+    
 }
