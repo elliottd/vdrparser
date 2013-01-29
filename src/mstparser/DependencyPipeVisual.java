@@ -214,8 +214,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
         while (instance != null)
         {
-            System.out.println(String.format("Instance %s", depReader.getCount()));
-            // depReader.getCount()*2, depReader.getCount()*2+1));
+            //System.out.println(String.format("Instance %s", depReader.getCount()));
             String[] labs = instance.deprels;
             for (int i = 0; i < labs.length; i++)
             {
@@ -255,6 +254,11 @@ public class DependencyPipeVisual extends DependencyPipe
         else
         {
         	headForm = forms[headIndex];
+        }
+        if (headForm.equals("ROOT"))
+        {
+        	// We overfit the model with ROOT unigram features
+        	return;
         }
         
         // Get features for the siblings
@@ -692,24 +696,23 @@ public class DependencyPipeVisual extends DependencyPipe
         
         Image i = images.get(depReader.getCount());
         
-        System.out.println(feats[headIndex][0] + " " + feats[headIndex][1]);      
-        System.out.println(feats[argIndex][0] + " " + feats[argIndex][1]);
-
+        if (options.verbose)
+        {
+        	System.out.println(feats[headIndex][0] + " " + feats[headIndex][1]);      
+        	System.out.println(feats[argIndex][0] + " " + feats[argIndex][1]);
+        }
+        	
         Point2D headPoint = new Point2D.Double(new Double(feats[headIndex][0].replace("\"","")), new Double(feats[headIndex][1].replace("\"","")));
         Point2D argPoint = new Point2D.Double(new Double(feats[argIndex][0].replace("\"","")), new Double(feats[argIndex][1].replace("\"","")));
         int h = i.findPolygon(forms[headIndex], headPoint);
         int a = i.findPolygon(forms[argIndex], argPoint);
         if (h > -1 &&  a > -1)
         {
-            System.out.println(i.polygons[h]);
             SpatialRelation.Relations s = i.polygons[h].spatialRelations[a];
             StringBuilder feature = new StringBuilder();
             feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
-            System.out.println(feature.toString());
             add(feature.toString(), fv);
             feature.append(" HA=" + label);
-            System.out.println(feature.toString());
-            
             add(feature.toString(), fv);
         }
     }    
@@ -746,8 +749,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
             //System.out.println(headIndex + " | " + argIndex);
 
-            //this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            // address the previous index because there are n+1 entries here.
+            this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             this.addVisualBigramFeatures(instance, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -797,8 +799,9 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    //this.addLinguisticUnigramFeatures(instance, w1, parInt, childInt, "null", prodFV);
+                    this.addLinguisticUnigramFeatures(instance, w1, parInt, childInt, "null", prodFV);
                     this.addLinguisticBigramFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    this.addVisualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
@@ -865,6 +868,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                         this.addLinguisticUnigramFeatures(instance, w1, w1, w2, "null", prodFV);
                         this.addLinguisticBigramFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        this.addVisualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
                         //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
 
