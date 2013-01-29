@@ -57,8 +57,9 @@ public final class ParserOptions
     public String testSourceFile = null;
     public String testAlignmentsFile = null;
     public String xmlFile = null;
-    public String imageDirectory = null;
-    public String testXmlFile = null;    		
+    public String imagesFile = null;
+    public String testXmlFile = null;
+    public String testImagesFile = null;
     public boolean qg = false;
     public boolean eddie = false;
     public boolean useLinearFeatures = false;
@@ -155,6 +156,22 @@ public final class ParserOptions
             if (pair[0].equals("alignments-file"))
             {
                 alignmentsFile = pair[1];
+            }
+            if (pair[0].equals("xml-file"))
+            {
+                xmlFile = pair[1];
+            }
+            if (pair[0].equals("test-xml-file"))
+            {
+                testXmlFile = pair[1];
+            }
+            if (pair[0].equals("images-file"))
+            {
+                imagesFile = pair[1];
+            }
+            if (pair[0].equals("test-images-file"))
+            {
+                testImagesFile = pair[1];
             }
             if (pair[0].equals("source-file"))
             {
