@@ -2,7 +2,10 @@ package mstparser;
 
 import mstparser.io.*;
 import mstparser.visual.Image;
+import mstparser.visual.Polygon;
+import mstparser.visual.SpatialRelation;
 
+import java.awt.geom.Point2D;
 import java.io.*;
 
 import gnu.trove.*;
@@ -41,13 +44,21 @@ public class DependencyPipeVisual extends DependencyPipe
         {
             this.readSourceInstances(options.sourceFile);
             this.readAlignments(options.alignmentsFile);
-            this.readImageData(options.imagesFile, options.xmlFile);
         }
         else if (options.test && options.testSourceFile != null)
         {
             this.readSourceInstances(options.testSourceFile);
             this.readAlignments(options.testAlignmentsFile);
-            this.readImageData(options.testImagesFile, options.testXmlFile);
+        }
+        if (options.train && options.imagesFile != null)
+        {
+            this.images = new ArrayList<Image>();
+            this.readImageData(options.imagesFile, options.xmlFile);
+        }
+        else if (options.test && options.testImagesFile != null)
+        {
+            this.images = new ArrayList<Image>();
+            this.readImageData(options.testImagesFile, options.testXmlFile);           
         }
         correspondingReader = DependencyReader.createDependencyReader(
                 options.format, options.discourseMode);
@@ -86,6 +97,7 @@ public class DependencyPipeVisual extends DependencyPipe
     {
     	try 
     	{
+    	    System.out.println("Reading image data into memory");
 			BufferedReader in = new BufferedReader(new FileReader(imagesFile));
 			String line = null;
 			while((line = in.readLine()) != null)
@@ -106,6 +118,8 @@ public class DependencyPipeVisual extends DependencyPipe
 			for (Image i: images)
 			{
 				i.parseXMLFile();
+				i.calculateSpatialRelationships();
+				//System.out.println(i.toString());
 			}
 		} 
     	catch (FileNotFoundException e) 
@@ -197,11 +211,10 @@ public class DependencyPipeVisual extends DependencyPipe
         labeled = depReader.startReading(file);
 
         DependencyInstance instance = depReader.getNext();
-        int cnt = 0;
 
         while (instance != null)
         {
-            // System.out.println(String.format("%s: %s, %s", cnt,
+            System.out.println(String.format("Instance %s", depReader.getCount()));
             // depReader.getCount()*2, depReader.getCount()*2+1));
             String[] labs = instance.deprels;
             for (int i = 0; i < labs.length; i++)
@@ -210,7 +223,6 @@ public class DependencyPipeVisual extends DependencyPipe
             }
 
             createFeatureVector(instance);
-            cnt++;
 
             instance = depReader.getNext();
             depReader.incCount();
@@ -657,6 +669,50 @@ public class DependencyPipeVisual extends DependencyPipe
             add("NTJ=" + w + suff, fv); // word and suff
         }
     }
+    
+    /**
+     * Adds visual information features to the parsing model.
+     * 
+     * @param instance
+     * @param headIndex
+     * @param argIndex
+     * @param label
+     * @param fv
+     */
+    private void addVisualBigramFeatures(DependencyInstance instance,
+            int headIndex, int argIndex, String label, FeatureVector fv)
+    {
+        if (headIndex < 1 || argIndex < 1)
+        {
+            // we cannot do anything with the ROOT node
+            return;
+        }
+        String[][] feats = instance.feats;
+        String[] forms = instance.forms;
+        
+        Image i = images.get(depReader.getCount());
+        
+        System.out.println(feats[headIndex][0] + " " + feats[headIndex][1]);      
+        System.out.println(feats[argIndex][0] + " " + feats[argIndex][1]);
+
+        Point2D headPoint = new Point2D.Double(new Double(feats[headIndex][0].replace("\"","")), new Double(feats[headIndex][1].replace("\"","")));
+        Point2D argPoint = new Point2D.Double(new Double(feats[argIndex][0].replace("\"","")), new Double(feats[argIndex][1].replace("\"","")));
+        int h = i.findPolygon(forms[headIndex], headPoint);
+        int a = i.findPolygon(forms[argIndex], argPoint);
+        if (h > -1 &&  a > -1)
+        {
+            System.out.println(i.polygons[h]);
+            SpatialRelation.Relations s = i.polygons[h].spatialRelations[a];
+            StringBuilder feature = new StringBuilder();
+            feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
+            System.out.println(feature.toString());
+            add(feature.toString(), fv);
+            feature.append(" HA=" + label);
+            System.out.println(feature.toString());
+            
+            add(feature.toString(), fv);
+        }
+    }    
 
     /**
      * This is where we calculate the features over an input, which is
@@ -688,7 +744,11 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
 
+            //System.out.println(headIndex + " | " + argIndex);
+
             //this.addLinguisticUnigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+            // address the previous index because there are n+1 entries here.
+            this.addVisualBigramFeatures(instance, headIndex, argIndex, labs[i], fv);
             this.addLinguisticBigramFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);

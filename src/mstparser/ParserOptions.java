@@ -251,6 +251,10 @@ public final class ParserOptions
         sb.append("FLAGS\n[");
         sb.append("train-file: " + trainfile);
         sb.append("\n");
+        sb.append("train-xml-file: " + xmlFile);
+        sb.append("\n");
+        sb.append("train-images-file: " + imagesFile);
+        sb.append("\n");        
         sb.append("alignments-file: " + alignmentsFile);
         sb.append("\n");
         sb.append("source-file: " + sourceFile);

@@ -29,13 +29,15 @@ public class CreateFeatureVectorTest
         options = new ParserOptions(new String[0]);
         options.train = true;
         options.trainfile = "/home/delliott/src/workspace/mstparser/data/visualtrain.lab";
+        options.xmlFile = "/home/delliott/src/workspace/mstparser/data/xmlinput";
+        options.imagesFile = "/home/delliott/src/workspace/mstparser/data/imagesinput";
         options.modelName = "junit";
         options.numIters = 5;
         options.lossType = "nopunc";
         options.decodeType = "non-proj";
         options.format = "CONLL";
         options.visualMode = true;
-        options.verbose = true;
+        options.verbose = false;
         options.numIters = 1;
         File tmpDir = new File("/scratch/tmp");
         try
