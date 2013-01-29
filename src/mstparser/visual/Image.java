@@ -54,7 +54,8 @@ public class Image {
 	 * 
 	 * @param label the label of the entry in the .conll file
 	 * @param centroid the centroid in the FEATS column of the entry.
-	 * @return
+	 * @return            System.out.println(feature.toString());            
+
 	 */
 	public int findPolygon(String label, Point2D centroid)
 	{
@@ -66,7 +67,7 @@ public class Image {
 	            // The polygon has the same label and is within two pixels
 	            if (p.centroid.distance(centroid) < 10.0)
 	            {
-	                System.out.println(p.label);
+	                //System.out.println(p.label);
 	                return i;
 	            }
 	        }
