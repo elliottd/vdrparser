@@ -1,6 +1,7 @@
 package mstparser;
 
 import mstparser.io.*;
+import mstparser.visual.Image;
 
 import java.io.*;
 
@@ -30,6 +31,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
     private List<DependencyInstance> sourceInstances;
     private List<List<Alignment>> alignments;
+    private List<Image> images;
 
     public DependencyPipeVisual(ParserOptions options) throws IOException
     {
@@ -39,11 +41,13 @@ public class DependencyPipeVisual extends DependencyPipe
         {
             this.readSourceInstances(options.sourceFile);
             this.readAlignments(options.alignmentsFile);
+            this.readImageData(options.imagesFile, options.xmlFile);
         }
         else if (options.test && options.testSourceFile != null)
         {
             this.readSourceInstances(options.testSourceFile);
             this.readAlignments(options.testAlignmentsFile);
+            this.readImageData(options.testImagesFile, options.testXmlFile);
         }
         correspondingReader = DependencyReader.createDependencyReader(
                 options.format, options.discourseMode);
@@ -70,7 +74,52 @@ public class DependencyPipeVisual extends DependencyPipe
      * return instance; }
      */
 
-    public int[] createInstances(String file, File featFileName)
+    /**
+     * Reads the content of LabelMe XML files and the associated raw image data
+     * into an Image object. These data structures are used to infer
+     * image-level statistics and features about the data set.
+     * 
+     * @param imagesFile
+     * @param xmlFile
+     */
+    private void readImageData(String imagesFile, String xmlFile) 
+    {
+    	try 
+    	{
+			BufferedReader in = new BufferedReader(new FileReader(imagesFile));
+			String line = null;
+			while((line = in.readLine()) != null)
+			{
+				Image i = new Image(line);
+				images.add(i);
+			}
+			in.close();
+			in = new BufferedReader(new FileReader(xmlFile));
+			line = null;
+			int count = 0;
+			while((line = in.readLine()) != null)
+			{
+				Image i = images.get(count);
+				i.setXMLFile(line);
+				count++;
+			}
+			for (Image i: images)
+			{
+				i.parseXMLFile();
+			}
+		} 
+    	catch (FileNotFoundException e) 
+    	{
+			e.printStackTrace();
+		} 
+    	catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+    	
+	}
+
+	public int[] createInstances(String file, File featFileName)
             throws IOException
     {
 
