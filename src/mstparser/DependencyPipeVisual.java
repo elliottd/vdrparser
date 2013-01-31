@@ -231,6 +231,20 @@ public class DependencyPipeVisual extends DependencyPipe
 
         System.out.println("Done.");
     }
+    
+    /** 
+     * @param index the position of the word in the DependencyInstance
+     * @param instanceHeads the array of instance heads in the Dependency Instance.
+     * @return true if the word at position index has a head at -1.
+     */
+    public boolean checkForRootAttach(int index, int[] instanceHeads)
+    {
+        if (instanceHeads[index] == -1)
+        {
+            return true;
+        }
+        return false;
+    }      
 
     /**
      * Add a set of unigram features for word i in a DependencyInstance
@@ -245,22 +259,9 @@ public class DependencyPipeVisual extends DependencyPipe
         int[] heads = instance.heads;
         String[] forms = instance.forms;
         
-        String headForm;
+        String headForm = checkForRootAttach(headIndex, heads) ? "ROOT" : forms[headIndex];
         String argForm = forms[argIndex];
-        if (heads[headIndex] == -1)
-        {
-        	headForm = "ROOT";
-        }
-        else
-        {
-        	headForm = forms[headIndex];
-        }
-        if (headForm.equals("ROOT"))
-        {
-        	// We overfit the model with ROOT unigram features
-        	return;
-        }
-        
+
         // Get features for the siblings
         int argCounter = 0;
         
@@ -346,7 +347,6 @@ public class DependencyPipeVisual extends DependencyPipe
     /**
      * 
      * @param instance
-     * @param i
      * @param headIndex
      * @param argIndex
      * @param label
@@ -357,17 +357,8 @@ public class DependencyPipeVisual extends DependencyPipe
     {
         int[] heads = instance.heads;
         String[] forms = instance.forms;
-        String headForm;
+        String headForm = checkForRootAttach(headIndex, heads) ? "ROOT" : forms[headIndex];
         String argForm = forms[argIndex];
-        if (heads[headIndex] == -1)
-        {
-        	headForm = "ROOT";
-        }
-        else
-        {
-        	headForm = forms[headIndex];
-        }
-        
         StringBuilder feature;
 
         //13. H=Head A=Arg
@@ -378,7 +369,7 @@ public class DependencyPipeVisual extends DependencyPipe
         feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + label);
         add(feature.toString(), fv);
         
-        int argCounter = 0;
+        /*int argCounter = 0;
         
         for (int j=0; j < instance.length(); j++)
         {
@@ -394,7 +385,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
         //16. H=Head A=Arg A#=no. args HA=labelhead−arg
         feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + label);
-        add(feature.toString(), fv);
+        add(feature.toString(), fv);*/
     }
     
     /**
@@ -716,10 +707,25 @@ public class DependencyPipeVisual extends DependencyPipe
             
             SpatialRelation.Relations s = i.polygons[h].spatialRelations[a];
             StringBuilder feature = new StringBuilder();
-            feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
-            add(feature.toString(), fv);
-            feature.append(" HA=" + label);
-            add(feature.toString(), fv);
+            if (label == null)
+            {
+                // This happens at test time and we don't know which label to apply
+                // so we just try all of them and believe the model will make it happy.
+                for (String type: types)
+                {
+                    feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
+                    add(feature.toString(), fv);
+                    feature.append(" HA=" + type);
+                    add(feature.toString(), fv);
+                }
+            }
+            else
+            {
+                feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
+                add(feature.toString(), fv);
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);                
+            }
         }
     }    
 
@@ -774,11 +780,19 @@ public class DependencyPipeVisual extends DependencyPipe
      * TODO: Rewrite all the methods that add features so they don't make naive
      *       assumptions about the data. These fill methods really need to attempt
      *       all possible combinations.
+     *       
+     * TODO: Make sure you never read from instance.deprels[] since this can contain
+     *       the gold standard dependency relations we are trying to predict.
      * 
      * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
      *            instance represents the features calculated between word i and 
      *            word j in the DependencyInstance and k represents whether i or
      *            j was the proposed head node.
+     *            
+     *  @param nt_fvs A four-dimension array of FeatureVectors where each
+     *                [i][j][k][l] entry represents a feature vector with
+     *                features for word [i], with arc label [j], where [k=0]
+     *                means [i] is a head and [k=1] means [i] is a child 
      */
     public void fillFeatureVectors(DependencyInstance instance,
             FeatureVector[][][] fvs, double[][][] probs,
@@ -801,9 +815,9 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    this.addLinguisticUnigramFeatures(instance, parInt, childInt, "-", prodFV);
-                    this.addLinguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                    this.addVisualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
+                    this.addLinguisticUnigramFeatures(instance, parInt, childInt, null, prodFV);
+                    this.addLinguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
+                    this.addVisualBigramFeatures(instance, parInt, childInt, null, prodFV);
                     //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
@@ -818,16 +832,18 @@ public class DependencyPipeVisual extends DependencyPipe
         {
             for (int w1 = 0; w1 < instanceLength; w1++)
             {
+                // For each word in the input sentence
                 for (int t = 0; t < types.length; t++)
                 {
+                    // For each arc label type
                     String type = types[t];
                     for (int ph = 0; ph < 2; ph++)
                     {
-
+                        // Does this attachment go left or right?
                         boolean attR = ph == 0 ? true : false;
                         for (int ch = 0; ch < 2; ch++)
                         {
-
+                            // Do we include children features?
                             boolean child = ch == 0 ? true : false;
 
                             FeatureVector prodFV = new FeatureVector();
@@ -845,6 +861,9 @@ public class DependencyPipeVisual extends DependencyPipe
         }  
     }
          
+    /**
+     * Save the features in a gold standard DependencyInstance to disk.
+     */
     @Override
     protected void writeInstance(DependencyInstance instance,
             ObjectOutputStream out)

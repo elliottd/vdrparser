@@ -44,6 +44,8 @@ public class FillFeatureVectorTest
         options = new ParserOptions(new String[0]);
         options.test = true;
         options.testfile = "/home/delliott/src/workspace/mstparser/data/visualtrain.lab";
+        options.testXmlFile = "/home/delliott/src/workspace/mstparser/data/xmlinput";
+        options.testImagesFile = "/home/delliott/src/workspace/mstparser/data/imagesinput";        
         options.modelName = "junit";
         options.numIters = 5;
         options.lossType = "nopunc";
