@@ -5,5 +5,5 @@
 5	man	man	NN	NN	"1047.934|761.514"	0	-	_	_
 6	road	road	NN	NN	"1133.554|1325.882"	1	on	_	_
 7	river	river	NN	NN	"1169.705|799.729"	6	opposite	_	_
-8	sky	sky	NN	NN	"999.263|186.352"_	0	-	_	_
+8	sky	sky	NN	NN	"999.263|186.352"	0	-	_	_
 9	tree	tree	NN	NN	"1741.086|714.614"	0	-	_	_
