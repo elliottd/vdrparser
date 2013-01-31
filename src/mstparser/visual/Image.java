@@ -13,6 +13,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 
+//import static com.googlecode.javacv.cpp.opencv_core.IplImage;
+//import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImage;
+
 /**
  * This is a wrapper class for all the data types
  * associated with an image. Most of the actual data
@@ -29,10 +32,15 @@ public class Image {
 	public String filename;
 	public String xmlFilename;
 	public String dotFilename;
+	//public IplImage image;
 	
 	public Image(String imageFile)
 	{
 		this.filename = imageFile;
+//		this.image = cvLoadImage(filename);
+//		this.dimensions = new double[2];
+//		this.dimensions[0] = this.image.width();
+//		this.dimensions[1] = this.image.height();
 	}
 	
 	public void setXMLFile(String filename)
