@@ -373,7 +373,7 @@ public class DependencyParser
             {
                 pipe = new DependencyPipe2O(options);
             }
-            else if (options.visualMode)
+            else if (options.pipeName.equals("DependencyPipeVisual"))
             {
                 pipe = new DependencyPipeVisual(options);
             }
@@ -409,7 +409,7 @@ public class DependencyParser
             {
                 pipe = new DependencyPipe2O(options);
             }
-            else if (options.visualMode)
+            else if (options.pipeName.equals("DependencyPipeVisual"))
             {
                 pipe = new DependencyPipeVisual(options);                
             }
