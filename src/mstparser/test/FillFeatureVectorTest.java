@@ -51,7 +51,7 @@ public class FillFeatureVectorTest
         options.lossType = "nopunc";
         options.decodeType = "non-proj";
         options.format = "CONLL";
-        options.visualMode = true;
+        options.pipeName = "DependencyPipeVisual";
         options.verbose = true;
 
         try

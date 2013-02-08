@@ -38,7 +38,7 @@ public final class ParserOptions
     public boolean rankEdgesByConfidence = false;
     public String modelName = "dep.model";
     public String lossType = "punc";
-    public boolean createForest = true;
+    public boolean createForest = false;
     public String decodeType = "proj";
     public String format = "CONLL";
     public int numIters = 10;
@@ -52,6 +52,7 @@ public final class ParserOptions
     public String confidenceEstimator = null;
     
     // These options are specific to my environment
+    public String pipeName = "DependencyPipe";
     public String alignmentsFile = null;
     public String sourceFile = null;
     public String testSourceFile = null;
@@ -62,9 +63,8 @@ public final class ParserOptions
     public String testImagesFile = null;
     public boolean qg = false;
     public boolean eddie = false;
-    public boolean useLinearFeatures = false;
     public boolean verbose = false;
-    public boolean visualMode = false;
+    public boolean visualFeatures = false;
 
     public ParserOptions(String[] args)
     {
@@ -127,6 +127,7 @@ public final class ParserOptions
             }
             if (pair[0].equals("create-forest"))
             {
+                System.out.println(pair[1]);
                 createForest = pair[1].equals("true") ? true : false;
             }
             if (pair[0].equals("decode-type"))
@@ -193,17 +194,17 @@ public final class ParserOptions
             {
                 eddie = true;
             }
-            if (pair[0].equals("linear"))
-            {
-            	useLinearFeatures = true;
-            }
             if (pair[0].equals("verbose"))
             {
             	verbose = true;
             }
-            if (pair[0].equals("visual"))
+            if (pair[0].equals("visual-features"))
             {
-                visualMode = true;
+                visualFeatures = true;
+            }
+            if (pair[0].equals("pipe-name"))
+            {
+                pipeName = pair[1];
             }
         }
 
@@ -223,13 +224,13 @@ public final class ParserOptions
         		tmpDir = new File("/scratch/tmp");
         	}
         	
-            if (null != trainfile)
+            if (trainfile != null)
             {
                 trainforest = File.createTempFile("train", ".forest", tmpDir);
                 trainforest.deleteOnExit();
             }
 
-            if (null != testfile)
+            if (testfile != null)
             {
                 testforest = File.createTempFile("test", ".forest", tmpDir);
                 testforest.deleteOnExit();
@@ -251,19 +252,9 @@ public final class ParserOptions
         sb.append("FLAGS\n[");
         sb.append("train-file: " + trainfile);
         sb.append("\n");
-        sb.append("train-xml-file: " + xmlFile);
-        sb.append("\n");
-        sb.append("train-images-file: " + imagesFile);
-        sb.append("\n");        
-        sb.append("alignments-file: " + alignmentsFile);
-        sb.append("\n");
         sb.append("source-file: " + sourceFile);
         sb.append("\n");
         sb.append("test-file: " + testfile);
-        sb.append("\n");
-        sb.append("test-alignments-file: " + testAlignmentsFile);
-        sb.append("\n");
-        sb.append("test-source-file: " + testSourceFile);
         sb.append("\n");
         sb.append("gold-file: " + goldfile);
         sb.append("\n");
@@ -272,8 +263,6 @@ public final class ParserOptions
         sb.append("model-name: " + modelName);
         sb.append("\n");
         sb.append("train: " + train);
-        sb.append("\n");
-        sb.append("qg: " + qg);
         sb.append("\n");
         sb.append("test: " + test);
         sb.append("\n");
@@ -297,13 +286,26 @@ public final class ParserOptions
         sb.append("\n");
         sb.append("relational-features: " + useRelationalFeatures);
         sb.append("\n");
-        sb.append("use-linear-features: " + useLinearFeatures);
-        sb.append("\n");
-        sb.append("verbose: " + verbose);
-        sb.append("\n");
         sb.append("discourse-mode: " + discourseMode);
         sb.append("\n");
-        sb.append("visual-mode: " + visualMode);       
+        sb.append("------\n");
+        sb.append("pipe-type: " + pipeName);
+        sb.append("\n");
+        sb.append("visual-features: " + visualFeatures);
+        sb.append("\n");
+        sb.append("qg: " + qg);
+        sb.append("\n");
+        sb.append("test-alignments-file: " + testAlignmentsFile);
+        sb.append("\n");
+        sb.append("test-source-file: " + testSourceFile);
+        sb.append("\n");        
+        sb.append("train-xml-file: " + xmlFile);
+        sb.append("\n");
+        sb.append("train-images-file: " + imagesFile);
+        sb.append("\n");        
+        sb.append("alignments-file: " + alignmentsFile);
+        sb.append("\n");
+        sb.append("verbose: " + verbose);
         sb.append("\n]\n");
         return sb.toString();
     }
