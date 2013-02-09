@@ -193,13 +193,13 @@ public class DependencyPipeVisual extends DependencyPipe
         }
 
         System.out.println();
-
-        closeAlphabets();
-
+        
         if (options.createForest)
         {
             out.close();
         }
+        
+        System.out.println(typeAlphabet.toString());
 
         return lengths.toNativeArray();
 
@@ -263,6 +263,11 @@ public class DependencyPipeVisual extends DependencyPipe
         int[] heads = instance.heads;
         String[] forms = instance.forms;
         
+        if (label != null && label.equals("-"))
+        {
+        	label = "<no-type>";
+        }
+        
         String wordForm = checkForRootAttach(wordIndex, heads) ? "ROOT" : forms[wordIndex];
         
         StringBuilder feature;
@@ -304,6 +309,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 //3. H=Head HA=labelhead−arg
                 feature = new StringBuilder("H=" + wordForm + " HA=" + label);
                 this.add(feature.toString(), fv);
+                
                 
                 /*// Get features for the siblings
                 int argCounter = 0;
@@ -463,6 +469,11 @@ public class DependencyPipeVisual extends DependencyPipe
         String argForm = forms[argIndex];
         StringBuilder feature;
         
+        if (label != null && label.equals("-"))
+        {
+        	label = "<no-type>";
+        }
+        
         if (label == null)
         {
             for (String type: types)
@@ -475,7 +486,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + type);
                 add(feature.toString(), fv);
                 
-                for (int i = 1; i < instance.length()-1; i++)
+                /*for (int i = 1; i < instance.length()-1; i++)
                 {                
                     int argCounter = i;
                     
@@ -486,7 +497,7 @@ public class DependencyPipeVisual extends DependencyPipe
                     //16. H=Head A=Arg A#=no. args HA=labelhead−arg
                     feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + type);
                     add(feature.toString(), fv);
-                }
+                }*/
             }
             
         }
@@ -500,7 +511,7 @@ public class DependencyPipeVisual extends DependencyPipe
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + label);
             add(feature.toString(), fv);
             
-            int argCounter = 0;
+            /*int argCounter = 0;
             
             for (int j=0; j < instance.length(); j++)
             {
@@ -516,7 +527,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
             //16. H=Head A=Arg A#=no. args HA=labelhead−arg
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + label);
-            add(feature.toString(), fv);            
+            add(feature.toString(), fv);*/           
         }
     }
     
@@ -789,7 +800,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param label
      * @param fv
      */
-    private void addVisualBigramFeatures(DependencyInstance instance,
+    public void addVisualBigramFeatures(DependencyInstance instance,
             int headIndex, int argIndex, String label, FeatureVector fv)
     {
         if (headIndex < 1 || argIndex < 1)
@@ -797,6 +808,11 @@ public class DependencyPipeVisual extends DependencyPipe
             // we cannot do anything with the ROOT node since there are no
             // spatial relationships between the ROOT node and any other node
             return;
+        }
+                
+        if (label != null && label.equals("-"))
+        {
+        	label = "<no-type>";
         }
         
         String[][] feats = instance.feats;
@@ -875,12 +891,12 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
 
-            //this.addLinguisticUnigramFeatures(instance, headIndex, true, labs[i], fv);
-            //this.addLinguisticUnigramFeatures(instance, argIndex, false, labs[i], fv);            
-            this.addLinguisticBigramFeatures(instance, headIndex, argIndex, labs[argIndex], fv);
+            //this.addLinguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
+            this.addLinguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);            
+            this.addLinguisticBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
             if (options.visualFeatures)
             {
-                this.addVisualBigramFeatures(instance, headIndex, argIndex, labs[argIndex], fv);
+                this.addVisualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
             }
             //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
             //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -956,7 +972,7 @@ public class DependencyPipeVisual extends DependencyPipe
                     FeatureVector prodFV = new FeatureVector();
 
                     //this.addLinguisticUnigramFeatures(instance, parInt, true, null, prodFV);
-                    //this.addLinguisticUnigramFeatures(instance, childInt, false, null, prodFV);
+                    this.addLinguisticUnigramFeatures(instance, childInt, false, null, prodFV);
                     this.addLinguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
                     if (options.visualFeatures)
                     {
@@ -1052,12 +1068,12 @@ public class DependencyPipeVisual extends DependencyPipe
 
                         FeatureVector prodFV = new FeatureVector();                        
 
-                        //this.addLinguisticUnigramFeatures(instance, parInt, true, instance.deprels[childInt], prodFV);
-                        //this.addLinguisticUnigramFeatures(instance, childInt, false, instance.deprels[childInt], prodFV);
-                        this.addLinguisticBigramFeatures(instance, parInt, childInt, instance.deprels[childInt], prodFV);
+                        //this.addLinguisticUnigramFeatures(instance, parInt, true, instance.deprels[parInt], prodFV);
+                        this.addLinguisticUnigramFeatures(instance, childInt, false, instance.deprels[parInt], prodFV);
+                        this.addLinguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
                         if (options.visualFeatures)
                         {
-                            this.addVisualBigramFeatures(instance, parInt, childInt, instance.deprels[childInt], prodFV);
+                            this.addVisualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
                         }
                         //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);

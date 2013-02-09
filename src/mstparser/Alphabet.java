@@ -28,7 +28,7 @@ public class Alphabet implements Serializable
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("Data Alphabet");
+        sb.append("Alphabet");
         sb.append("\n");
         
         for (Object s: map.keys())
