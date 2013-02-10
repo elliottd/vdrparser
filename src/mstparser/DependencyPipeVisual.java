@@ -981,9 +981,6 @@ public class DependencyPipeVisual extends DependencyPipe
                     //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
-                    double prodProb = params.getScore(prodFV);
-                    fvs[w1][w2][ph] = prodFV;
-                    probs[w1][w2][ph] = prodProb;
                     if (options.qg)
                     {
                         /*
@@ -1002,7 +999,11 @@ public class DependencyPipeVisual extends DependencyPipe
                                 distBool, instance, firstSrc, prodFV);
                         addQGFeatures(alignments.get(second), parInt, childInt, attR,
                                 distBool, instance, secondSrc, prodFV);
-                    }                    
+                    }
+
+                    double prodProb = params.getScore(prodFV);
+                    fvs[w1][w2][ph] = prodFV;
+                    probs[w1][w2][ph] = prodProb;
                 }
             }
         }
