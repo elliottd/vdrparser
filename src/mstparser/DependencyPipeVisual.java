@@ -1,5 +1,6 @@
 package mstparser;
 
+import mstparser.Alignment.Configuration;
 import mstparser.io.*;
 import mstparser.visual.Image;
 import mstparser.visual.Polygon;
@@ -93,26 +94,6 @@ public class DependencyPipeVisual extends DependencyPipe
     		}
 		}
     }
-
-    /*
-     * protected final DependencyInstance nextInstance() throws IOException {
-     * DependencyInstance instance = depReader.getNext(); if (instance == null
-     * || instance.forms == null) { return null; }
-     * 
-     * //depReader.incCount();
-     * 
-     * instance.setFeatureVector(createFeatureVector(instance));
-     * 
-     * String[] labs = instance.deprels; int[] heads = instance.heads;
-     * 
-     * StringBuffer spans = new StringBuffer(heads.length * 5); for (int i = 1;
-     * i < heads.length; i++) {
-     * spans.append(heads[i]).append("|").append(i).append
-     * (":").append(typeAlphabet.lookupIndex(labs[i])).append(" "); }
-     * instance.actParseTree = spans.substring(0, spans.length() - 1);
-     * 
-     * return instance; }
-     */
 
 	public int[] createInstances(String file, File featFileName)
             throws IOException
@@ -298,6 +279,7 @@ public class DependencyPipeVisual extends DependencyPipe
 			{
 				i.parseXMLFile();
 				i.calculateSpatialRelationships();
+				i.populateQuadrants();
 				//System.out.println(i.toString());
 			}
 		} 
@@ -342,7 +324,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
             
-            this.addFeatures(instance, i, headIndex, argIndex, attR, fv);
+            this.addFeatures(instance, i, headIndex, argIndex, attR, headIndex == i, fv);
         }
 
         return fv;
@@ -388,11 +370,11 @@ public class DependencyPipeVisual extends DependencyPipe
 
                     FeatureVector prodFV = new FeatureVector();
 
-                    //this.addLinguisticUnigramFeatures(instance, parInt, true, null, prodFV);
-                    //this.linguisticUnigramFeatures(instance, childInt, false, null, prodFV);
                     this.linguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
+                    //this.visualUnigramFeatures(instance, parInt, null, true, prodFV);
+                    //this.visualUnigramFeatures(instance, childInt, null, false, prodFV);                   
                     this.visualBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    this.quasiSynchronousFeatures(instance, parInt, childInt, prodFV);
+                    this.quasiSynchronousFeatures(instance, parInt, childInt, null, prodFV);
                     //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
@@ -464,11 +446,11 @@ public class DependencyPipeVisual extends DependencyPipe
 
                         FeatureVector prodFV = new FeatureVector();                        
 
-                        //this.addLinguisticUnigramFeatures(instance, parInt, true, instance.deprels[parInt], prodFV);
-                        //this.linguisticUnigramFeatures(instance, childInt, false, instance.deprels[parInt], prodFV);
                         this.linguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
+                        //this.visualUnigramFeatures(instance, parInt, null, true, prodFV);
+                        //this.visualUnigramFeatures(instance, childInt, null, false, prodFV);                            
                         this.visualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        this.quasiSynchronousFeatures(instance, parInt, childInt, prodFV);
+                        this.quasiSynchronousFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
                         //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         
@@ -522,16 +504,16 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param fv the FeatureVector for this instance.
      */
     public void addFeatures(DependencyInstance instance, int position, 
-    		int headIndex, int argIndex, boolean attR, FeatureVector fv)
+    		int headIndex, int argIndex, boolean attR, boolean isHead, FeatureVector fv)
     {
     	
         String[] labs = instance.deprels;
         int[] heads = instance.heads;
-    	//this.addLinguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
-        //this.linguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);            
         this.linguisticBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
+        //this.visualUnigramFeatures(instance, headIndex, labs[headIndex], true, fv);
+        //this.visualUnigramFeatures(instance, argIndex, labs[headIndex], false, fv);
         this.visualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
-        this.quasiSynchronousFeatures(instance, headIndex, argIndex, fv);
+        this.quasiSynchronousFeatures(instance, headIndex, argIndex, labs[headIndex],  fv);
         
         //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
         //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -544,8 +526,8 @@ public class DependencyPipeVisual extends DependencyPipe
     /**
      * Add a set of unigram features for the word at wordIndex in a DependencyInstance
      * 
-     * TODO: This new implementation has catastrophic repercussions for parsing
-     *       accuracy. It is currently disabled.
+     * TODO: These features have catastrophic repercussions for parsing
+     *       accuracy and are currently disabled.
      * 
      * @param instance
      * @param fv
@@ -650,7 +632,7 @@ public class DependencyPipeVisual extends DependencyPipe
                         int siblingsCounter = i;
                         
                         List<String> siblingForms = new ArrayList<String>();
-                        
+                       
                         for (int j=0; j < siblingsCounter; j++)
                         {
                             if (j != wordIndex)
@@ -790,6 +772,14 @@ public class DependencyPipeVisual extends DependencyPipe
                     //16. H=Head A=Arg A#=no. args HA=labelhead−arg
                     feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + type);
                     add(feature.toString(), fv);
+                    
+                    //21. H=Head A=Arg S#=no. siblings
+                    feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
+                    add(feature.toString(), fv);
+                    
+                    //24. H=Head A=Arg S#=no. siblings HA=labelhead−arg
+                    feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+                    add(feature.toString(), fv);
                 }*/
             }
             
@@ -805,14 +795,22 @@ public class DependencyPipeVisual extends DependencyPipe
             add(feature.toString(), fv);
             
             /*int argCounter = 0;
+            List<String> siblingFormsList = new ArrayList<String>();
             
             for (int j=0; j < instance.length(); j++)
             {
                 if (heads[j] == headIndex)
                 {
                     argCounter++;
+                    if (j != headIndex)
+                    {
+                    	siblingFormsList.add(forms[j]);
+                    }
                 }
-            }
+            }            
+
+            String[] sortedSiblings = siblingFormsList.toArray(new String[0]);
+            Arrays.sort(sortedSiblings);
             
             //15. H=Head A=Arg A#=no. args
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter);
@@ -820,7 +818,21 @@ public class DependencyPipeVisual extends DependencyPipe
 
             //16. H=Head A=Arg A#=no. args HA=labelhead−arg
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + label);
-            add(feature.toString(), fv);*/           
+            add(feature.toString(), fv);
+
+            StringBuilder siblingForms = new StringBuilder();
+            for (int k=0; k < sortedSiblings.length; k++)
+            {
+                siblingForms.append(" S=" + sortedSiblings[k]);
+            }
+                    
+            //21. H=Head A=Arg S#=no. siblings
+            feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
+            add(feature.toString(), fv);
+            
+            //24. H=Head A=Arg S#=no. siblings HA=labelhead−arg
+            feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
+            add(feature.toString(), fv);*/        
         }
     }
     
@@ -974,9 +986,10 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param fv
      */
     public void quasiSynchronousFeatures(DependencyInstance visual, int headIndex,
-    		                             int argIndex, FeatureVector fv)
+    		                             int argIndex, String label, FeatureVector fv)
     {
     	if (!options.qg)
+
     	{
     		return;
     	}
@@ -1012,33 +1025,22 @@ public class DependencyPipeVisual extends DependencyPipe
                                 || a.getTargetIndex() == argIndex && b.getTargetIndex() == headIndex)
                         {
                             Alignment.Configuration c = a.getAlignmentConfiguration(b, visual, source);
-                            //if (c != Alignment.Configuration.NONE)
-                            //{
-                                int order = a.getAlignmentOrder(b, visual, source);
-                                String head_word, arg_word;
-                                if (order == 1)
-                                {
-                                    head_word = source.lemmas[a.getSourceIndex() + 1];
-                                    arg_word = source.lemmas[b.getSourceIndex() + 1];
+                            if (/*c == Configuration.NONE ||*/ a.getSourceIndex() == 0 || b.getSourceIndex() == 0)
+                            {
+                            	continue;
+                            }
+                           
+                            String head_word = visual.forms[headIndex];
+                            String arg_word = visual.forms[argIndex];
 
-                                }
-                                else
-                                {
-                                    head_word = source.lemmas[b.getSourceIndex() + 1];
-                                    arg_word = source.lemmas[a.getSourceIndex() + 1];
-                                }
-
-                                String words_cfg = String.format("H=%s A=%s CFG=%s", head_word, arg_word, c.toString());
-                                 
-                                add(words_cfg, fv);
-                            //}
+                            StringBuilder feature = new StringBuilder();
+                            feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
+                            add(feature.toString(), fv);
                         }
                     }
                 }
             }            
         }
- 
-        
     }
 
     /**
@@ -1101,6 +1103,93 @@ public class DependencyPipeVisual extends DependencyPipe
     }
     
     /**
+     * TODO: These features have catastrophic repercussions for parsing
+     *       accuracy and are currently disabled.
+     * 
+     * @param instance
+     * @param index
+     * @param label
+     * @param isHead
+     * @param fv
+     */
+    public void visualUnigramFeatures(DependencyInstance instance,
+    		int index, String label, boolean isHead, FeatureVector fv)
+    {
+    	if(!this.options.visualFeatures || index < 1)
+    	{
+            // we cannot do anything with the ROOT node since there are no
+            // spatial relationships between the ROOT node and any other node
+    		return;
+    	}
+                
+        if (label != null && label.equals("-"))
+        {
+        	label = "<no-type>";
+        }
+        
+        String[][] feats = instance.feats;
+        String[] forms = instance.forms;
+        
+        Image i = images.get(depReader.getCount());
+        
+        if (options.verbose)
+        {
+        	System.out.println(feats[index][0] + " " + feats[index][1]);      
+        }
+        	
+        Point2D point = new Point2D.Double(new Double(feats[index][0].replace("\"","")), new Double(feats[index][1].replace("\"","")));
+        
+        int h = i.findPolygon(forms[index], point);
+        
+        if (h > -1)
+        {
+            // We need to have found valid polygons for these points to continue
+            
+            StringBuilder feature = new StringBuilder();
+            if (label == null)
+            {
+                // This happens at test time and we don't know which label to apply
+                // so we just try all of them and believe the model will make it happy.
+                for (String type: types)
+                {
+                	feature = new StringBuilder();
+                	if (isHead)
+                	{
+                		/*feature.append("H=" + forms[index] + " HQ=" + i.polygons[h].imageQuadrant);
+                		add(feature.toString(), fv);
+                		feature.append(" HA=" + type);
+                		add(feature.toString(), fv);*/
+                	}
+                	else
+                	{
+                		feature.append("A=" + forms[index] + " AQ=" + i.polygons[h].imageQuadrant);
+                		add(feature.toString(), fv);
+                		feature.append(" HA=" + type);
+                		add(feature.toString(), fv);                		
+                	}
+                }
+            }
+            else
+            {
+            	if (isHead)
+            	{
+            		/*feature.append("H=" + forms[index] + " HQ=" + i.polygons[h].imageQuadrant);
+            		add(feature.toString(), fv);
+            		feature.append(" HA=" + label);
+            		add(feature.toString(), fv);*/
+            	}
+            	else
+            	{
+            		feature.append("A=" + forms[index] + " AQ=" + i.polygons[h].imageQuadrant);
+            		add(feature.toString(), fv);
+            		feature.append(" HA=" + label);
+            		add(feature.toString(), fv);                		
+            	}             
+            }
+        }
+    }
+    
+    /**
      * Adds visual information features to the parsing model.
      * 
      * @param instance
@@ -1159,10 +1248,14 @@ public class DependencyPipeVisual extends DependencyPipe
                 // so we just try all of them and believe the model will make it happy.
                 for (String type: types)
                 {
+                	feature = new StringBuilder();
                     feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
                     add(feature.toString(), fv);
                     feature.append(" HA=" + type);
                     add(feature.toString(), fv);
+                    feature.append(" HQ=" + i.polygons[h].imageQuadrant);
+                    add(feature.toString(), fv);
+                    feature.append(" AQ=" + i.polygons[a].imageQuadrant);
                 }
             }
             else
@@ -1170,7 +1263,10 @@ public class DependencyPipeVisual extends DependencyPipe
                 feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
                 add(feature.toString(), fv);
                 feature.append(" HA=" + label);
-                add(feature.toString(), fv);                
+                add(feature.toString(), fv); 
+                feature.append(" HQ=" + i.polygons[h].imageQuadrant);
+                add(feature.toString(), fv);
+                feature.append(" AQ=" + i.polygons[a].imageQuadrant);
             }
         }
     }    
@@ -1187,5 +1283,32 @@ public class DependencyPipeVisual extends DependencyPipe
             return true;
         }
         return false;
-    }          
+    }
+    
+    public SpatialRelation.Relations getSpatialRelationship(DependencyInstance instance, int headIndex, int argIndex)
+    {
+    	if (headIndex < 1 || argIndex < 1)
+        {
+            // we cannot do anything with the ROOT node since there are no
+            // spatial relationships between the ROOT node and any other node
+            return null;
+        }
+    	
+    	String[][] feats = instance.feats;
+        Image i = images.get(depReader.getCount());        	
+        
+        Point2D headPoint = new Point2D.Double(new Double(feats[headIndex][0].replace("\"","")), new Double(feats[headIndex][1].replace("\"","")));
+        Point2D argPoint = new Point2D.Double(new Double(feats[argIndex][0].replace("\"","")), new Double(feats[argIndex][1].replace("\"","")));
+        
+        int h = i.findPolygon(instance.forms[headIndex], headPoint);
+        int a = i.findPolygon(instance.forms[argIndex], argPoint);
+        
+        if (h > -1 &&  a > -1)
+        {
+            // We need to have found valid polygons for these points to continue
+            
+            return i.polygons[h].spatialRelations[a];
+        }
+        return null;
+    }    
 }

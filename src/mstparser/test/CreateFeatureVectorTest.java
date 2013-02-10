@@ -31,6 +31,8 @@ public class CreateFeatureVectorTest
         options.trainfile = "/home/delliott/src/workspace/mstparser/data/visualtrain.lab";
         options.xmlFile = "/home/delliott/src/workspace/mstparser/data/xmlinput";
         options.imagesFile = "/home/delliott/src/workspace/mstparser/data/imagesinput";
+        options.sourceFile = "/home/delliott/src/workspace/mstparser/data/visualtrain.parsed";
+        options.alignmentsFile = "/home/delliott/src/workspace/mstparser/data/visualtrain.alignments";
         options.modelName = "junit";
         options.numIters = 5;
         options.lossType = "nopunc";
@@ -39,6 +41,7 @@ public class CreateFeatureVectorTest
         options.pipeName = "DependencyPipeVisual";
         options.verbose = false;
         options.numIters = 1;
+        options.qg = true;
         File tmpDir = new File("/scratch/tmp");
         try
         {
@@ -54,6 +57,7 @@ public class CreateFeatureVectorTest
         try
         {
             pipe = new DependencyPipeVisual(options);
+            pipe.initialisePipe();
             pipe.labeled = false;
             iL = pipe.createInstances(options.trainfile, options.trainforest);
             dp = new DependencyParser(pipe, options);
@@ -91,7 +95,7 @@ public class CreateFeatureVectorTest
     /**
      * Expects 24 features.
      */
-    @Test
+    //@Test
     public void testLinguisticGrandparents()
     {
     	assertTrue(pipe.dataAlphabet.contains("GP=ROOT H=man A=bike"));
@@ -128,7 +132,7 @@ public class CreateFeatureVectorTest
     /*
      * Expects 32 features.
      */
-    @Test
+    //@Test
     public void testLinguisticArgumentSiblings()
     {
     	assertTrue(pipe.dataAlphabet.contains("H=ROOT A=man #S=2"));
@@ -343,6 +347,11 @@ public class CreateFeatureVectorTest
         assertTrue(pipe.dataAlphabet.contains("A=field HA=on"));      
         assertTrue(pipe.dataAlphabet.contains("A=field #S=0"));
         assertTrue(pipe.dataAlphabet.contains("A=field #S=0 HA=on"));    
-
+    }
+    
+    @Test
+    public void testQuasiSynchronousFeatures()
+    {
+    	
     }
 }
