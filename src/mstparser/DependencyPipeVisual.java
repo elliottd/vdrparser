@@ -28,11 +28,11 @@ import com.googlecode.javacv.cpp.*;
 public class DependencyPipeVisual extends DependencyPipe
 {
 
-    private DependencyReader correspondingReader;
+    private DependencyReader textReader;
 
     private ParserOptions options;
 
-    private List<DependencyInstance> sourceInstances;
+    private List<DependencyInstance> descriptions;
     private List<List<Alignment>> alignments;
     private List<Image> images;
 
@@ -41,30 +41,57 @@ public class DependencyPipeVisual extends DependencyPipe
         super(options);
         this.options = options;
 
-        correspondingReader = DependencyReader.createDependencyReader(
-                options.format, options.discourseMode);
-        sourceInstances = new LinkedList<DependencyInstance>();
-        
-        if (options.train && options.sourceFile != null)
-        {
-            this.readDescriptions(options.sourceFile);
-            this.readAlignments(options.alignmentsFile);
-        }
-        else if (options.test && options.testSourceFile != null)
-        {
-            this.readDescriptions(options.testSourceFile);
-            this.readAlignments(options.testAlignmentsFile);
-        }
-        if (options.train && options.imagesFile != null)
-        {
-            this.images = new ArrayList<Image>();
-            this.readImageData(options.imagesFile, options.xmlFile);
-        }
-        else if (options.test && options.testImagesFile != null)
-        {
-            this.images = new ArrayList<Image>();
-            this.readImageData(options.testImagesFile, options.testXmlFile);           
-        }
+        this.descriptions = new LinkedList<DependencyInstance>();
+        this.alignments = new LinkedList<List<Alignment>>();
+        this.images = new LinkedList<Image>();
+    }
+    
+    /**
+     * Initialise the data structures associated with the DependencyPipe.
+     * 
+     * This happens here because a Constructor should not block.
+     */
+    @Override
+    public void initialisePipe()
+    {
+    	try
+    	{
+    		textReader = DependencyReader.createDependencyReader(options.format,
+    				                                             options.discourseMode);
+    	}
+    	catch (IOException ioe)
+    	{
+    		ioe.printStackTrace();
+    	}
+    	
+    	if (options.train)
+    	{
+    		if (options.sourceFile != null)
+    		{
+                this.readDescriptions(options.sourceFile);
+                this.readAlignments(options.alignmentsFile);
+    		}
+    		
+    		if (options.imagesFile != null)
+    		{
+                this.images = new ArrayList<Image>();
+                this.readImageData(options.imagesFile, options.xmlFile);
+    		}
+    	}
+    	else if (options.test)
+    	{
+    		if (options.testSourceFile != null)
+    		{
+
+                this.readDescriptions(options.testSourceFile);
+                this.readAlignments(options.testAlignmentsFile);
+    		}
+    		if (options.testImagesFile != null)
+    		{
+	            this.images = new ArrayList<Image>();
+	            this.readImageData(options.testImagesFile, options.testXmlFile);
+    		}
+		}
     }
 
     /*
@@ -194,12 +221,12 @@ public class DependencyPipeVisual extends DependencyPipe
         try
         {
             System.out.println(sourceFile);
-            correspondingReader.startReading(sourceFile);
-            DependencyInstance x = correspondingReader.getNext();
+            textReader.startReading(sourceFile);
+            DependencyInstance x = textReader.getNext();
             while (x != null)
             {
-                sourceInstances.add(x);
-                x = correspondingReader.getNext();
+                descriptions.add(x);
+                x = textReader.getNext();
             }
         }
         catch (IOException ioe)
@@ -214,20 +241,27 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param alignmentsFile
      * @throws IOException
      */
-    public void readAlignments(String alignmentsFile) throws IOException
+    public void readAlignments(String alignmentsFile)
     {
-        alignments = new LinkedList<List<Alignment>>();
-
-        AlignmentsReader ar = AlignmentsReader
-                .getAlignmentsReader(alignmentsFile);
-
-        List<Alignment> thisLine = ar.getNext();
-
-        while (thisLine != null)
-        {
-            alignments.add(thisLine);
-            thisLine = ar.getNext();
-        }
+    	try
+	    	{
+	        alignments = new LinkedList<List<Alignment>>();
+	
+	        AlignmentsReader ar = AlignmentsReader
+	                .getAlignmentsReader(alignmentsFile);
+	
+	        List<Alignment> thisLine = ar.getNext();
+	
+	        while (thisLine != null)
+	        {
+	            alignments.add(thisLine);
+	            thisLine = ar.getNext();
+	        }
+    	}
+    	catch (IOException ioe)
+    	{
+    		ioe.printStackTrace();
+    	}
     }   
     
     /**
@@ -286,7 +320,6 @@ public class DependencyPipeVisual extends DependencyPipe
     {
         final int instanceLength = instance.length();
 
-        String[] labs = instance.deprels;
         int[] heads = instance.heads;
 
         FeatureVector fv = new FeatureVector();
@@ -356,35 +389,14 @@ public class DependencyPipeVisual extends DependencyPipe
                     FeatureVector prodFV = new FeatureVector();
 
                     //this.addLinguisticUnigramFeatures(instance, parInt, true, null, prodFV);
-                    this.linguisticUnigramFeatures(instance, childInt, false, null, prodFV);
+                    //this.linguisticUnigramFeatures(instance, childInt, false, null, prodFV);
                     this.linguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    if (options.visualFeatures)
-                    {
-                        this.visualBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    }
+                    this.visualBigramFeatures(instance, parInt, childInt, null, prodFV);
+                    this.quasiSynchronousFeatures(instance, parInt, childInt, prodFV);
                     //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
                     //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
 
-                    if (options.qg)
-                    {
-                        /*
-                         * We add features QG features from both the first and
-                         * second sentences to the model.
-                         */
-
-                        int first = super.depReader.getCount() * 2;
-                        int second = first + 1;
-                        String distBool = "";
-                        DependencyInstance firstSrc = sourceInstances
-                                .get(first);
-                        DependencyInstance secondSrc = sourceInstances
-                                .get(second);
-                        quasiSynchronousFeatures(alignments.get(first), parInt, childInt, attR,
-                                distBool, instance, firstSrc, prodFV);
-                        quasiSynchronousFeatures(alignments.get(second), parInt, childInt, attR,
-                                distBool, instance, secondSrc, prodFV);
-                    }
-
+         
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
                     probs[w1][w2][ph] = prodProb;
@@ -411,8 +423,7 @@ public class DependencyPipeVisual extends DependencyPipe
                             boolean child = ch == 0 ? true : false;
 
                             FeatureVector prodFV = new FeatureVector();
-                            labeledFeatures(instance, w1, type, attR, child,
-                                    prodFV);
+                            labeledFeatures(instance, w1, type, attR, child, prodFV);
 
                             double nt_prob = params.getScore(prodFV);
                             nt_fvs[w1][t][ph][ch] = prodFV;
@@ -454,34 +465,12 @@ public class DependencyPipeVisual extends DependencyPipe
                         FeatureVector prodFV = new FeatureVector();                        
 
                         //this.addLinguisticUnigramFeatures(instance, parInt, true, instance.deprels[parInt], prodFV);
-                        this.linguisticUnigramFeatures(instance, childInt, false, instance.deprels[parInt], prodFV);
+                        //this.linguisticUnigramFeatures(instance, childInt, false, instance.deprels[parInt], prodFV);
                         this.linguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        if (options.visualFeatures)
-                        {
-                            this.visualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        }
+                        this.visualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
+                        this.quasiSynchronousFeatures(instance, parInt, childInt, prodFV);
                         //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
                         //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-
-                        if (options.qg)
-                        {
-                            /*
-                             * We add features QG features from both the first and
-                             * second sentences to the model.
-                             */
-
-                            int first = super.depReader.getCount() * 2;
-                            int second = first + 1;
-                            String distBool = "";
-                            DependencyInstance firstSrc = sourceInstances
-                                    .get(first);
-                            DependencyInstance secondSrc = sourceInstances
-                                    .get(second);
-                            quasiSynchronousFeatures(alignments.get(first), parInt, childInt, attR,
-                                    distBool, instance, firstSrc, prodFV);
-                            quasiSynchronousFeatures(alignments.get(second), parInt, childInt, attR,
-                                    distBool, instance, secondSrc, prodFV);
-                        }    
                         
                         out.writeObject(prodFV.keys());
                     }
@@ -503,8 +492,7 @@ public class DependencyPipeVisual extends DependencyPipe
                             {
                                 boolean child = ch == 0 ? true : false;
                                 FeatureVector prodFV = new FeatureVector();
-                                labeledFeatures(instance, w1, type, attR,
-                                        child, prodFV);
+                                labeledFeatures(instance, w1, type, attR, child, prodFV);
                                 out.writeObject(prodFV.keys());
                             }
                         }
@@ -540,33 +528,17 @@ public class DependencyPipeVisual extends DependencyPipe
         String[] labs = instance.deprels;
         int[] heads = instance.heads;
     	//this.addLinguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
-        this.linguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);            
+        //this.linguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);            
         this.linguisticBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
-        if (options.visualFeatures)
-        {
-            this.visualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
-        }
+        this.visualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
+        this.quasiSynchronousFeatures(instance, headIndex, argIndex, fv);
+        
         //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
         //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
-        if (labeled)
-        {
-            labeledFeatures(instance, position, labs[position], attR, true, fv);
-            labeledFeatures(instance, heads[position], labs[position], attR, false, fv);
-        }
+        this.labeledFeatures(instance, position, labs[position], attR, true, fv);
+        this.labeledFeatures(instance, heads[position], labs[position], attR, false, fv);
         
-        if (options.qg)
-        {
-            int first = super.depReader.getCount() * 2;
-            int second = first + 1;
-            String distBool = "";
-            DependencyInstance firstSrc = sourceInstances.get(first);
-            DependencyInstance secondSrc = sourceInstances.get(second);
-            quasiSynchronousFeatures(alignments.get(first), headIndex, argIndex, attR,
-                    distBool, instance, firstSrc, fv);
-            quasiSynchronousFeatures(alignments.get(second), headIndex, argIndex, attR,
-                    distBool, instance, secondSrc, fv);
-        }
     }    	        
 
     /**
@@ -1001,56 +973,72 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param source
      * @param fv
      */
-    public void quasiSynchronousFeatures(List<Alignment> theseAlignments, int small,
-            int large, boolean attR, String distBool,
-            DependencyInstance target, DependencyInstance source,
-            FeatureVector fv)
+    public void quasiSynchronousFeatures(DependencyInstance visual, int headIndex,
+    		                             int argIndex, FeatureVector fv)
     {
-        // No QG features to add.
-        if (theseAlignments.size() == 0)
-        {
-            return;
-        }
+    	if (!options.qg)
+    	{
+    		return;
+    	}
+    	
+        int first = super.depReader.getCount() * 2;
+        int second = first + 1;
+        DependencyInstance source = descriptions.get(first);
         
-        String att = attR ? "RA" : "LA";
-
-        for (Alignment a : theseAlignments)
-        {
-            for (Alignment b : theseAlignments)
+        List<Alignment> theseAlignments = alignments.get(first);
+        
+        for (int i = 0; i < 2; i++)
+        {        	
+        	// Add features over the first and second sentences
+        
+        	if (i == 1)
+        	{
+        		source = descriptions.get(second);
+        		theseAlignments = alignments.get(second);
+        	}
+        
+        	if (theseAlignments.size() == 0)
+            {	// No QG features to add.
+                continue;
+            }
+        	
+            for (Alignment a : theseAlignments)
             {
-                if (a != b)
+                for (Alignment b : theseAlignments)
                 {
-                    if (a.getTargetIndex() == small
-                            && b.getTargetIndex() == large
-                            || a.getTargetIndex() == large
-                            && b.getTargetIndex() == small)
+                    if (a != b)
                     {
-                        Alignment.Configuration c = a
-                                .getAlignmentConfiguration(b, target, source);
-                        //if (c != Alignment.Configuration.NONE)
-                        //{
-                            int order = a.getAlignmentOrder(b, target, source);
-                            String head_word, arg_word;
-                            if (order == 1)
-                            {
-                                head_word = source.lemmas[a.getSourceIndex() + 1];
-                                arg_word = source.lemmas[b.getSourceIndex() + 1];
+                        if (a.getTargetIndex() == headIndex && b.getTargetIndex() == argIndex
+                                || a.getTargetIndex() == argIndex && b.getTargetIndex() == headIndex)
+                        {
+                            Alignment.Configuration c = a.getAlignmentConfiguration(b, visual, source);
+                            //if (c != Alignment.Configuration.NONE)
+                            //{
+                                int order = a.getAlignmentOrder(b, visual, source);
+                                String head_word, arg_word;
+                                if (order == 1)
+                                {
+                                    head_word = source.lemmas[a.getSourceIndex() + 1];
+                                    arg_word = source.lemmas[b.getSourceIndex() + 1];
 
-                            }
-                            else
-                            {
-                                head_word = source.lemmas[b.getSourceIndex() + 1];
-                                arg_word = source.lemmas[a.getSourceIndex() + 1];
-                            }
+                                }
+                                else
+                                {
+                                    head_word = source.lemmas[b.getSourceIndex() + 1];
+                                    arg_word = source.lemmas[a.getSourceIndex() + 1];
+                                }
 
-                            String words_cfg = String.format("H=%s A=%s CFG=%s", head_word, arg_word, c.toString());
-                             
-                            add(words_cfg, fv);
-                        //}
+                                String words_cfg = String.format("H=%s A=%s CFG=%s", head_word, arg_word, c.toString());
+                                 
+                                add(words_cfg, fv);
+                            //}
+                        }
                     }
                 }
-            }
+            }            
         }
+ 
+        
     }
 
     /**
@@ -1124,6 +1112,12 @@ public class DependencyPipeVisual extends DependencyPipe
     public void visualBigramFeatures(DependencyInstance instance,
             int headIndex, int argIndex, String label, FeatureVector fv)
     {
+    	
+    	if (!this.options.visualFeatures)
+    	{
+    		return;
+    	}
+    	
         if (headIndex < 1 || argIndex < 1)
         {
             // we cannot do anything with the ROOT node since there are no

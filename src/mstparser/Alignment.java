@@ -20,6 +20,7 @@ public class Alignment
     {
         SIBLINGS,
         PARENTCHILD,
+        ANCESTERDESCENDENT,
         GRANDPARENTGRANDCHILD,
         DOMINATES,
         CCOMMAND,
@@ -64,9 +65,9 @@ public class Alignment
             //System.out.println("This is the head of the other");
             c = isParentChild(this, other, source) ? Configuration.PARENTCHILD : c;
             c = isChildParent(this, other, source) ? Configuration.CHILDPARENT : c;
-            c = isGrandparentGrandchild(this, other, source) ? Configuration.GRANDPARENTGRANDCHILD : c;
+            c = isGrandparentGrandchild(this, other, source) ? Configuration.ANCESTERDESCENDENT : c;
             c = isCCommand(this, other, source) ? Configuration.CCOMMAND : c;
-            c = isDominates(this, other, source) ? Configuration.DOMINATES : c;
+            c = isDominates(this, other, source) ? Configuration.ANCESTERDESCENDENT : c;
             c = isSiblings(this, other, source) ? Configuration.SIBLINGS : c;
         }
         else if (target.heads[other.targetIndex] == this.targetIndex)
@@ -74,9 +75,9 @@ public class Alignment
             //System.out.println("The other is the head of this");
             c = isParentChild(other, this, source) ? Configuration.PARENTCHILD : c;
             c = isChildParent(other, this, source) ? Configuration.CHILDPARENT : c;
-            c = isGrandparentGrandchild(other, this, source) ? Configuration.GRANDPARENTGRANDCHILD : c;
+            c = isGrandparentGrandchild(other, this, source) ? Configuration.ANCESTERDESCENDENT : c;
             c = isCCommand(other, this, source) ? Configuration.CCOMMAND : c;
-            c = isDominates(other, this, source) ? Configuration.DOMINATES : c;
+            c = isDominates(other, this, source) ? Configuration.ANCESTERDESCENDENT : c;
             c = isSiblings(other, this, source) ? Configuration.SIBLINGS : c;
         }
 

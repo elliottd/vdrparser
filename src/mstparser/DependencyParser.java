@@ -376,6 +376,7 @@ public class DependencyParser
             else if (options.pipeName.equals("DependencyPipeVisual"))
             {
                 pipe = new DependencyPipeVisual(options);
+                pipe.initialisePipe();
             }
             else
             {
@@ -411,7 +412,8 @@ public class DependencyParser
             }
             else if (options.pipeName.equals("DependencyPipeVisual"))
             {
-                pipe = new DependencyPipeVisual(options);                
+                pipe = new DependencyPipeVisual(options);
+                pipe.initialisePipe();
             }
             else
             {
