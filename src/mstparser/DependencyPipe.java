@@ -252,8 +252,8 @@ public class DependencyPipe
             addCoreFeatures(instance, small, large, attR, fv);
             if (labeled)
             {
-                addLabeledFeatures(instance, i, labs[i], attR, true, fv);
-                addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
+                labeledFeatures(instance, i, labs[i], attR, true, fv);
+                labeledFeatures(instance, heads[i], labs[i], attR, false, fv);
             }
         }
 
@@ -579,7 +579,7 @@ public class DependencyPipe
 
     }
 
-    public void addLabeledFeatures(DependencyInstance instance, int word,
+    public void labeledFeatures(DependencyInstance instance, int word,
             String type, boolean attR, boolean childFeatures, FeatureVector fv)
     {
 
@@ -809,7 +809,7 @@ public class DependencyPipe
                             boolean child = ch == 0 ? true : false;
 
                             FeatureVector prodFV = new FeatureVector();
-                            addLabeledFeatures(instance, w1, type, attR, child,
+                            labeledFeatures(instance, w1, type, attR, child,
                                     prodFV);
 
                             double nt_prob = params.getScore(prodFV);
@@ -865,7 +865,7 @@ public class DependencyPipe
                             {
                                 boolean child = ch == 0 ? true : false;
                                 FeatureVector prodFV = new FeatureVector();
-                                addLabeledFeatures(instance, w1, type, attR,
+                                labeledFeatures(instance, w1, type, attR,
                                         child, prodFV);
                                 out.writeObject(prodFV.keys());
                             }
