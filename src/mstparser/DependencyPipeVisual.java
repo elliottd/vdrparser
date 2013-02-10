@@ -47,12 +47,12 @@ public class DependencyPipeVisual extends DependencyPipe
         
         if (options.train && options.sourceFile != null)
         {
-            this.readSourceInstances(options.sourceFile);
+            this.readDescriptions(options.sourceFile);
             this.readAlignments(options.alignmentsFile);
         }
         else if (options.test && options.testSourceFile != null)
         {
-            this.readSourceInstances(options.testSourceFile);
+            this.readDescriptions(options.testSourceFile);
             this.readAlignments(options.testAlignmentsFile);
         }
         if (options.train && options.imagesFile != null)
@@ -86,54 +86,6 @@ public class DependencyPipeVisual extends DependencyPipe
      * 
      * return instance; }
      */
-
-    /**
-     * Reads the content of LabelMe XML files and the associated raw image data
-     * into an Image object. These data structures are used to infer
-     * image-level statistics and features about the data set.
-     * 
-     * @param imagesFile
-     * @param xmlFile
-     */
-    private void readImageData(String imagesFile, String xmlFile) 
-    {
-    	try 
-    	{
-    	    System.out.println("Reading image data into memory");
-			BufferedReader in = new BufferedReader(new FileReader(imagesFile));
-			String line = null;
-			while((line = in.readLine()) != null)
-			{
-				Image i = new Image(line);
-				images.add(i);
-			}
-			in.close();
-			in = new BufferedReader(new FileReader(xmlFile));
-			line = null;
-			int count = 0;
-			while((line = in.readLine()) != null)
-			{
-				Image i = images.get(count);
-				i.setXMLFile(line);
-				count++;
-			}
-			for (Image i: images)
-			{
-				i.parseXMLFile();
-				i.calculateSpatialRelationships();
-				//System.out.println(i.toString());
-			}
-		} 
-    	catch (FileNotFoundException e) 
-    	{
-			e.printStackTrace();
-		} 
-    	catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-    	
-	}
 
 	public int[] createInstances(String file, File featFileName)
             throws IOException
@@ -199,8 +151,6 @@ public class DependencyPipeVisual extends DependencyPipe
             out.close();
         }
         
-        System.out.println(typeAlphabet.toString());
-
         return lengths.toNativeArray();
 
     }
@@ -234,19 +184,390 @@ public class DependencyPipeVisual extends DependencyPipe
         System.out.println("Done.");
     }
     
-    /** 
-     * @param index the position of the word in the DependencyInstance
-     * @param instanceHeads the array of instance heads in the Dependency Instance.
-     * @return true if the word at position index has a head at -1.
+    /**
+     * Read the parsed source sentences from disk into memory.
+     * 
+     * @param sourceFile
      */
-    public boolean checkForRootAttach(int index, int[] instanceHeads)
+    public void readDescriptions(String sourceFile)
     {
-        if (instanceHeads[index] == -1)
+        try
         {
-            return true;
+            System.out.println(sourceFile);
+            correspondingReader.startReading(sourceFile);
+            DependencyInstance x = correspondingReader.getNext();
+            while (x != null)
+            {
+                sourceInstances.add(x);
+                x = correspondingReader.getNext();
+            }
         }
-        return false;
-    }      
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+    }
+
+    /**
+     * Read the alignments from disk into memory.
+     * 
+     * @param alignmentsFile
+     * @throws IOException
+     */
+    public void readAlignments(String alignmentsFile) throws IOException
+    {
+        alignments = new LinkedList<List<Alignment>>();
+
+        AlignmentsReader ar = AlignmentsReader
+                .getAlignmentsReader(alignmentsFile);
+
+        List<Alignment> thisLine = ar.getNext();
+
+        while (thisLine != null)
+        {
+            alignments.add(thisLine);
+            thisLine = ar.getNext();
+        }
+    }   
+    
+    /**
+     * Reads the content of LabelMe XML files and the associated raw image data
+     * into an Image object. These data structures are used to infer
+     * image-level statistics and features about the data set.
+     * 
+     * @param imagesFile
+     * @param xmlFile
+     */
+    public void readImageData(String imagesFile, String xmlFile) 
+    {
+    	try 
+    	{
+    	    System.out.println("Reading image data into memory");
+			BufferedReader in = new BufferedReader(new FileReader(imagesFile));
+			String line = null;
+			while((line = in.readLine()) != null)
+			{
+				Image i = new Image(line);
+				images.add(i);
+			}
+			in.close();
+			in = new BufferedReader(new FileReader(xmlFile));
+			line = null;
+			int count = 0;
+			while((line = in.readLine()) != null)
+			{
+				Image i = images.get(count);
+				i.setXMLFile(line);
+				count++;
+			}
+			for (Image i: images)
+			{
+				i.parseXMLFile();
+				i.calculateSpatialRelationships();
+				//System.out.println(i.toString());
+			}
+		} 
+    	catch (FileNotFoundException e) 
+    	{
+			e.printStackTrace();
+		} 
+    	catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+    	
+	}    
+
+    /**
+     * This is where we calculate the features over an input, which is
+     * represented as a DependencyInstance.
+     */
+    public FeatureVector createFeatureVector(DependencyInstance instance)
+    {
+        final int instanceLength = instance.length();
+
+        String[] labs = instance.deprels;
+        int[] heads = instance.heads;
+
+        FeatureVector fv = new FeatureVector();
+        for (int i = 0; i < instanceLength; i++)
+        {
+            if (heads[i] == -1)
+            {
+                continue;
+            }
+
+            /* Figure out if i the head and argument indices */
+            int headIndex = i < heads[i] ? i : heads[i];
+            int argIndex = i > heads[i] ? i : heads[i];
+            boolean attR = i < heads[i] ? false : true;
+            
+            if (!attR)
+            {
+                int tmp = headIndex;
+                headIndex = argIndex;
+                argIndex = tmp;
+            }
+            
+            this.addFeatures(instance, i, headIndex, argIndex, attR, fv);
+        }
+
+        return fv;
+    }
+    
+    /**
+     * 
+     * TODO: Rewrite all the methods that add features so they don't make naive
+     *       assumptions about the data. These fill methods really need to attempt
+     *       all possible combinations.
+     *       
+     * TODO: Make sure you never read from instance.deprels[] since this can contain
+     *       the gold standard dependency relations we are trying to predict.
+     * 
+     * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
+     *            instance represents the features calculated between word i and 
+     *            word j in the DependencyInstance and k represents whether i or
+     *            j was the proposed head node.
+     *            
+     *  @param nt_fvs A four-dimension array of FeatureVectors where each
+     *                [i][j][k][l] entry represents a feature vector with
+     *                features for word [i], with arc label [j], where [k=0]
+     *                means [i] is a head and [k=1] means [i] is a child 
+     */
+    public void fillFeatureVectors(DependencyInstance instance,
+            FeatureVector[][][] fvs, double[][][] probs,
+            FeatureVector[][][][] nt_fvs, double[][][][] nt_probs,
+            Parameters params)
+    {
+
+        final int instanceLength = instance.length();
+
+        for (int w1 = 0; w1 < instanceLength; w1++)
+        {
+            for (int w2 = w1 + 1; w2 < instanceLength; w2++)
+            {
+                for (int ph = 0; ph < 2; ph++)
+                {
+                    boolean attR = ph == 0 ? true : false;
+
+                    int childInt = attR ? w2 : w1;
+                    int parInt = attR ? w1 : w2;
+
+                    FeatureVector prodFV = new FeatureVector();
+
+                    //this.addLinguisticUnigramFeatures(instance, parInt, true, null, prodFV);
+                    this.linguisticUnigramFeatures(instance, childInt, false, null, prodFV);
+                    this.linguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
+                    if (options.visualFeatures)
+                    {
+                        this.visualBigramFeatures(instance, parInt, childInt, null, prodFV);
+                    }
+                    //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
+                    //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
+
+                    if (options.qg)
+                    {
+                        /*
+                         * We add features QG features from both the first and
+                         * second sentences to the model.
+                         */
+
+                        int first = super.depReader.getCount() * 2;
+                        int second = first + 1;
+                        String distBool = "";
+                        DependencyInstance firstSrc = sourceInstances
+                                .get(first);
+                        DependencyInstance secondSrc = sourceInstances
+                                .get(second);
+                        quasiSynchronousFeatures(alignments.get(first), parInt, childInt, attR,
+                                distBool, instance, firstSrc, prodFV);
+                        quasiSynchronousFeatures(alignments.get(second), parInt, childInt, attR,
+                                distBool, instance, secondSrc, prodFV);
+                    }
+
+                    double prodProb = params.getScore(prodFV);
+                    fvs[w1][w2][ph] = prodFV;
+                    probs[w1][w2][ph] = prodProb;
+                }
+            }
+        }
+        
+        if (labeled)
+        {
+            for (int w1 = 0; w1 < instanceLength; w1++)
+            {
+                // For each word in the input sentence
+                for (int t = 0; t < types.length; t++)
+                {
+                    // For each arc label type
+                    String type = types[t];
+                    for (int ph = 0; ph < 2; ph++)
+                    {
+                        // Does this attachment go left or right?
+                        boolean attR = ph == 0 ? true : false;
+                        for (int ch = 0; ch < 2; ch++)
+                        {
+                            // Do we include children features?
+                            boolean child = ch == 0 ? true : false;
+
+                            FeatureVector prodFV = new FeatureVector();
+                            labeledFeatures(instance, w1, type, attR, child,
+                                    prodFV);
+
+                            double nt_prob = params.getScore(prodFV);
+                            nt_fvs[w1][t][ph][ch] = prodFV;
+                            nt_probs[w1][t][ph][ch] = nt_prob;
+
+                        }
+                    }
+                }
+            }
+        }  
+    }
+         
+    /**
+     * Save the features in a gold standard DependencyInstance to disk at test time.
+     * 
+     * This is used to create a parse forest.
+     */
+    @Override
+    protected void writeInstance(DependencyInstance instance,
+            ObjectOutputStream out)
+    {
+        try
+        {
+            final int instanceLength = instance.length();
+
+            // Get production crap.
+
+            for (int w1 = 0; w1 < instanceLength; w1++)
+            {
+                for (int w2 = w1 + 1; w2 < instanceLength; w2++)
+                {
+                    for (int ph = 0; ph < 2; ph++)
+                    {
+                        boolean attR = ph == 0 ? true : false;
+
+                        int childInt = attR ? w2 : w1;
+                        int parInt = attR ? w1 : w2;
+
+                        FeatureVector prodFV = new FeatureVector();                        
+
+                        //this.addLinguisticUnigramFeatures(instance, parInt, true, instance.deprels[parInt], prodFV);
+                        this.linguisticUnigramFeatures(instance, childInt, false, instance.deprels[parInt], prodFV);
+                        this.linguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
+                        if (options.visualFeatures)
+                        {
+                            this.visualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
+                        }
+                        //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+                        //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
+
+                        if (options.qg)
+                        {
+                            /*
+                             * We add features QG features from both the first and
+                             * second sentences to the model.
+                             */
+
+                            int first = super.depReader.getCount() * 2;
+                            int second = first + 1;
+                            String distBool = "";
+                            DependencyInstance firstSrc = sourceInstances
+                                    .get(first);
+                            DependencyInstance secondSrc = sourceInstances
+                                    .get(second);
+                            quasiSynchronousFeatures(alignments.get(first), parInt, childInt, attR,
+                                    distBool, instance, firstSrc, prodFV);
+                            quasiSynchronousFeatures(alignments.get(second), parInt, childInt, attR,
+                                    distBool, instance, secondSrc, prodFV);
+                        }    
+                        
+                        out.writeObject(prodFV.keys());
+                    }
+                }
+            }
+            out.writeInt(-3);
+            
+            if (labeled)
+            {
+                for (int w1 = 0; w1 < instanceLength; w1++)
+                {
+                    for (int t = 0; t < types.length; t++)
+                    {
+                        String type = types[t];
+                        for (int ph = 0; ph < 2; ph++)
+                        {
+                            boolean attR = ph == 0 ? true : false;
+                            for (int ch = 0; ch < 2; ch++)
+                            {
+                                boolean child = ch == 0 ? true : false;
+                                FeatureVector prodFV = new FeatureVector();
+                                labeledFeatures(instance, w1, type, attR,
+                                        child, prodFV);
+                                out.writeObject(prodFV.keys());
+                            }
+                        }
+                    }
+                }
+                out.writeInt(-3);
+            }
+            
+            out.writeObject(instance.fv.keys());
+            out.writeInt(-4);
+
+            out.writeObject(instance);
+            out.writeInt(-1);
+
+            out.reset();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }   
+    
+    /**
+     * A wrapper method that performs all of the feature addition operations.
+     * 
+     * @param instance the DependencyInstance read from disk
+     * @param fv the FeatureVector for this instance.
+     */
+    public void addFeatures(DependencyInstance instance, int position, 
+    		int headIndex, int argIndex, boolean attR, FeatureVector fv)
+    {
+    	
+        String[] labs = instance.deprels;
+        int[] heads = instance.heads;
+    	//this.addLinguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
+        this.linguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);            
+        this.linguisticBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
+        if (options.visualFeatures)
+        {
+            this.visualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
+        }
+        //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+        //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
+
+        if (labeled)
+        {
+            labeledFeatures(instance, position, labs[position], attR, true, fv);
+            labeledFeatures(instance, heads[position], labs[position], attR, false, fv);
+        }
+        
+        if (options.qg)
+        {
+            int first = super.depReader.getCount() * 2;
+            int second = first + 1;
+            String distBool = "";
+            DependencyInstance firstSrc = sourceInstances.get(first);
+            DependencyInstance secondSrc = sourceInstances.get(second);
+            quasiSynchronousFeatures(alignments.get(first), headIndex, argIndex, attR,
+                    distBool, instance, firstSrc, fv);
+            quasiSynchronousFeatures(alignments.get(second), headIndex, argIndex, attR,
+                    distBool, instance, secondSrc, fv);
+        }
+    }    	        
 
     /**
      * Add a set of unigram features for the word at wordIndex in a DependencyInstance
@@ -257,7 +578,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param instance
      * @param fv
      */
-    public void addLinguisticUnigramFeatures(DependencyInstance instance,
+    public void linguisticUnigramFeatures(DependencyInstance instance,
             int wordIndex, boolean isHead, String label, FeatureVector fv)
     {
         int[] heads = instance.heads;
@@ -460,7 +781,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param label
      * @param fv
      */
-    public void addLinguisticBigramFeatures(DependencyInstance instance,
+    public void linguisticBigramFeatures(DependencyInstance instance,
             int headIndex, int argIndex, String label, FeatureVector fv)
     {
         int[] heads = instance.heads;
@@ -543,7 +864,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param label
      * @param fv
      */
-    public void addLinguisticGrandparentGrandchildFeatures(DependencyInstance instance, 
+    public void linguisticGrandparentGrandchildFeatures(DependencyInstance instance, 
                                                  int i, int headIndex, 
                                                  int argIndex, String label, 
                                                  FeatureVector fv)
@@ -597,7 +918,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param label
      * @param fv
      */
-    public void addLinguisticBigramSiblingFeatures(DependencyInstance instance, 
+    public void linguisticBigramSiblingFeatures(DependencyInstance instance, 
                                                     int i, int headIndex, 
                                                     int argIndex, String label, 
                                                     FeatureVector fv)
@@ -680,7 +1001,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param source
      * @param fv
      */
-    public void addQGFeatures(List<Alignment> theseAlignments, int small,
+    public void quasiSynchronousFeatures(List<Alignment> theseAlignments, int small,
             int large, boolean attR, String distBool,
             DependencyInstance target, DependencyInstance source,
             FeatureVector fv)
@@ -744,7 +1065,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param childFeatures
      * @param fv
      */
-    public void addLabeledFeatures(DependencyInstance instance, int wordIndex,
+    public void labeledFeatures(DependencyInstance instance, int wordIndex,
             String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
     {    
         /* The original implementation */
@@ -800,7 +1121,7 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param label
      * @param fv
      */
-    public void addVisualBigramFeatures(DependencyInstance instance,
+    public void visualBigramFeatures(DependencyInstance instance,
             int headIndex, int argIndex, String label, FeatureVector fv)
     {
         if (headIndex < 1 || argIndex < 1)
@@ -859,487 +1180,18 @@ public class DependencyPipeVisual extends DependencyPipe
             }
         }
     }    
-
-    /**
-     * This is where we calculate the features over an input, which is
-     * represented as a DependencyInstance.
-     */
-    public FeatureVector createFeatureVector(DependencyInstance instance)
-    {
-        final int instanceLength = instance.length();
-
-        String[] labs = instance.deprels;
-        int[] heads = instance.heads;
-
-        FeatureVector fv = new FeatureVector();
-        for (int i = 0; i < instanceLength; i++)
-        {
-            if (heads[i] == -1)
-            {
-                continue;
-            }
-
-            /* Figure out if i the head and argument indices */
-            int headIndex = i < heads[i] ? i : heads[i];
-            int argIndex = i > heads[i] ? i : heads[i];
-            boolean attR = i < heads[i] ? false : true;
-            
-            if (!attR)
-            {
-                int tmp = headIndex;
-                headIndex = argIndex;
-                argIndex = tmp;
-            }
-
-            //this.addLinguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
-            this.addLinguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);            
-            this.addLinguisticBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
-            if (options.visualFeatures)
-            {
-                this.addVisualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
-            }
-            //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-            //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
-
-            if (labeled)
-            {
-                addLabeledFeatures(instance, i, labs[i], attR, true, fv);
-                addLabeledFeatures(instance, heads[i], labs[i], attR, false, fv);
-            }
-            
-            if (options.qg)
-            {
-                /*
-                 * We add features QG features from both the first and
-                 * second sentences to the model.
-                 */
-
-                int first = super.depReader.getCount() * 2;
-                int second = first + 1;
-                String distBool = "";
-                DependencyInstance firstSrc = sourceInstances
-                        .get(first);
-                DependencyInstance secondSrc = sourceInstances
-                        .get(second);
-                addQGFeatures(alignments.get(first), headIndex, argIndex, attR,
-                        distBool, instance, firstSrc, fv);
-                addQGFeatures(alignments.get(second), headIndex, argIndex, attR,
-                        distBool, instance, secondSrc, fv);
-            }
-        }
-
-        return fv;
-    }
-
-    /**
-     * 
-     * TODO: Rewrite all the methods that add features so they don't make naive
-     *       assumptions about the data. These fill methods really need to attempt
-     *       all possible combinations.
-     *       
-     * TODO: Make sure you never read from instance.deprels[] since this can contain
-     *       the gold standard dependency relations we are trying to predict.
-     * 
-     * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
-     *            instance represents the features calculated between word i and 
-     *            word j in the DependencyInstance and k represents whether i or
-     *            j was the proposed head node.
-     *            
-     *  @param nt_fvs A four-dimension array of FeatureVectors where each
-     *                [i][j][k][l] entry represents a feature vector with
-     *                features for word [i], with arc label [j], where [k=0]
-     *                means [i] is a head and [k=1] means [i] is a child 
-     */
-    public void fillFeatureVectors(DependencyInstance instance,
-            FeatureVector[][][] fvs, double[][][] probs,
-            FeatureVector[][][][] nt_fvs, double[][][][] nt_probs,
-            Parameters params)
-    {
-
-        final int instanceLength = instance.length();
-
-        for (int w1 = 0; w1 < instanceLength; w1++)
-        {
-            for (int w2 = w1 + 1; w2 < instanceLength; w2++)
-            {
-                for (int ph = 0; ph < 2; ph++)
-                {
-                    boolean attR = ph == 0 ? true : false;
-
-                    int childInt = attR ? w2 : w1;
-                    int parInt = attR ? w1 : w2;
-
-                    FeatureVector prodFV = new FeatureVector();
-
-                    //this.addLinguisticUnigramFeatures(instance, parInt, true, null, prodFV);
-                    this.addLinguisticUnigramFeatures(instance, childInt, false, null, prodFV);
-                    this.addLinguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    if (options.visualFeatures)
-                    {
-                        this.addVisualBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    }
-                    //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
-                    //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
-
-                    if (options.qg)
-                    {
-                        /*
-                         * We add features QG features from both the first and
-                         * second sentences to the model.
-                         */
-
-                        int first = super.depReader.getCount() * 2;
-                        int second = first + 1;
-                        String distBool = "";
-                        DependencyInstance firstSrc = sourceInstances
-                                .get(first);
-                        DependencyInstance secondSrc = sourceInstances
-                                .get(second);
-                        addQGFeatures(alignments.get(first), parInt, childInt, attR,
-                                distBool, instance, firstSrc, prodFV);
-                        addQGFeatures(alignments.get(second), parInt, childInt, attR,
-                                distBool, instance, secondSrc, prodFV);
-                    }
-
-                    double prodProb = params.getScore(prodFV);
-                    fvs[w1][w2][ph] = prodFV;
-                    probs[w1][w2][ph] = prodProb;
-                }
-            }
-        }
-        
-        if (labeled)
-        {
-            for (int w1 = 0; w1 < instanceLength; w1++)
-            {
-                // For each word in the input sentence
-                for (int t = 0; t < types.length; t++)
-                {
-                    // For each arc label type
-                    String type = types[t];
-                    for (int ph = 0; ph < 2; ph++)
-                    {
-                        // Does this attachment go left or right?
-                        boolean attR = ph == 0 ? true : false;
-                        for (int ch = 0; ch < 2; ch++)
-                        {
-                            // Do we include children features?
-                            boolean child = ch == 0 ? true : false;
-
-                            FeatureVector prodFV = new FeatureVector();
-                            addLabeledFeatures(instance, w1, type, attR, child,
-                                    prodFV);
-
-                            double nt_prob = params.getScore(prodFV);
-                            nt_fvs[w1][t][ph][ch] = prodFV;
-                            nt_probs[w1][t][ph][ch] = nt_prob;
-
-                        }
-                    }
-                }
-            }
-        }  
-    }
-         
-    /**
-     * Save the features in a gold standard DependencyInstance to disk at test time.
-     * 
-     * This is used to create a parse forest.
-     */
-    @Override
-    protected void writeInstance(DependencyInstance instance,
-            ObjectOutputStream out)
-    {
-        try
-        {
-            final int instanceLength = instance.length();
-
-            // Get production crap.
-
-            for (int w1 = 0; w1 < instanceLength; w1++)
-            {
-                for (int w2 = w1 + 1; w2 < instanceLength; w2++)
-                {
-                    for (int ph = 0; ph < 2; ph++)
-                    {
-                        boolean attR = ph == 0 ? true : false;
-
-                        int childInt = attR ? w2 : w1;
-                        int parInt = attR ? w1 : w2;
-
-                        FeatureVector prodFV = new FeatureVector();                        
-
-                        //this.addLinguisticUnigramFeatures(instance, parInt, true, instance.deprels[parInt], prodFV);
-                        this.addLinguisticUnigramFeatures(instance, childInt, false, instance.deprels[parInt], prodFV);
-                        this.addLinguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        if (options.visualFeatures)
-                        {
-                            this.addVisualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        }
-                        //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                        //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-
-                        if (options.qg)
-                        {
-                            /*
-                             * We add features QG features from both the first and
-                             * second sentences to the model.
-                             */
-
-                            int first = super.depReader.getCount() * 2;
-                            int second = first + 1;
-                            String distBool = "";
-                            DependencyInstance firstSrc = sourceInstances
-                                    .get(first);
-                            DependencyInstance secondSrc = sourceInstances
-                                    .get(second);
-                            addQGFeatures(alignments.get(first), parInt, childInt, attR,
-                                    distBool, instance, firstSrc, prodFV);
-                            addQGFeatures(alignments.get(second), parInt, childInt, attR,
-                                    distBool, instance, secondSrc, prodFV);
-                        }    
-                        
-                        out.writeObject(prodFV.keys());
-                    }
-                }
-            }
-            out.writeInt(-3);
-            
-            if (labeled)
-            {
-                for (int w1 = 0; w1 < instanceLength; w1++)
-                {
-                    for (int t = 0; t < types.length; t++)
-                    {
-                        String type = types[t];
-                        for (int ph = 0; ph < 2; ph++)
-                        {
-                            boolean attR = ph == 0 ? true : false;
-                            for (int ch = 0; ch < 2; ch++)
-                            {
-                                boolean child = ch == 0 ? true : false;
-                                FeatureVector prodFV = new FeatureVector();
-                                addLabeledFeatures(instance, w1, type, attR,
-                                        child, prodFV);
-                                out.writeObject(prodFV.keys());
-                            }
-                        }
-                    }
-                }
-                out.writeInt(-3);
-            }
-            
-            out.writeObject(instance.fv.keys());
-            out.writeInt(-4);
-
-            out.writeObject(instance);
-            out.writeInt(-1);
-
-            out.reset();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
     
-    
-    /**
-     * Read an instance from an input stream.
-     * 
-     **/
-    public DependencyInstance readInstance(ObjectInputStream in, int length,
-            FeatureVector[][][] fvs, double[][][] probs,
-            FeatureVector[][][][] nt_fvs, double[][][][] nt_probs,
-            Parameters params) throws IOException
-    {
-
-        try
-        {
-
-            // Get production crap.
-            for (int w1 = 0; w1 < length; w1++)
-            {
-                for (int w2 = w1 + 1; w2 < length; w2++)
-                {
-                    for (int ph = 0; ph < 2; ph++)
-                    {
-                        FeatureVector prodFV = new FeatureVector(
-                                (int[]) in.readObject());
-                        double prodProb = params.getScore(prodFV);
-                        fvs[w1][w2][ph] = prodFV;
-                        probs[w1][w2][ph] = prodProb;
-                    }
-                }
-            }
-            int last = in.readInt();
-            if (last != -3)
-            {
-                System.out.println("Error reading file.");
-                System.exit(0);
-            }
-
-            if (labeled) 
-            { 
-                for (int w1 = 0; w1 < length; w1++) 
-                { 
-                    for (int t = 0; t < types.length; t++) 
-                    { 
-                        String type = types[t];              
-                        for (int ph = 0; ph < 2; ph++) 
-                        { 
-                            for (int ch = 0; ch < 2; ch++) 
-                            {
-                                FeatureVector prodFV = new FeatureVector( (int[])in.readObject()); 
-                                double nt_prob = params.getScore(prodFV);
-                                nt_fvs[w1][t][ph][ch] = prodFV; 
-                                nt_probs[w1][t][ph][ch] = nt_prob;
-                            } 
-                        }
-                    } 
-                } 
-                last = in.readInt(); 
-                if (last != -3) 
-                {
-                    System.out.println("Error reading file."); 
-                    System.exit(0); 
-                } 
-            }
-             
-            FeatureVector nfv = new FeatureVector((int[]) in.readObject());
-            last = in.readInt();
-            if (last != -4)
-            {
-                System.out.println("Error reading file.");
-                System.exit(0);
-            }
-
-            DependencyInstance marshalledDI;
-            marshalledDI = (DependencyInstance) in.readObject();
-            marshalledDI.setFeatureVector(nfv);
-
-            last = in.readInt();
-            if (last != -1)
-            {
-                System.out.println("Error reading file.");
-                System.exit(0);
-            }
-
-            return marshalledDI;
-
-        }
-        catch (ClassNotFoundException e)
-        {
-            System.out.println("Error reading file.");
-            System.exit(0);
-        }
-
-        // this won't happen, but it takes care of compilation complaints
-        return null;
-    }
-
-    /**
-     * Read the parsed source sentences from disk into memory.
-     * 
-     * @param sourceFile
+    /** 
+     * @param index the position of the word in the DependencyInstance
+     * @param instanceHeads the array of instance heads in the Dependency Instance.
+     * @return true if the word at position index has a head at -1.
      */
-    public void readSourceInstances(String sourceFile)
+    public boolean checkForRootAttach(int index, int[] instanceHeads)
     {
-        try
+        if (instanceHeads[index] == -1)
         {
-            System.out.println(sourceFile);
-            correspondingReader.startReading(sourceFile);
-            DependencyInstance x = correspondingReader.getNext();
-            while (x != null)
-            {
-                sourceInstances.add(x);
-                x = correspondingReader.getNext();
-            }
+            return true;
         }
-        catch (IOException ioe)
-        {
-            ioe.printStackTrace();
-        }
-    }
-
-    /**
-     * Read the alignments from disk into memory.
-     * 
-     * @param alignmentsFile
-     * @throws IOException
-     */
-    public void readAlignments(String alignmentsFile) throws IOException
-    {
-        alignments = new LinkedList<List<Alignment>>();
-
-        AlignmentsReader ar = AlignmentsReader
-                .getAlignmentsReader(alignmentsFile);
-
-        List<Alignment> thisLine = ar.getNext();
-
-        while (thisLine != null)
-        {
-            alignments.add(thisLine);
-            thisLine = ar.getNext();
-        }
-    }
-
-    /**
-     * Adds features that allow for labelled parsing.
-     * 
-     * TODO: Rewrite this code because it uses position-based features.
-     * 
-     * @param instance
-     * @param wordIndex
-     * @param dependencyType
-     * @param attR
-     * @param childFeatures
-     * @param fv
-     */
-    public void newAddLabeledFeatures(DependencyInstance instance, int wordIndex,
-            String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
-    {    
-        /* The original implementation */
-        if (!labeled)
-        {
-            return;
-        }
-        
-        String[] forms = instance.forms;
-        String[] pos = instance.postags;
-
-        String att = "";
-        if (attR)
-        {
-            att = "RA";
-        }
-        else
-        {
-            att = "LA";
-        }
-
-        att += "&" + childFeatures; // attachment direction)
-        //att = "";
-
-        String w = forms[wordIndex]; // word
-        String wP = pos[wordIndex]; // postag
-
-        String wPm1 = wordIndex > 0 ? pos[wordIndex - 1] : "STR"; // pos of proceeding word
-        String wPp1 = wordIndex < pos.length - 1 ? pos[wordIndex + 1] : "END"; // pos of the next word
-
-        add("NTS1=" + dependencyType + "&" + att, fv); // dependency relation label + direction
-        add("ANTS1=" + dependencyType, fv); // dependency relation label
-        for (int i = 0; i < 2; i++)
-        {
-            String suff = i < 1 ? "&" + att : ""; // attachment direction
-            suff = "&" + dependencyType + suff; // and dependency relation label
-
-            add("NTH=" + w + " " + wP + suff, fv); // word and pos and suff
-            add("NTI=" + wP + suff, fv); // pos tag and suff
-            add("NTIA=" + wPm1 + " " + wP + suff, fv); // prev pos tag and this pos tag and suff 
-            add("NTIB=" + wP + " " + wPp1 + suff, fv); // this pos and prev pos and suff
-            add("NTIC=" + wPm1 + " " + wP + " " + wPp1 + suff, fv); // prev pos, this pos, next pos, suff
-            add("NTJ=" + w + suff, fv); // word and suff
-        }
-    }
+        return false;
+    }          
 }
