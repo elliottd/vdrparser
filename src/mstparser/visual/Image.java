@@ -1,5 +1,6 @@
 package mstparser.visual;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 
@@ -9,12 +10,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 
-//import static com.googlecode.javacv.cpp.opencv_core.IplImage;
-//import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImage;
 
 /**
  * This is a wrapper class for all the data types
@@ -37,10 +38,27 @@ public class Image {
 	public Image(String imageFile)
 	{
 		this.filename = imageFile;
-//		this.image = cvLoadImage(filename);
-//		this.dimensions = new double[2];
-//		this.dimensions[0] = this.image.width();
-//		this.dimensions[1] = this.image.height();
+		this.dimensions = new double[2];
+
+		try 
+		{
+			BufferedImage img = ImageIO.read(new File(this.filename));
+			this.dimensions[0] = img.getWidth();
+			this.dimensions[1] = img.getHeight();
+			img = null;
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+		catch(IllegalArgumentException iae)
+		{
+			// This only happens for one file 2010__006219.jpg. 
+			// There must be something wrong with how it is encoded.
+			this.dimensions[0] = -1;
+			this.dimensions[1] = -1;
+			System.err.println("Could not read image from disk: " + this.filename);
+		}
 	}
 	
 	public void setXMLFile(String filename)
@@ -82,6 +100,14 @@ public class Image {
 	    }
 	    // This is a problem.
 	    return -1;
+	}
+	
+	public void populateQuadrants()
+	{
+		for (Polygon p: polygons)
+		{
+			p.imageQuadrant = ImageQuadrant.getPolygonQuadrant(p, this);
+		}
 	}
 	
 	public void calculateSpatialRelationships()

@@ -20,7 +20,7 @@ public class Polygon {
 	public double convexHullArea;
 	public SpatialRelation.Relations[] spatialRelations;
 	public Color averageRGB;
-	public ImageQuadrant imageQuadrant;
+	public ImageQuadrant.Quadrant imageQuadrant;
 	public String label;
 	public Point2D[] points;
 	
