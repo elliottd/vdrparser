@@ -39,6 +39,11 @@ public class DependencyPipe
         depReader = DependencyReader.createDependencyReader(options.format,
                 options.discourseMode);
     }
+    
+    public void initialisePipe()
+    {
+    	
+    }
 
     public void initInputFile(String file) throws IOException
     {
