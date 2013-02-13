@@ -739,7 +739,7 @@ public class DependencyPipeVisual extends DependencyPipe
         
         if (label != null && label.equals("-"))
         {
-        	label = "<no-type>";
+        	//label = "<no-type>";
         }
         
         if (label == null)
@@ -1232,7 +1232,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 
         if (label != null && label.equals("-"))
         {
-        	label = "<no-type>";
+        	//label = "<no-type>";
         }
         
         String[][] feats = instance.feats;
