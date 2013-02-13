@@ -76,38 +76,78 @@ public class Alphabet implements Serializable
      * @return
      */
     public String topNFeaturesByWeight(Parameters params, int n)
-    {
-        StringBuilder sb = new StringBuilder();
+    {      
         
-        Object[] okeys = map.keys();
-        String[] keys = new String[okeys.length];
-        for (int z = 0; z < okeys.length; z++)
+        class FeatureWeightHolder implements Comparable<FeatureWeightHolder>
         {
-            keys[z] = okeys.toString();
-        }
-                
-        double[][] paramIndices = new double[keys.length][2];
-                
-        for (int i = 0; i < keys.length; i++)
-        {
-            paramIndices[i][0] = map.get(keys[i]);
-            paramIndices[i][1] = params.parameters[map.get(keys[i])];
-        }
-        
-        Arrays.sort(paramIndices, new Comparator<double[]>(){
-            public int compare(double[] a, double[] b)
+
+            String key;
+            int index;
+            double weight;
+            
+            public FeatureWeightHolder(String key, int index, double weight)
             {
-                return -Double.compare(a[1], b[1]);
+                this.key = key;
+                this.index = index;
+                this.weight = weight;
             }
-        });
+            
+            public int compareTo(FeatureWeightHolder other)
+            {
+                return -Double.compare(this.weight, other.weight );
+            }
+            
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        Object[] okeys = map.keys();       
+        FeatureWeightHolder[] sortedFeatures = new FeatureWeightHolder[okeys.length];
+
+        for (int i = 0; i < okeys.length; i++)
+        {
+            sortedFeatures[i] = new FeatureWeightHolder(okeys[i].toString(), map.get(okeys[i]), params.parameters[map.get(okeys[i])]);
+        }
+        
+        Arrays.sort(sortedFeatures);
         
         for (int j = 0; j < n-1; j++)
-        {
-            int idx = (int)paramIndices[j][0];
-            sb.append(keys[idx] + " " + paramIndices[j][1] + "\n" );
+        {            
+            sb.append(sortedFeatures[j].key + " " + sortedFeatures[j].weight + "\n" );
         }
                 
-        return sb.toString();
+        return sb.toString();        
+        
+//        StringBuilder sb = new StringBuilder();
+//        
+//        Object[] okeys = map.keys();
+//        String[] keys = new String[okeys.length];
+//        for (int z = 0; z < okeys.length; z++)
+//        {
+//            keys[z] = okeys.toString();
+//        }
+//                
+//        double[][] paramIndices = new double[keys.length][2];
+//                
+//        for (int i = 0; i < keys.length; i++)
+//        {
+//            paramIndices[i][0] = map.get(keys[i]);
+//            paramIndices[i][1] = params.parameters[map.get(keys[i])];
+//        }
+//        
+//        Arrays.sort(paramIndices, new Comparator<double[]>(){
+//            public int compare(double[] a, double[] b)
+//            {
+//                return -Double.compare(a[1], b[1]);
+//            }
+//        });
+//        
+//        for (int j = 0; j < n-1; j++)
+//        {
+//            int idx = (int)paramIndices[j][0];
+//            sb.append(keys[idx] + " " + paramIndices[j][1] + "\n" );
+//        }
+//                
+//        return sb.toString();
     }
 
 

@@ -56,11 +56,8 @@ public class DependencyParser
         }
 
         params.averageParams(i * instanceLengths.length);
-        
-        if (options.verbose)
-        {
-        	System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 25));
-        }
+
+        System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 20));
     }
 
     private void trainingIter(int[] instanceLengths, String trainfile,

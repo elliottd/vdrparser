@@ -39,9 +39,10 @@ public class CreateFeatureVectorTest
         options.decodeType = "non-proj";
         options.format = "CONLL";
         options.pipeName = "DependencyPipeVisual";
-        options.verbose = false;
+        options.verbose = true;
         options.numIters = 1;
         options.qg = true;
+        options.createForest = true;
         File tmpDir = new File("/scratch/tmp");
         try
         {
