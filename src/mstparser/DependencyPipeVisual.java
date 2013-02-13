@@ -324,7 +324,9 @@ public class DependencyPipeVisual extends DependencyPipe
                 argIndex = tmp;
             }
             
-            this.addFeatures(instance, i, headIndex, argIndex, attR, headIndex == i, fv);
+            this.addFeatures(instance, i, headIndex, argIndex, attR, headIndex == i, instance.deprels[headIndex], fv);
+            this.labeledFeatures(instance, i, instance.deprels[i], attR, true, fv);
+            this.labeledFeatures(instance, heads[i], instance.deprels[i], attR, false, fv);
         }
 
         return fv;
@@ -369,15 +371,8 @@ public class DependencyPipeVisual extends DependencyPipe
                     int parInt = attR ? w1 : w2;
 
                     FeatureVector prodFV = new FeatureVector();
-
-                    this.linguisticBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    //this.visualUnigramFeatures(instance, parInt, null, true, prodFV);
-                    //this.visualUnigramFeatures(instance, childInt, null, false, prodFV);                   
-                    this.visualBigramFeatures(instance, parInt, childInt, null, prodFV);
-                    this.quasiSynchronousFeatures(instance, parInt, childInt, null, prodFV);
-                    //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);
-                    //this.addLinguisticBigramSiblingFeatures(instance, w1, parInt, childInt, instance.deprels[parInt], prodFV);*/
-
+                    
+                    this.addFeatures(instance, w1, parInt, childInt, attR, parInt == w1, null, prodFV);
          
                     double prodProb = params.getScore(prodFV);
                     fvs[w1][w2][ph] = prodFV;
@@ -444,16 +439,8 @@ public class DependencyPipeVisual extends DependencyPipe
                         int childInt = attR ? w2 : w1;
                         int parInt = attR ? w1 : w2;
 
-                        FeatureVector prodFV = new FeatureVector();                        
-
-                        this.linguisticBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        //this.visualUnigramFeatures(instance, parInt, null, true, prodFV);
-                        //this.visualUnigramFeatures(instance, childInt, null, false, prodFV);                            
-                        this.visualBigramFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        this.quasiSynchronousFeatures(instance, parInt, childInt, instance.deprels[parInt], prodFV);
-                        //this.addLinguisticGrandparentGrandchildFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                        //this.addLinguisticBigramSiblingFeatures(instance, w1, w1, w2, instance.deprels[parInt], prodFV);
-                        
+                        FeatureVector prodFV = new FeatureVector();
+                        this.addFeatures(instance, w1, parInt, childInt, attR, parInt == w1, instance.deprels[parInt], prodFV);                   
                         out.writeObject(prodFV.keys());
                     }
                 }
@@ -504,22 +491,23 @@ public class DependencyPipeVisual extends DependencyPipe
      * @param fv the FeatureVector for this instance.
      */
     public void addFeatures(DependencyInstance instance, int position, 
-    		int headIndex, int argIndex, boolean attR, boolean isHead, FeatureVector fv)
+    		int headIndex, int argIndex, boolean attR, boolean isHead, String label, FeatureVector fv)
     {
-    	
-        String[] labs = instance.deprels;
-        int[] heads = instance.heads;
-        this.linguisticBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
+        //this.linguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
+        //this.linguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);        
+        this.linguisticBigramFeatures(instance, headIndex, argIndex, label, fv);
+        
         //this.visualUnigramFeatures(instance, headIndex, labs[headIndex], true, fv);
         //this.visualUnigramFeatures(instance, argIndex, labs[headIndex], false, fv);
-        this.visualBigramFeatures(instance, headIndex, argIndex, labs[headIndex], fv);
-        this.quasiSynchronousFeatures(instance, headIndex, argIndex, labs[headIndex],  fv);
+        this.visualBigramFeatures(instance, headIndex, argIndex, label, fv);
+
+        this.quasiSynchronousFeatures(instance, headIndex, argIndex, label,  fv);
         
         //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
         //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
 
-        this.labeledFeatures(instance, position, labs[position], attR, true, fv);
-        this.labeledFeatures(instance, heads[position], labs[position], attR, false, fv);
+        //this.labeledFeatures(instance, position, label, attR, true, fv);
+        //this.labeledFeatures(instance, heads[position], labs[position], attR, false, fv);
         
     }    	        
 
@@ -544,6 +532,11 @@ public class DependencyPipeVisual extends DependencyPipe
         }
         
         String wordForm = checkForRootAttach(wordIndex, heads) ? "ROOT" : forms[wordIndex];
+        
+        if (wordForm.equals(("ROOT")) || wordForm.equals("<root>"))
+        {
+            return;
+        }                
         
         StringBuilder feature;
         
@@ -1036,6 +1029,16 @@ public class DependencyPipeVisual extends DependencyPipe
                             StringBuilder feature = new StringBuilder();
                             feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
                             add(feature.toString(), fv);
+                            feature.append(" HA=" + label);
+                            add(feature.toString(), fv);                            
+                            /*feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
+                            add(feature.toString(), fv);
+                            feature.append(" HA=" + label);
+                            add(feature.toString(), fv);
+                            feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
+                            add(feature.toString(), fv);
+                            feature.append(" HA=" + label);
+                            add(feature.toString(), fv);*/
                         }
                     }
                 }
@@ -1080,9 +1083,22 @@ public class DependencyPipeVisual extends DependencyPipe
         att += "&" + childFeatures; // attachment direction)
         //att = "";
 
-        String w = forms[wordIndex]; // word
-        String wP = pos[wordIndex]; // postag
-
+        String w;
+        String wP;
+        
+        if (wordIndex < 0)
+        {
+            w = "<root>";
+            wP = "<root-POS>";                    
+        }
+        else
+        {
+            w = forms[wordIndex]; // word
+            wP = pos[wordIndex]; // postag
+           
+        }
+        
+        
         String wPm1 = wordIndex > 0 ? pos[wordIndex - 1] : "STR"; // pos of proceeding word
         String wPp1 = wordIndex < pos.length - 1 ? pos[wordIndex + 1] : "END"; // pos of the next word
 
