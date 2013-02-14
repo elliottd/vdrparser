@@ -73,7 +73,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 this.readAlignments(options.alignmentsFile);
     		}
     		
-    		if (options.imagesFile != null)
+    		if (options.visualFeatures)
     		{
                 this.images = new ArrayList<Image>();
                 this.readImageData(options.imagesFile, options.xmlFile);
@@ -87,7 +87,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 this.readDescriptions(options.testSourceFile);
                 this.readAlignments(options.testAlignmentsFile);
     		}
-    		if (options.testImagesFile != null)
+    		if (options.visualFeatures)
     		{
 	            this.images = new ArrayList<Image>();
 	            this.readImageData(options.testImagesFile, options.testXmlFile);
