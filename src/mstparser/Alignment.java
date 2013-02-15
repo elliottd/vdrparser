@@ -13,8 +13,8 @@ import java.util.Arrays;
  */
 public class Alignment
 {
-    private int sourceIndex; // -1 denotes the ROOT of the linguistic parse
-    private int targetIndex; // 0 denotes the ROOT of the image parse
+    private int descriptionIndex; // -1 denotes the ROOT of the linguistic parse
+    private int imageIndex; // 0 denotes the ROOT of the image parse
 
     public enum Configuration
     {
@@ -30,18 +30,18 @@ public class Alignment
 
     public Alignment(String source, String target)
     {
-        this.sourceIndex = Integer.valueOf(source);
-        this.targetIndex = Integer.valueOf(target);
+        this.descriptionIndex = Integer.valueOf(source);
+        this.imageIndex = Integer.valueOf(target);
     }
 
-    public int getSourceIndex()
+    public int getDescriptionIndex()
     {
-        return sourceIndex;
+        return descriptionIndex;
     }
 
-    public int getTargetIndex()
+    public int getImageIndex()
     {
-        return targetIndex;
+        return imageIndex;
     }
 
     /**
@@ -60,7 +60,7 @@ public class Alignment
 
         Configuration c = Configuration.NONE;
 
-        if (target.heads[this.targetIndex] == other.targetIndex)
+        if (target.heads[this.imageIndex] == other.imageIndex)
         {
             //System.out.println("This is the head of the other");
             c = isParentChild(this, other, source) ? Configuration.PARENTCHILD : c;
@@ -70,7 +70,7 @@ public class Alignment
             c = isDominates(this, other, source) ? Configuration.ANCESTERDESCENDENT : c;
             c = isSiblings(this, other, source) ? Configuration.SIBLINGS : c;
         }
-        else if (target.heads[other.targetIndex] == this.targetIndex)
+        else if (target.heads[other.imageIndex] == this.imageIndex)
         {
             //System.out.println("The other is the head of this");
             c = isParentChild(other, this, source) ? Configuration.PARENTCHILD : c;
@@ -88,11 +88,11 @@ public class Alignment
                                  DependencyInstance target,
                                  DependencyInstance source)
     {
-        if (target.heads[this.targetIndex] == other.targetIndex)
+        if (target.heads[this.imageIndex] == other.imageIndex)
         {
             return 1;
         }
-        else if (target.heads[other.targetIndex] == this.targetIndex)
+        else if (target.heads[other.imageIndex] == this.imageIndex)
         {
             return -1;
         }
@@ -103,8 +103,8 @@ public class Alignment
     public boolean isParentChild(Alignment head, Alignment argument,
                                         DependencyInstance source)
     {
-        int head_source = head.getSourceIndex();
-        int arg_source = argument.getSourceIndex();
+        int head_source = head.getDescriptionIndex();
+        int arg_source = argument.getDescriptionIndex();
 
         //System.out.println(source);
 
@@ -123,8 +123,8 @@ public class Alignment
     public boolean isChildParent(Alignment head, Alignment argument,
                                         DependencyInstance source)
     {
-        int head_source = head.getSourceIndex();
-        int arg_source = argument.getSourceIndex();
+        int head_source = head.getDescriptionIndex();
+        int arg_source = argument.getDescriptionIndex();
 
         if (arg_source == -1)
         {
@@ -141,8 +141,8 @@ public class Alignment
     public boolean isGrandparentGrandchild(Alignment head, Alignment argument,
                                            DependencyInstance source)
     {
-        int head_source = head.getSourceIndex();
-        int arg_source = argument.getSourceIndex();
+        int head_source = head.getDescriptionIndex();
+        int arg_source = argument.getDescriptionIndex();
 
         if (arg_source == -1)
         {
@@ -168,8 +168,8 @@ public class Alignment
     public boolean isCCommand(Alignment head, Alignment argument,
                               DependencyInstance source)
     {
-        int head_source = head.getSourceIndex();
-        int arg_source = argument.getSourceIndex();
+        int head_source = head.getDescriptionIndex();
+        int arg_source = argument.getDescriptionIndex();
 
         if (arg_source == -1)
         {
@@ -206,8 +206,8 @@ public class Alignment
     public boolean isDominates(Alignment head, Alignment argument,
                               DependencyInstance source)
     {
-        int head_source_index = head.getSourceIndex();
-        int arg_source_index = argument.getSourceIndex();
+        int head_source_index = head.getDescriptionIndex();
+        int arg_source_index = argument.getDescriptionIndex();
 
         if (arg_source_index == -1)
         {
@@ -249,8 +249,8 @@ public class Alignment
     public boolean isSiblings(Alignment head, Alignment argument,
                               DependencyInstance source)
     {
-        int head_source_index = head.getSourceIndex();
-        int arg_source_index = argument.getSourceIndex();
+        int head_source_index = head.getDescriptionIndex();
+        int arg_source_index = argument.getDescriptionIndex();
         if (arg_source_index == -1)
         {
             arg_source_index = 0;
