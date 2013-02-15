@@ -1,9 +1,7 @@
 package mstparser;
 
-import mstparser.Alignment.Configuration;
 import mstparser.io.*;
 import mstparser.visual.Image;
-import mstparser.visual.Polygon;
 import mstparser.visual.SpatialRelation;
 
 import java.awt.geom.Point2D;
@@ -13,7 +11,6 @@ import gnu.trove.*;
 
 import java.util.*;
 
-import com.googlecode.javacv.cpp.*;
 
 /**
  * A DependencyPipe subclass for parsing Visual Dependency Representations.
@@ -30,6 +27,8 @@ public class DependencyPipeVisual extends DependencyPipe
 {
 
     private DependencyReader textReader;
+    
+    public Hashtable<String, String> clusteredLabels;
 
     private ParserOptions options;
 
@@ -67,10 +66,11 @@ public class DependencyPipeVisual extends DependencyPipe
     	
     	if (options.train)
     	{
-    		if (options.sourceFile != null)
+    		if (options.qg)
     		{
                 this.readDescriptions(options.sourceFile);
                 this.readAlignments(options.alignmentsFile);
+                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/clusteredlabelsV1");
     		}
     		
     		if (options.visualFeatures)
@@ -81,11 +81,12 @@ public class DependencyPipeVisual extends DependencyPipe
     	}
     	else if (options.test)
     	{
-    		if (options.testSourceFile != null)
+    		if (options.qg)
     		{
 
                 this.readDescriptions(options.testSourceFile);
                 this.readAlignments(options.testAlignmentsFile);
+                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/clusteredlabelsV1");
     		}
     		if (options.visualFeatures)
     		{
@@ -95,7 +96,35 @@ public class DependencyPipeVisual extends DependencyPipe
 		}
     }
 
-	public int[] createInstances(String file, File featFileName)
+	private void readClusterAssignments(String string)
+    {
+	    this.clusteredLabels = new Hashtable<String, String>();
+	    try
+	    {
+	        BufferedReader reader = new BufferedReader(new FileReader(string));
+	        String line;
+	        
+	        while((line = reader.readLine()) != null)
+	        {
+	            if (line.indexOf(":") != -1)
+	            {
+	                String assignment = line.split(":")[0];
+	                String labels = line.split(":")[1];
+	                String[] splitLabels = labels.split(",");
+	                for(String s: splitLabels)
+	                {
+	                    this.clusteredLabels.put(s, assignment);
+	                }
+	            }
+	        }
+	    }
+	    catch (IOException ioe)
+	    {
+	        ioe.printStackTrace();
+	    }
+    }
+
+    public int[] createInstances(String file, File featFileName)
             throws IOException
     {
 
@@ -224,8 +253,9 @@ public class DependencyPipeVisual extends DependencyPipe
      */
     public void readAlignments(String alignmentsFile)
     {
+        int counter = 0;
     	try
-	    	{
+	    {
 	        alignments = new LinkedList<List<Alignment>>();
 	
 	        AlignmentsReader ar = AlignmentsReader
@@ -236,6 +266,7 @@ public class DependencyPipeVisual extends DependencyPipe
 	        while (thisLine != null)
 	        {
 	            alignments.add(thisLine);
+	            counter += thisLine.size();
 	            thisLine = ar.getNext();
 	        }
     	}
@@ -243,6 +274,8 @@ public class DependencyPipeVisual extends DependencyPipe
     	{
     		ioe.printStackTrace();
     	}
+    	
+    	System.out.println(String.format("Read %d alignments from disk", counter));
     }   
     
     /**
@@ -501,7 +534,7 @@ public class DependencyPipeVisual extends DependencyPipe
         //this.visualUnigramFeatures(instance, argIndex, labs[headIndex], false, fv);
         this.visualBigramFeatures(instance, headIndex, argIndex, label, fv);
 
-        this.quasiSynchronousFeatures(instance, headIndex, argIndex, label,  fv);
+        this.quasiSynchronousFeatures(instance, headIndex, argIndex, label, fv);
         
         //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
         //this.addLinguisticBigramSiblingFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -1014,31 +1047,54 @@ public class DependencyPipeVisual extends DependencyPipe
                 {
                     if (a != b)
                     {
-                        if (a.getTargetIndex() == headIndex && b.getTargetIndex() == argIndex
-                                || a.getTargetIndex() == argIndex && b.getTargetIndex() == headIndex)
+                        if (a.getImageIndex() == headIndex && b.getImageIndex() == argIndex
+                                || a.getImageIndex() == argIndex && b.getImageIndex() == headIndex)
                         {
                             Alignment.Configuration c = a.getAlignmentConfiguration(b, visual, source);
-                            if (/*c == Configuration.NONE ||*/ a.getSourceIndex() == 0 || b.getSourceIndex() == 0)
+                            /*if (c == Configuration.NONE || a.getSourceIndex() == 0 || b.getSourceIndex() == 0)
                             {
                             	continue;
-                            }
+                            }*/
                            
-                            String head_word = visual.forms[headIndex];
-                            String arg_word = visual.forms[argIndex];
-
-                            StringBuilder feature = new StringBuilder();
-                            feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
-                            add(feature.toString(), fv);
-                            feature.append(" HA=" + label);
-                            add(feature.toString(), fv);                            
-                            /*feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
-                            add(feature.toString(), fv);
-                            feature.append(" HA=" + label);
-                            add(feature.toString(), fv);
-                            feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
-                            add(feature.toString(), fv);
-                            feature.append(" HA=" + label);
-                            add(feature.toString(), fv);*/
+                            String head_word = this.clusteredLabels.contains(visual.forms[headIndex]) ? this.clusteredLabels.get(visual.forms[headIndex]) : visual.forms[headIndex];
+                            String arg_word = this.clusteredLabels.contains(visual.forms[argIndex]) ? this.clusteredLabels.get(visual.forms[argIndex]) : visual.forms[argIndex];
+                            /*if (label == null)
+                            {
+                                // This happens at test time and we don't know which label to apply
+                                // so we just try all of them and believe the model will make it happy.
+                                for (String type: types)
+                                {
+                                    StringBuilder feature = new StringBuilder();
+                                    feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
+                                    add(feature.toString(), fv);
+                                    feature.append(" HA=" + type);
+                                    add(feature.toString(), fv);                            
+                                    feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
+                                    add(feature.toString(), fv);
+                                    feature.append(" HA=" + type);
+                                    add(feature.toString(), fv);
+                                    feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
+                                    add(feature.toString(), fv);
+                                    feature.append(" HA=" + type);
+                                    add(feature.toString(), fv);
+                                }
+                            }*/
+                            //else
+                            //{
+                                StringBuilder feature = new StringBuilder();
+                                feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
+                                add(feature.toString(), fv);
+                                feature.append(" HA=" + label);
+                                add(feature.toString(), fv);                            
+//                                feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
+//                                add(feature.toString(), fv);
+//                                feature.append(" HA=" + label);
+//                                add(feature.toString(), fv);
+//                                feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
+//                                add(feature.toString(), fv);
+//                                feature.append(" HA=" + label);
+//                                add(feature.toString(), fv);
+                            //}
                         }
                     }
                 }
