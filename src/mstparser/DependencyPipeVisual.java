@@ -70,7 +70,7 @@ public class DependencyPipeVisual extends DependencyPipe
     		{
                 this.readDescriptions(options.sourceFile);
                 this.readAlignments(options.alignmentsFile);
-                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/clusteredlabelsV1");
+                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v1clusters/clusters");
     		}
     		
     		if (options.visualFeatures)
@@ -86,7 +86,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                 this.readDescriptions(options.testSourceFile);
                 this.readAlignments(options.testAlignmentsFile);
-                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/clusteredlabelsV1");
+                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v1clusters/clusters");
     		}
     		if (options.visualFeatures)
     		{
@@ -1051,14 +1051,10 @@ public class DependencyPipeVisual extends DependencyPipe
                                 || a.getImageIndex() == argIndex && b.getImageIndex() == headIndex)
                         {
                             Alignment.Configuration c = a.getAlignmentConfiguration(b, visual, source);
-                            /*if (c == Configuration.NONE || a.getSourceIndex() == 0 || b.getSourceIndex() == 0)
-                            {
-                            	continue;
-                            }*/
                            
                             String head_word = this.clusteredLabels.contains(visual.forms[headIndex]) ? this.clusteredLabels.get(visual.forms[headIndex]) : visual.forms[headIndex];
                             String arg_word = this.clusteredLabels.contains(visual.forms[argIndex]) ? this.clusteredLabels.get(visual.forms[argIndex]) : visual.forms[argIndex];
-                            /*if (label == null)
+                            if (label == null)
                             {
                                 // This happens at test time and we don't know which label to apply
                                 // so we just try all of them and believe the model will make it happy.
@@ -1071,16 +1067,16 @@ public class DependencyPipeVisual extends DependencyPipe
                                     add(feature.toString(), fv);                            
                                     feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
                                     add(feature.toString(), fv);
-                                    feature.append(" HA=" + type);
-                                    add(feature.toString(), fv);
-                                    feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
-                                    add(feature.toString(), fv);
-                                    feature.append(" HA=" + type);
-                                    add(feature.toString(), fv);
+//                                    feature.append(" HA=" + type);
+//                                    add(feature.toString(), fv);
+//                                    feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
+//                                    add(feature.toString(), fv);
+//                                    feature.append(" HA=" + type);
+//                                    add(feature.toString(), fv);
                                 }
-                            }*/
-                            //else
-                            //{
+                            }
+                            else
+                            {
                                 StringBuilder feature = new StringBuilder();
                                 feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
                                 add(feature.toString(), fv);
@@ -1094,7 +1090,7 @@ public class DependencyPipeVisual extends DependencyPipe
 //                                add(feature.toString(), fv);
 //                                feature.append(" HA=" + label);
 //                                add(feature.toString(), fv);
-                            //}
+                            }
                         }
                     }
                 }
@@ -1328,6 +1324,7 @@ public class DependencyPipeVisual extends DependencyPipe
                     feature.append(" HQ=" + i.polygons[h].imageQuadrant);
                     add(feature.toString(), fv);
                     feature.append(" AQ=" + i.polygons[a].imageQuadrant);
+                    add(feature.toString(), fv);
                 }
             }
             else
@@ -1339,6 +1336,8 @@ public class DependencyPipeVisual extends DependencyPipe
                 feature.append(" HQ=" + i.polygons[h].imageQuadrant);
                 add(feature.toString(), fv);
                 feature.append(" AQ=" + i.polygons[a].imageQuadrant);
+                add(feature.toString(), fv);
+
             }
         }
     }    
