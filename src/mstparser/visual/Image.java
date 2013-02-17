@@ -39,7 +39,10 @@ public class Image {
 	{
 		this.filename = imageFile;
 		this.dimensions = new double[2];
-
+	}
+	
+	public void getImageDimensions()
+	{
 		try 
 		{
 			BufferedImage img = ImageIO.read(new File(this.filename));
@@ -58,6 +61,14 @@ public class Image {
 			this.dimensions[0] = -1;
 			this.dimensions[1] = -1;
 			System.err.println("Could not read image from disk: " + this.filename);
+		}
+	}
+	
+	public void calculatePolygonAreas()
+	{
+		for (Polygon p: this.polygons)
+		{
+			p.calculateArea();
 		}
 	}
 	

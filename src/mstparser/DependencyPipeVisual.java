@@ -2,6 +2,8 @@ package mstparser;
 
 import mstparser.io.*;
 import mstparser.visual.Image;
+import mstparser.visual.ImageQuadrant.Quadrant;
+import mstparser.visual.Polygon.Area;
 import mstparser.visual.SpatialRelation;
 
 import java.awt.geom.Point2D;
@@ -311,8 +313,10 @@ public class DependencyPipeVisual extends DependencyPipe
 			for (Image i: images)
 			{
 				i.parseXMLFile();
+				i.getImageDimensions();
 				i.calculateSpatialRelationships();
 				i.populateQuadrants();
+				i.calculatePolygonAreas();
 				//System.out.println(i.toString());
 			}
 		} 
@@ -525,15 +529,9 @@ public class DependencyPipeVisual extends DependencyPipe
      */
     public void addFeatures(DependencyInstance instance, int position, 
     		int headIndex, int argIndex, boolean attR, boolean isHead, String label, FeatureVector fv)
-    {
-        //this.linguisticUnigramFeatures(instance, headIndex, true, labs[headIndex], fv);
-        //this.linguisticUnigramFeatures(instance, argIndex, false, labs[headIndex], fv);        
-        this.linguisticBigramFeatures(instance, headIndex, argIndex, label, fv);
-        
-        //this.visualUnigramFeatures(instance, headIndex, labs[headIndex], true, fv);
-        //this.visualUnigramFeatures(instance, argIndex, labs[headIndex], false, fv);
-        this.visualBigramFeatures(instance, headIndex, argIndex, label, fv);
-
+    {       
+        this.linguisticFeatures(instance, headIndex, argIndex, label, fv);
+        this.visualFeatures(instance, headIndex, argIndex, label, fv);
         this.quasiSynchronousFeatures(instance, headIndex, argIndex, label, fv);
         
         //this.addLinguisticGrandparentGrandchildFeatures(instance, i, headIndex, argIndex, labs[i], fv);
@@ -543,225 +541,18 @@ public class DependencyPipeVisual extends DependencyPipe
         //this.labeledFeatures(instance, heads[position], labs[position], attR, false, fv);
         
     }    	        
-
-    /**
-     * Add a set of unigram features for the word at wordIndex in a DependencyInstance
-     * 
-     * TODO: These features have catastrophic repercussions for parsing
-     *       accuracy and are currently disabled.
-     * 
-     * @param instance
-     * @param fv
-     */
-    public void linguisticUnigramFeatures(DependencyInstance instance,
-            int wordIndex, boolean isHead, String label, FeatureVector fv)
-    {
-        int[] heads = instance.heads;
-        String[] forms = instance.forms;
-        
-        if (label != null && label.equals("-"))
-        {
-        	label = "<no-type>";
-        }
-        
-        String wordForm = checkForRootAttach(wordIndex, heads) ? "ROOT" : forms[wordIndex];
-        
-        if (wordForm.equals(("ROOT")) || wordForm.equals("<root>"))
-        {
-            return;
-        }                
-        
-        StringBuilder feature;
-        
-        if (isHead)
-        {
-            if (label == null)
-            {
-                for (String type: types)
-                {
-                    //1. H=Head
-                    feature = new StringBuilder("H=" + wordForm);
-                    this.add(feature.toString(), fv);
-                    
-                    //3. H=Head HA=labelhead−arg
-                    feature = new StringBuilder("H=" + wordForm + " HA=" + type);
-                    this.add(feature.toString(), fv);
-                    
-                    /*for (int i = 0; i < instance.length()-1; i++)
-                    {
-                        int argCounter = i;
-
-                        //5. H=Head A#=no. args
-                        feature = new StringBuilder("H=" + wordForm + " #A=" + argCounter);
-                        this.add(feature.toString(), fv);
-                        
-                        //6. H=Head A#=no. args HA=labelhead−arg
-                        feature = new StringBuilder("H=" + wordForm + " #A=" + argCounter + " HA=" + label);
-                        this.add(feature.toString(), fv);                        
-                    }*/
-                }
-            }
-            else
-            {                
-                //1. H=Head
-                feature = new StringBuilder("H=" + wordForm);
-                this.add(feature.toString(), fv);
-                
-                //3. H=Head HA=labelhead−arg
-                feature = new StringBuilder("H=" + wordForm + " HA=" + label);
-                this.add(feature.toString(), fv);
-                
-                
-                /*// Get features for the siblings
-                int argCounter = 0;
-                
-                List<String> arguments = new ArrayList<String>();
-                
-                for (int j=0; j < instance.length(); j++)
-                {
-                    if (heads[j] == wordIndex)
-                    {
-                        argCounter++;
-                        if (j != wordIndex)
-                        {
-                            arguments.add(forms[j]);
-                        }
-                    }
-                }
-
-                //5. H=Head A#=no. args
-                feature = new StringBuilder("H=" + wordForm + " #A=" + argCounter);
-                this.add(feature.toString(), fv);
-                
-                //6. H=Head A#=no. args HA=labelhead−arg
-                feature = new StringBuilder("H=" + wordForm + " #A=" + argCounter + " HA=" + label);
-                this.add(feature.toString(), fv);*/
-                
-            }
-        }
-        else
-        {
-            if (label == null)
-            {
-                for (String type: types)
-                {
-                    //2. A=Arg
-                    feature = new StringBuilder("A=" + wordForm);
-                    this.add(feature.toString(), fv);
-    
-                    //4. A=Arg HA=labelhead−arg
-                    feature = new StringBuilder("A=" + wordForm + " HA="+ type);
-                    this.add(feature.toString(), fv);
-                    
-                    /*for (int i = 0; i < instance.length()-1; i++)
-                    {
-                        int siblingsCounter = i;
-                        
-                        List<String> siblingForms = new ArrayList<String>();
-                       
-                        for (int j=0; j < siblingsCounter; j++)
-                        {
-                            if (j != wordIndex)
-                            {
-                                    siblingForms.add(forms[j]);
-                            }
-                        }                             
-
-                        //7. A=Arg S#=no. siblings
-                        feature = new StringBuilder("A=" + wordForm + " #S=" + siblingsCounter);
-                        this.add(feature.toString(), fv);
-                        
-                        //8. A=Arg S#=no. siblings HA=labelhead−arg
-                        feature = new StringBuilder("A=" + wordForm + " #S=" + siblingsCounter + " HA=" + label);
-                        this.add(feature.toString(), fv);
-                        
-                        //9. A=Arg S=Sibling1,...,N
-                        feature = feature.append(siblingForms.toString());        
-                        this.add(feature.toString(), fv);
-                        
-                        //10. A=Arg S=Sibling1,...,N HA=labelhead−arg
-                        feature = new StringBuilder("A=" + wordForm + " HA=" + label);
-                        feature = feature.append(siblingForms.toString());        
-                        this.add(feature.toString(), fv);
-                        
-                        //11. A=Arg S#=no. siblings S=Sibling1,...,N
-                        feature = new StringBuilder("A=" + wordForm + " #S=" + (siblingsCounter-1));
-                        feature = feature.append(siblingForms.toString());        
-                        this.add(feature.toString(), fv);
-                        
-                        //12. A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
-                        feature = new StringBuilder("A=" + wordForm + " #S=" + (siblingsCounter-1) + " HA=" + label);
-                        feature = feature.append(siblingForms.toString());        
-                        this.add(feature.toString(), fv);                                
-                    } */                   
-                }            
-            }
-            else
-            {
-                //2. A=Arg
-                feature = new StringBuilder("A=" + wordForm);
-                this.add(feature.toString(), fv);
-
-                //4. A=Arg HA=labelhead−arg
-                feature = new StringBuilder("A=" + wordForm + " HA="+ label);
-                this.add(feature.toString(), fv);
-                
-                // Get features for the siblings
-                /*int siblingsCounter = 0;
-                
-                List<String> siblingForms = new ArrayList<String>();
-                
-                for (int j=0; j < instance.length(); j++)
-                {
-                    if (heads[j] == wordIndex)
-                    {
-                        siblingsCounter++;
-                        if (j != wordIndex)
-                        {
-                            siblingForms.add(forms[j]);
-                        }
-                    }
-                }                
-                
-                //7. A=Arg S#=no. siblings
-                feature = new StringBuilder("A=" + wordForm + " #S=" + (siblingsCounter-1));
-                this.add(feature.toString(), fv);
-                
-                //8. A=Arg S#=no. siblings HA=labelhead−arg
-                feature = new StringBuilder("A=" + wordForm + " #S=" + (siblingsCounter-1) + " HA=" + label);
-                this.add(feature.toString(), fv);
-                
-                //9. A=Arg S=Sibling1,...,N
-                feature = feature.append(siblingForms.toString());        
-                this.add(feature.toString(), fv);
-                
-                //10. A=Arg S=Sibling1,...,N HA=labelhead−arg
-                feature = new StringBuilder("A=" + wordForm + " HA=" + label);
-                feature = feature.append(siblingForms.toString());        
-                this.add(feature.toString(), fv);
-                
-                //11. A=Arg S#=no. siblings S=Sibling1,...,N
-                feature = new StringBuilder("A=" + wordForm + " #S=" + (siblingsCounter-1));
-                feature = feature.append(siblingForms.toString());        
-                this.add(feature.toString(), fv);
-                
-                //12. A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
-                feature = new StringBuilder("A=" + wordForm + " #S=" + (siblingsCounter-1) + " HA=" + label);
-                feature = feature.append(siblingForms.toString());        
-                this.add(feature.toString(), fv);*/                
-            }          
-        }
-    }
    
     /**
      * 
-     * @param instance
-     * @param headIndex
-     * @param argIndex
-     * @param label
-     * @param fv
+     * Adds features from the DependencyInstance itself to the FeatureVector.
+     * 
+     * @param instance the DependencyInstance
+     * @param headIndex index of the head word in DependencyInstance
+     * @param argIndex index of the arg word in DependencyInstance
+     * @param label label on of the attachment between headIndex and argIndex
+     * @param fv the FeatureVector to fill
      */
-    public void linguisticBigramFeatures(DependencyInstance instance,
+    public void linguisticFeatures(DependencyInstance instance,
             int headIndex, int argIndex, String label, FeatureVector fv)
     {
         int[] heads = instance.heads;
@@ -770,232 +561,47 @@ public class DependencyPipeVisual extends DependencyPipe
         String argForm = forms[argIndex];
         StringBuilder feature;
         
-        if (label != null && label.equals("-"))
-        {
-        	//label = "<no-type>";
-        }
+    	//1. H=Head
+        feature = new StringBuilder("H=" + headForm);
+        this.add(feature.toString(), fv);
+
+        // A=Arg
+        feature = new StringBuilder("A=" + argForm);            
+        
+        //13. H=Head A=Arg
+        feature = new StringBuilder("H=" + headForm + " A=" + argForm);
+        add(feature.toString(), fv);
         
         if (label == null)
         {
             for (String type: types)
             {
-                //13. H=Head A=Arg
-                feature = new StringBuilder("H=" + headForm + " A=" + argForm);
-                add(feature.toString(), fv);
+                //3. H=Head HA=labelhead−arg
+                feature = new StringBuilder("H=" + headForm + " HA=" + type);
+                this.add(feature.toString(), fv);
+            
+				// A=Arg HA=label
+				feature = new StringBuilder("A=" + argForm + " HA=" + type);            
 
                 //14. H=Head A=Arg HA=labelhead−arg
                 feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + type);
                 add(feature.toString(), fv);
-                
-                /*for (int i = 1; i < instance.length()-1; i++)
-                {                
-                    int argCounter = i;
-                    
-                    //15. H=Head A=Arg A#=no. args
-                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter);
-                    add(feature.toString(), fv);
-    
-                    //16. H=Head A=Arg A#=no. args HA=labelhead−arg
-                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + type);
-                    add(feature.toString(), fv);
-                    
-                    //21. H=Head A=Arg S#=no. siblings
-                    feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
-                    add(feature.toString(), fv);
-                    
-                    //24. H=Head A=Arg S#=no. siblings HA=labelhead−arg
-                    feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
-                    add(feature.toString(), fv);
-                }*/
             }
             
         }
         else
         {
-            //13. H=Head A=Arg
-            feature = new StringBuilder("H=" + headForm + " A=" + argForm);
-            add(feature.toString(), fv);
-
+            //3. H=Head HA=labelhead−arg
+            feature = new StringBuilder("H=" + headForm + " HA=" + label);
+            this.add(feature.toString(), fv);          
+        	
+			// A=Arg HA=label
+			feature = new StringBuilder("A=" + argForm + " HA=" + label);               
+            
             //14. H=Head A=Arg HA=labelhead−arg
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + label);
-            add(feature.toString(), fv);
-            
-            /*int argCounter = 0;
-            List<String> siblingFormsList = new ArrayList<String>();
-            
-            for (int j=0; j < instance.length(); j++)
-            {
-                if (heads[j] == headIndex)
-                {
-                    argCounter++;
-                    if (j != headIndex)
-                    {
-                    	siblingFormsList.add(forms[j]);
-                    }
-                }
-            }            
-
-            String[] sortedSiblings = siblingFormsList.toArray(new String[0]);
-            Arrays.sort(sortedSiblings);
-            
-            //15. H=Head A=Arg A#=no. args
-            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter);
-            add(feature.toString(), fv);
-
-            //16. H=Head A=Arg A#=no. args HA=labelhead−arg
-            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " #A=" + argCounter + " HA=" + label);
-            add(feature.toString(), fv);
-
-            StringBuilder siblingForms = new StringBuilder();
-            for (int k=0; k < sortedSiblings.length; k++)
-            {
-                siblingForms.append(" S=" + sortedSiblings[k]);
-            }
-                    
-            //21. H=Head A=Arg S#=no. siblings
-            feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
-            add(feature.toString(), fv);
-            
-            //24. H=Head A=Arg S#=no. siblings HA=labelhead−arg
-            feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
-            add(feature.toString(), fv);*/        
+            add(feature.toString(), fv);          
         }
-    }
-    
-    /**
-     * Add features to the model based on Grandparent-Grandchild relationships.
-     *
-     * TODO: Correctly implement fillFeatureVectors before re-enabling this method.
-     * 
-     * @param instance
-     * @param i
-     * @param headIndex
-     * @param argIndex
-     * @param label
-     * @param fv
-     */
-    public void linguisticGrandparentGrandchildFeatures(DependencyInstance instance, 
-                                                 int i, int headIndex, 
-                                                 int argIndex, String label, 
-                                                 FeatureVector fv)
-    {
-        int[] heads = instance.heads;
-        String[] forms = instance.forms;
-        
-        int gpIndex = heads[headIndex];
-
-        if (gpIndex == -1)
-        {
-        	// This is the dummy <root> node
-        	return;
-        }
-        
-        String headForm;
-        String argForm = forms[argIndex];
-        headForm = forms[headIndex];
-        
-        String gpForm = gpIndex == 0 ? "ROOT" : forms[gpIndex];
-        String gpRel = gpIndex == 0 ? "-" : instance.deprels[headIndex];
-        
-        StringBuilder feature;
-
-        //17. GP=Grandparent H=Head A=Arg
-        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex]);
-        add(feature.toString(), fv);
-        
-        //18. GP=Grandparent H=Head A=Arg GH=labelgrandparent−head
-        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex] + " GH=" + gpRel);
-        add(feature.toString(), fv);
-
-        //19. GP=Grandparent H=Head A=Arg HA=labelhead−arg
-        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex] + " HA=" + label);
-        add(feature.toString(), fv);
-                
-        //20. GP=Grandparent H=Head A=Arg GH=labelgrandparent−head HA=labelhead−arg
-        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + forms[argIndex] + " GH=" + gpRel + " HA=" + label);
-        add(feature.toString(), fv);
-    }
-    
-    /**
-     * Adds bigram features based on the siblings of the argument.
-     * 
-     *  TODO: Correctly implement fillFeatureVectors before re-enabling this method.
-     * 
-     * @param instance
-     * @param i
-     * @param headIndex
-     * @param argIndex
-     * @param label
-     * @param fv
-     */
-    public void linguisticBigramSiblingFeatures(DependencyInstance instance, 
-                                                    int i, int headIndex, 
-                                                    int argIndex, String label, 
-                                                    FeatureVector fv)
-    {
-        int[] heads = instance.heads;
-        String[] forms = instance.forms;
-
-        String headForm;
-        String argForm = forms[argIndex];
-        if (heads[headIndex] == -1)
-        {
-        	headForm = "ROOT";
-        }
-        else
-        {
-        	headForm = forms[headIndex];
-        }
-        
-        StringBuilder feature;
-        StringBuilder siblingForms = new StringBuilder();
-        List<String> siblingFormsList = new ArrayList<String>();
-
-        int argCounter = 0;
-                
-        for (int j=0; j < instance.length(); j++)
-        {
-            if (heads[j] == headIndex)
-            {
-                argCounter++;
-                if (j != i)
-                {
-                	siblingFormsList.add(forms[j]);
-                }
-            }
-        }
-        
-        String[] sortedSiblings = siblingFormsList.toArray(new String[0]);
-        
-        Arrays.sort(sortedSiblings);
-        
-        for (int k=0; k < sortedSiblings.length; k++)
-        {
-            siblingForms.append(" S=" + sortedSiblings[k]);
-        }
-                
-        //21. H=Head A=Arg S#=no. siblings
-        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
-        add(feature.toString(), fv);
-        
-        //22. H=Head A=Arg S=Sibling1,...,N
-        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex]);
-        feature.append(siblingForms.toString());
-        add(feature.toString(), fv);
-        
-        //23. H=Head A=Arg S#=no. siblings S=Sibling1,...,N
-        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1));
-        feature.append(siblingForms.toString());
-        add(feature.toString(), fv);
-        
-        //24. H=Head A=Arg S#=no. siblings HA=labelhead−arg
-        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
-        add(feature.toString(), fv);
-        
-        //25. H=Head A=Arg S#=no. siblings S=Sibling1,...,N HA=labelhead−arg
-        feature = new StringBuilder("H=" + headForm + " A=" + forms[argIndex] + " #S=" + (argCounter-1) + " HA=" + label);
-        feature.append(siblingForms.toString());
-        add(feature.toString(), fv);
     }
     
     /**
@@ -1020,83 +626,273 @@ public class DependencyPipeVisual extends DependencyPipe
     		return;
     	}
     	
-        int first = super.depReader.getCount() * 2;
-        int second = first + 1;
-        DependencyInstance source = descriptions.get(first);
-        
-        List<Alignment> theseAlignments = alignments.get(first);
+        DependencyInstance source = descriptions.get(super.depReader.getCount() * 2);    
+        List<Alignment> a = alignments.get(super.depReader.getCount() * 2);
         
         for (int i = 0; i < 2; i++)
         {        	
-        	// Add features over the first and second sentences
-        
-        	if (i == 1)
-        	{
-        		source = descriptions.get(second);
-        		theseAlignments = alignments.get(second);
-        	}
-        
-        	if (theseAlignments.size() == 0)
-            {	// No QG features to add.
+        	// This loop runs twice to add features over the first and 
+        	// second sentences
+        	
+        	if (a.size() == 0)
+            {	// No QG features to add in this sentence
                 continue;
             }
         	
-            for (Alignment a : theseAlignments)
+            for (Alignment one : a)
             {
-                for (Alignment b : theseAlignments)
+                for (Alignment two : a)
                 {
-                    if (a != b)
+                    if (one != two && ((one.getImageIndex() == headIndex && two.getImageIndex() == argIndex
+                                || one.getImageIndex() == argIndex && two.getImageIndex() == headIndex)))
                     {
-                        if (a.getImageIndex() == headIndex && b.getImageIndex() == argIndex
-                                || a.getImageIndex() == argIndex && b.getImageIndex() == headIndex)
+                        Alignment.Configuration c = one.getAlignmentConfiguration(two, visual, source);
+                       
+                        // Get the labels of the head and argument from the clusters
+                        String head_word = this.clusteredLabels.contains(visual.forms[headIndex]) ? 
+                        		this.clusteredLabels.get(visual.forms[headIndex]) : visual.forms[headIndex];
+                        String arg_word = this.clusteredLabels.contains(visual.forms[argIndex]) ? 
+                        		this.clusteredLabels.get(visual.forms[argIndex]) : visual.forms[argIndex];
+                        		
+                        StringBuilder feature;
+
+                        // H=Head CFG=config
+                        feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
+                        add(feature.toString(), fv);
+                        
+                        // A=Arg CFG=config
+                        feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
+                        add(feature.toString(), fv);                        
+                        
+                        // H=Head A=Arg CFG=config
+                        feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
+                        add(feature.toString(), fv);
+                        
+                        if (label == null)
                         {
-                            Alignment.Configuration c = a.getAlignmentConfiguration(b, visual, source);
-                           
-                            String head_word = this.clusteredLabels.contains(visual.forms[headIndex]) ? this.clusteredLabels.get(visual.forms[headIndex]) : visual.forms[headIndex];
-                            String arg_word = this.clusteredLabels.contains(visual.forms[argIndex]) ? this.clusteredLabels.get(visual.forms[argIndex]) : visual.forms[argIndex];
-                            if (label == null)
+                            // This happens at test time and we don't know which label to apply
+                            // so we just try all of them and believe the model will make it happy.
+                            for (String type: types)
                             {
-                                // This happens at test time and we don't know which label to apply
-                                // so we just try all of them and believe the model will make it happy.
-                                for (String type: types)
-                                {
-                                    StringBuilder feature = new StringBuilder();
-                                    feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
-                                    add(feature.toString(), fv);
-                                    feature.append(" HA=" + type);
-                                    add(feature.toString(), fv);                            
-                                    feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
-                                    add(feature.toString(), fv);
-//                                    feature.append(" HA=" + type);
-//                                    add(feature.toString(), fv);
-//                                    feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
-//                                    add(feature.toString(), fv);
-//                                    feature.append(" HA=" + type);
-//                                    add(feature.toString(), fv);
-                                }
-                            }
-                            else
-                            {
-                                StringBuilder feature = new StringBuilder();
-                                feature.append("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
+                                // H=Head CFG=config HA=label
+                                feature = new StringBuilder("H=" + head_word + " CFG=" + c + " HA=" + type);
                                 add(feature.toString(), fv);
-                                feature.append(" HA=" + label);
-                                add(feature.toString(), fv);                            
-//                                feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
-//                                add(feature.toString(), fv);
-//                                feature.append(" HA=" + label);
-//                                add(feature.toString(), fv);
-//                                feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
-//                                add(feature.toString(), fv);
-//                                feature.append(" HA=" + label);
-//                                add(feature.toString(), fv);
+                                
+                                // A=Arg CFG=config HA=label
+                                feature = new StringBuilder("A=" + arg_word + " CFG=" + c + " HA=" + type);
+                                add(feature.toString(), fv);
+                            	
+                            	// H=Head A=Arg CFG=config HA=label
+                                feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c + " HA=" + type);
+                                add(feature.toString(), fv);    
+
                             }
+                        }
+                        else
+                        {
+                            // H=Head CFG=config HA=label
+                            feature = new StringBuilder("H=" + head_word + " CFG=" + c + " HA=" + label);
+                            add(feature.toString(), fv);
+                            
+                            // A=Arg CFG=config HA=label
+                            feature = new StringBuilder("A=" + arg_word + " CFG=" + c + " HA=" + label);
+                            add(feature.toString(), fv);
+                        	
+                        	// H=Head A=Arg CFG=config HA=label
+                            feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c + " HA=" + label);
+                            add(feature.toString(), fv);   
                         }
                     }
                 }
-            }            
+            }
+
+        	source = descriptions.get((super.depReader.getCount() * 2) + 1);
+        	a = alignments.get((super.depReader.getCount() * 2 )+ 1);            
         }
     }
+    
+    /**
+     * Adds visual information features to the parsing model.
+     * 
+     * @param instance
+     * @param headIndex
+     * @param argIndex
+     * @param label
+     * @param fv
+     */
+    public void visualFeatures(DependencyInstance instance,
+            int headIndex, int argIndex, String label, FeatureVector fv)
+    {
+    	
+    	if (!this.options.visualFeatures || headIndex < 1 || argIndex < 1)
+    	{
+            // we cannot do anything with the ROOT node since there are no
+            // spatial relationships between the ROOT node and any other node
+    		return;
+    	}
+        
+        String[][] feats = instance.feats;
+        String[] forms = instance.forms;
+        
+        Image i = images.get(depReader.getCount());
+        
+        if (options.verbose)
+        {
+        	System.out.println(feats[headIndex][0] + " " + feats[headIndex][1]);      
+        	System.out.println(feats[argIndex][0] + " " + feats[argIndex][1]);
+        }
+        	
+        Point2D headPoint = new Point2D.Double(new Double(feats[headIndex][0].replace("\"","")), new Double(feats[headIndex][1].replace("\"","")));
+        Point2D argPoint = new Point2D.Double(new Double(feats[argIndex][0].replace("\"","")), new Double(feats[argIndex][1].replace("\"","")));
+        
+        int h = i.findPolygon(forms[headIndex], headPoint);
+        int a = i.findPolygon(forms[argIndex], argPoint);
+        
+        if (h > -1 &&  a > -1)
+        {
+            // We need to have found valid polygons for these points to continue
+            
+        	String headForm = forms[headIndex];
+        	String argForm = forms[argIndex];
+            Quadrant headQuadrant = i.polygons[h].imageQuadrant;
+            Quadrant argQuadrant = i.polygons[a].imageQuadrant;  
+            Area headArea = i.polygons[h].relativeArea;
+            Area argArea = i.polygons[a].relativeArea;
+            SpatialRelation.Relations relationship = i.polygons[h].spatialRelations[a];
+            
+            StringBuilder feature = new StringBuilder();
+
+    		// H=Head VHA=spatialLabel
+        	feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
+    		add(feature.toString(), fv);
+
+    		// A=Arg VHA=spatialLabel
+        	feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
+    		add(feature.toString(), fv);
+            
+            // H=Head HQ=quadrant
+            feature = new StringBuilder("H=" + headForm + " HQ=" + headQuadrant);
+    		add(feature.toString(), fv);
+    		
+    		// A=Arg AQ=quadrant
+    		feature = new StringBuilder("A=" + headForm + " AQ=" + argQuadrant);
+    		add(feature.toString(), fv);
+    		
+//            // H=Head HArea=area
+//            feature = new StringBuilder("H=" + headForm + " HArea=" + headArea);
+//    		add(feature.toString(), fv);
+//    		
+//    		// A=Arg AArea=Area
+//    		feature = new StringBuilder("A=" + headForm + " AArea=" + argArea);
+//    		add(feature.toString(), fv);
+    		
+    		// H=Head A=Arg VHA=spatial label
+    		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+            add(feature.toString(), fv);
+    		
+    		if (label == null)
+            {            	
+                // This happens at test time and we don't know which label to apply
+                // so we just try all of them and believe the model will make it happy.
+                for (String type: types)
+                {
+            		// H=Head VHA=spatialLabel HA=label
+            		feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
+            		feature.append(" HA=" + type);
+            		add(feature.toString(), fv);
+            		
+            		// A=Arg VHA=spatialLabel HA=label
+                	feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
+            		feature.append(" HA=" + type);            
+            		add(feature.toString(), fv);                  	
+                	
+            		// H=Head HQ=quadrant HA=label        		
+                    feature = new StringBuilder("H=" + headForm + " HQ=" + headQuadrant);
+            		feature.append(" HA=" + type);
+            		add(feature.toString(), fv);
+
+            		// A=Arg HQ=quadrant HA=label        		
+            		feature = new StringBuilder("A=" + argForm + " HQ=" + argQuadrant);
+            		feature.append(" HA=" + type);
+            		add(feature.toString(), fv); 
+            		
+//                    // H=Head HArea=area HA=label
+//                    feature = new StringBuilder("H=" + headForm + " HArea=" + headArea + " HA=" + type);
+//            		add(feature.toString(), fv);
+//            		
+//            		// A=Arg AArea=Area HA=label
+//            		feature = new StringBuilder("A=" + headForm + " AArea=" + argArea + " HA=" + type);
+//            		add(feature.toString(), fv);            		
+                	
+                    // H=Head A=Arg VHA=spatialLabel HA=label
+            		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+                    feature.append(" HA=" + type);
+                    add(feature.toString(), fv);
+                    
+                    // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant
+                    feature.append(" HQ=" + headQuadrant);
+                    add(feature.toString(), fv);                    
+                    
+                    // H=Head A=Arg VHA=spatialLabel HA=label AQ=quadrant
+            		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+                    feature.append(" HA=" + type + " AQ=" +argQuadrant);
+                    add(feature.toString(), fv);                      
+
+                    // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant AQ=quadrant
+                    feature.append(" AQ=" + argQuadrant);
+                    add(feature.toString(), fv);
+                }
+            }
+            else
+            {
+        		// H=Head VHA=spatialLabel HA=label
+        		feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
+        		feature.append(" HA=" + label);
+        		add(feature.toString(), fv);
+        		
+        		// A=Arg VHA=spatialLabel HA=label
+            	feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
+        		feature.append(" HA=" + label);            
+        		add(feature.toString(), fv);             	
+            	
+        		// H=Head HQ=quadrant HA=label        		
+                feature = new StringBuilder("H=" + headForm + " HQ=" + headQuadrant);
+        		feature.append(" HA=" + label);
+        		add(feature.toString(), fv);  
+        		
+        		// A=Arg AQ=quadrant HA=label
+        		feature = new StringBuilder("A=" + argForm + " HQ=" + argQuadrant);
+        		feature.append(" HA=" + label);
+        		add(feature.toString(), fv); 
+        		
+//                // H=Head HArea=area HA=label
+//                feature = new StringBuilder("H=" + headForm + " HArea=" + headArea + " HA=" + label);
+//        		add(feature.toString(), fv);
+//        		
+//        		// A=Arg AArea=Area HA=label
+//        		feature = new StringBuilder("A=" + headForm + " AArea=" + argArea + " HA=" + label);
+//        		add(feature.toString(), fv);        		
+            	
+                // H=Head A=Arg VHA=spatialLabel HA=label
+        		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);
+                
+                // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant
+                feature.append(" HQ=" + headQuadrant);
+                add(feature.toString(), fv);
+                
+                // H=Head A=Arg VHA=spatialLabel HA=label AQ=quadrant
+        		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+                feature.append(" HA=" + label + " AQ=" +argQuadrant);
+                add(feature.toString(), fv);                
+
+                // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant AQ=quadrant
+                feature.append(" AQ=" + argQuadrant);
+                add(feature.toString(), fv);                
+            }
+        }
+    }           
 
     /**
      * Adds features that allow for labelled parsing.
@@ -1169,179 +965,7 @@ public class DependencyPipeVisual extends DependencyPipe
             add("NTJ=" + w + suff, fv); // word and suff
         }
     }
-    
-    /**
-     * TODO: These features have catastrophic repercussions for parsing
-     *       accuracy and are currently disabled.
-     * 
-     * @param instance
-     * @param index
-     * @param label
-     * @param isHead
-     * @param fv
-     */
-    public void visualUnigramFeatures(DependencyInstance instance,
-    		int index, String label, boolean isHead, FeatureVector fv)
-    {
-    	if(!this.options.visualFeatures || index < 1)
-    	{
-            // we cannot do anything with the ROOT node since there are no
-            // spatial relationships between the ROOT node and any other node
-    		return;
-    	}
-                
-        if (label != null && label.equals("-"))
-        {
-        	label = "<no-type>";
-        }
-        
-        String[][] feats = instance.feats;
-        String[] forms = instance.forms;
-        
-        Image i = images.get(depReader.getCount());
-        
-        if (options.verbose)
-        {
-        	System.out.println(feats[index][0] + " " + feats[index][1]);      
-        }
-        	
-        Point2D point = new Point2D.Double(new Double(feats[index][0].replace("\"","")), new Double(feats[index][1].replace("\"","")));
-        
-        int h = i.findPolygon(forms[index], point);
-        
-        if (h > -1)
-        {
-            // We need to have found valid polygons for these points to continue
-            
-            StringBuilder feature = new StringBuilder();
-            if (label == null)
-            {
-                // This happens at test time and we don't know which label to apply
-                // so we just try all of them and believe the model will make it happy.
-                for (String type: types)
-                {
-                	feature = new StringBuilder();
-                	if (isHead)
-                	{
-                		/*feature.append("H=" + forms[index] + " HQ=" + i.polygons[h].imageQuadrant);
-                		add(feature.toString(), fv);
-                		feature.append(" HA=" + type);
-                		add(feature.toString(), fv);*/
-                	}
-                	else
-                	{
-                		feature.append("A=" + forms[index] + " AQ=" + i.polygons[h].imageQuadrant);
-                		add(feature.toString(), fv);
-                		feature.append(" HA=" + type);
-                		add(feature.toString(), fv);                		
-                	}
-                }
-            }
-            else
-            {
-            	if (isHead)
-            	{
-            		/*feature.append("H=" + forms[index] + " HQ=" + i.polygons[h].imageQuadrant);
-            		add(feature.toString(), fv);
-            		feature.append(" HA=" + label);
-            		add(feature.toString(), fv);*/
-            	}
-            	else
-            	{
-            		feature.append("A=" + forms[index] + " AQ=" + i.polygons[h].imageQuadrant);
-            		add(feature.toString(), fv);
-            		feature.append(" HA=" + label);
-            		add(feature.toString(), fv);                		
-            	}             
-            }
-        }
-    }
-    
-    /**
-     * Adds visual information features to the parsing model.
-     * 
-     * @param instance
-     * @param headIndex
-     * @param argIndex
-     * @param label
-     * @param fv
-     */
-    public void visualBigramFeatures(DependencyInstance instance,
-            int headIndex, int argIndex, String label, FeatureVector fv)
-    {
-    	
-    	if (!this.options.visualFeatures)
-    	{
-    		return;
-    	}
-    	
-        if (headIndex < 1 || argIndex < 1)
-        {
-            // we cannot do anything with the ROOT node since there are no
-            // spatial relationships between the ROOT node and any other node
-            return;
-        }
-                
-        if (label != null && label.equals("-"))
-        {
-        	//label = "<no-type>";
-        }
-        
-        String[][] feats = instance.feats;
-        String[] forms = instance.forms;
-        
-        Image i = images.get(depReader.getCount());
-        
-        if (options.verbose)
-        {
-        	System.out.println(feats[headIndex][0] + " " + feats[headIndex][1]);      
-        	System.out.println(feats[argIndex][0] + " " + feats[argIndex][1]);
-        }
-        	
-        Point2D headPoint = new Point2D.Double(new Double(feats[headIndex][0].replace("\"","")), new Double(feats[headIndex][1].replace("\"","")));
-        Point2D argPoint = new Point2D.Double(new Double(feats[argIndex][0].replace("\"","")), new Double(feats[argIndex][1].replace("\"","")));
-        
-        int h = i.findPolygon(forms[headIndex], headPoint);
-        int a = i.findPolygon(forms[argIndex], argPoint);
-        
-        if (h > -1 &&  a > -1)
-        {
-            // We need to have found valid polygons for these points to continue
-            
-            SpatialRelation.Relations s = i.polygons[h].spatialRelations[a];
-            StringBuilder feature = new StringBuilder();
-            if (label == null)
-            {
-                // This happens at test time and we don't know which label to apply
-                // so we just try all of them and believe the model will make it happy.
-                for (String type: types)
-                {
-                	feature = new StringBuilder();
-                    feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
-                    add(feature.toString(), fv);
-                    feature.append(" HA=" + type);
-                    add(feature.toString(), fv);
-                    feature.append(" HQ=" + i.polygons[h].imageQuadrant);
-                    add(feature.toString(), fv);
-                    feature.append(" AQ=" + i.polygons[a].imageQuadrant);
-                    add(feature.toString(), fv);
-                }
-            }
-            else
-            {
-                feature.append("H=" +forms[headIndex] + " A=" + forms[argIndex] + " VHA=" + s);
-                add(feature.toString(), fv);
-                feature.append(" HA=" + label);
-                add(feature.toString(), fv); 
-                feature.append(" HQ=" + i.polygons[h].imageQuadrant);
-                add(feature.toString(), fv);
-                feature.append(" AQ=" + i.polygons[a].imageQuadrant);
-                add(feature.toString(), fv);
 
-            }
-        }
-    }    
-    
     /** 
      * @param index the position of the word in the DependencyInstance
      * @param instanceHeads the array of instance heads in the Dependency Instance.
@@ -1354,32 +978,5 @@ public class DependencyPipeVisual extends DependencyPipe
             return true;
         }
         return false;
-    }
-    
-    public SpatialRelation.Relations getSpatialRelationship(DependencyInstance instance, int headIndex, int argIndex)
-    {
-    	if (headIndex < 1 || argIndex < 1)
-        {
-            // we cannot do anything with the ROOT node since there are no
-            // spatial relationships between the ROOT node and any other node
-            return null;
-        }
-    	
-    	String[][] feats = instance.feats;
-        Image i = images.get(depReader.getCount());        	
-        
-        Point2D headPoint = new Point2D.Double(new Double(feats[headIndex][0].replace("\"","")), new Double(feats[headIndex][1].replace("\"","")));
-        Point2D argPoint = new Point2D.Double(new Double(feats[argIndex][0].replace("\"","")), new Double(feats[argIndex][1].replace("\"","")));
-        
-        int h = i.findPolygon(instance.forms[headIndex], headPoint);
-        int a = i.findPolygon(instance.forms[argIndex], argPoint);
-        
-        if (h > -1 &&  a > -1)
-        {
-            // We need to have found valid polygons for these points to continue
-            
-            return i.polygons[h].spatialRelations[a];
-        }
-        return null;
-    }    
+    } 
 }
