@@ -21,6 +21,16 @@ public class Util
         }
         return nums;
     }
+    
+    public static String listsToStrings(String[] list)
+    {
+        String s = "";
+        for (String x: list)
+        {
+            s += x;
+        }
+        return s;
+    }
 
     // Assumes input is a String[] containing doubles as strings.
     public static double[] stringsToDoubles(String[] stringreps)
