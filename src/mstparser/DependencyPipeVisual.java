@@ -119,6 +119,7 @@ public class DependencyPipeVisual extends DependencyPipe
 	                }
 	            }
 	        }
+	        reader.close();
 	    }
 	    catch (IOException ioe)
 	    {
@@ -200,6 +201,8 @@ public class DependencyPipeVisual extends DependencyPipe
         System.out.println("Creating Alphabet ... ");
 
         labeled = depReader.startReading(file);
+        
+        System.out.println("Labelled data: " + labeled);
 
         DependencyInstance instance = depReader.getNext();
 
@@ -393,7 +396,7 @@ public class DependencyPipeVisual extends DependencyPipe
             FeatureVector[][][][] nt_fvs, double[][][][] nt_probs,
             Parameters params)
     {
-
+        
         final int instanceLength = instance.length();
 
         for (int w1 = 0; w1 < instanceLength; w1++)
@@ -714,6 +717,14 @@ public class DependencyPipeVisual extends DependencyPipe
     /**
      * Adds visual information features to the parsing model.
      * 
+     * This method currently adds the following types of feature 
+     * conjoined in many different ways:
+     *   polygon position
+     *   polygon-polygon spatial relationship
+     *   
+     * These features are disabled:
+     *   polygon area
+     * 
      * @param instance
      * @param headIndex
      * @param argIndex
@@ -910,10 +921,6 @@ public class DependencyPipeVisual extends DependencyPipe
             String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
     {    
         /* The original implementation */
-        if (!labeled)
-        {
-            return;
-        }
         
         String[] forms = instance.forms;
         String[] pos = instance.postags;
