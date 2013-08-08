@@ -642,6 +642,23 @@ public class DependencyPipeVisual extends DependencyPipe
                 continue;
             }
         	
+        	// Find the verb that relates the head and the argument when the head is not ROOT
+            String verb = "";
+            if (headIndex > 0)
+            {
+                int[] heads = source.heads;
+                int rootPosition = -1;
+                for (int z = 0; z < heads.length; z++)
+                {
+                    if (heads[z] == 0)
+                    {
+                        rootPosition = z;
+                        break;
+                    }
+                }
+              verb = source.lemmas[rootPosition];
+            }
+        	
             for (Alignment one : a)
             {
                 for (Alignment two : a)
@@ -663,12 +680,24 @@ public class DependencyPipeVisual extends DependencyPipe
                         feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
                         add(feature.toString(), fv);
                         
+                        // H=Head V=verb CFG=config
+                        feature = new StringBuilder("H=" + head_word + " V=" + verb + " CFG=" + c.toString());
+                        add(feature.toString(), fv);
+                                                
                         // A=Arg CFG=config
                         feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
+                        add(feature.toString(), fv);
+                        
+                         // A=Arg V=verb CFG=config
+                        feature = new StringBuilder("A=" + arg_word + " V=" + verb + " CFG=" + c.toString());
                         add(feature.toString(), fv);                        
                         
                         // H=Head A=Arg CFG=config
                         feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
+                        add(feature.toString(), fv);
+                        
+                        // H=Head A=Arg V=verb CFG=config
+                        feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " V=" + verb + " CFG=" + c.toString());
                         add(feature.toString(), fv);
                         
                         if (label == null)
@@ -681,14 +710,25 @@ public class DependencyPipeVisual extends DependencyPipe
                                 feature = new StringBuilder("H=" + head_word + " CFG=" + c + " HA=" + type);
                                 add(feature.toString(), fv);
                                 
+                                // H=Head V=verb CFG=config HA=label
+                                feature = new StringBuilder("H=" + head_word + " V=" + verb + " CFG=" + c.toString() + " HA=" + type);
+                                add(feature.toString(), fv);
+                                
                                 // A=Arg CFG=config HA=label
                                 feature = new StringBuilder("A=" + arg_word + " CFG=" + c + " HA=" + type);
                                 add(feature.toString(), fv);
-                            	
-                            	// H=Head A=Arg CFG=config HA=label
+                                
+                                // A=Arg V=verb CFG=config HA=label
+                                feature = new StringBuilder("A=" + arg_word + " V=" + verb + " CFG=" + c.toString() + " HA=" + type);
+                                add(feature.toString(), fv);  
+                                
+                                // H=Head A=Arg CFG=config HA=label
                                 feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c + " HA=" + type);
-                                add(feature.toString(), fv);    
-
+                                add(feature.toString(), fv);
+                                
+                                // H=Head A=Arg V=verb CFG=config HA=label
+                                feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " V=" + verb + " CFG=" + c.toString() + " HA=" + type);
+                                add(feature.toString(), fv);
                             }
                         }
                         else
@@ -697,13 +737,25 @@ public class DependencyPipeVisual extends DependencyPipe
                             feature = new StringBuilder("H=" + head_word + " CFG=" + c + " HA=" + label);
                             add(feature.toString(), fv);
                             
+                            // H=Head V=verb CFG=config HA=label
+                            feature = new StringBuilder("H=" + head_word + " V=" + verb + " CFG=" + c.toString() + " HA=" + label);
+                            add(feature.toString(), fv);
+                            
                             // A=Arg CFG=config HA=label
                             feature = new StringBuilder("A=" + arg_word + " CFG=" + c + " HA=" + label);
                             add(feature.toString(), fv);
-                        	
-                        	// H=Head A=Arg CFG=config HA=label
+                            
+                            // A=Arg V=verb CFG=config HA=label
+                            feature = new StringBuilder("A=" + arg_word + " V=" + verb + " CFG=" + c.toString() + " HA=" + label);
+                            add(feature.toString(), fv);  
+                            
+                            // H=Head A=Arg CFG=config HA=label
                             feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c + " HA=" + label);
-                            add(feature.toString(), fv);   
+                            add(feature.toString(), fv);
+                            
+                            // H=Head A=Arg V=verb CFG=config HA=label
+                            feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " V=" + verb + " CFG=" + c.toString() + " HA=" + label);
+                            add(feature.toString(), fv);
                         }
                     }
                 }
