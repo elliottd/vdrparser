@@ -5,6 +5,7 @@ import java.awt.Point;
 import java.awt.geom.Point2D;
 
 import mstparser.DependencyInstance;
+import mstparser.Util;
 
 /**
  * This class represents an annotated image region as represented in a LabelMe
@@ -22,7 +23,7 @@ public class Polygon {
 
 	public Point2D centroid;
 	public double convexHullArea;
-	public Area relativeArea;
+	public double relativeArea;
 	public SpatialRelation.Relations[] spatialRelations;
 	public Color averageRGB;
 	public ImageQuadrant.Quadrant imageQuadrant;
@@ -34,21 +35,10 @@ public class Polygon {
 	    this.label = polygonLabel;
 	}
 	
-	public void calculateArea()
+	public void calculateArea(double imageArea)
 	{
 		this.convexHullArea = Math.abs(Point2Df.area(this.points));
-		if (convexHullArea < 5000)
-		{
-			this.relativeArea = Area.SMALL;
-		}
-		else if (convexHullArea > 5000 && convexHullArea < 10000)
-		{
-			this.relativeArea = Area.MEDIUM;
-		}
-		else
-		{
-			this.relativeArea = Area.LARGE;
-		}
+		this.relativeArea = Util.roundToNearestTen((this.convexHullArea/imageArea)*100);		
 	}
 	
 	public void setPoints(Point2D[] parsedPoints)

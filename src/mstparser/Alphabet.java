@@ -110,9 +110,12 @@ public class Alphabet implements Serializable
         
         Arrays.sort(sortedFeatures);
         
+        if (n > sortedFeatures.length)
+          n = sortedFeatures.length;
+        
         for (int j = 0; j < n-1; j++)
         {            
-            sb.append(sortedFeatures[j].key + " " + sortedFeatures[j].weight + "\n" );
+            sb.append("\"" + sortedFeatures[j].key + "\"," + " " + sortedFeatures[j].weight + "\n" );
         }
                 
         return sb.toString();        

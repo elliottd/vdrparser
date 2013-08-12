@@ -1,6 +1,7 @@
 package mstparser;
 
 import java.text.DecimalFormat;
+import org.apache.commons.math3.util.Precision;
 
 /**
  * Utility methods that may be generally useful.
@@ -10,6 +11,11 @@ import java.text.DecimalFormat;
  */
 public class Util
 {
+    
+    public static double roundToNearestTen(double value)
+    {
+        return Precision.round(value, -1);
+    }
 
     // Assumes input is a String[] containing integers as strings.
     public static int[] stringsToInts(String[] stringreps)

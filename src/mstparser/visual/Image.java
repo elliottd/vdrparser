@@ -30,6 +30,7 @@ public class Image {
 	
 	public Polygon[] polygons;
 	public double[] dimensions;
+	public double imageArea;
 	public String filename;
 	public String xmlFilename;
 	public String dotFilename;
@@ -48,6 +49,7 @@ public class Image {
 			BufferedImage img = ImageIO.read(new File(this.filename));
 			this.dimensions[0] = img.getWidth();
 			this.dimensions[1] = img.getHeight();
+			this.imageArea = this.dimensions[0] * this.dimensions[1];
 			img = null;
 		} 
 		catch (IOException e) 
@@ -68,7 +70,7 @@ public class Image {
 	{
 		for (Polygon p: this.polygons)
 		{
-			p.calculateArea();
+			p.calculateArea(this.imageArea);
 		}
 	}
 	
