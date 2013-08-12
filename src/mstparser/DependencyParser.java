@@ -58,6 +58,10 @@ public class DependencyParser
         params.averageParams(i * instanceLengths.length);
 
         System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 50));
+        
+        FileWriter w = new FileWriter("featureWeights");
+        w.write(pipe.dataAlphabet.topNFeaturesByWeight(params, 5000));
+        w.close();
     }
 
     private void trainingIter(int[] instanceLengths, String trainfile,
