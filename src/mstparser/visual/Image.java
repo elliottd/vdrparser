@@ -120,6 +120,7 @@ public class Image {
 		for (Polygon p: polygons)
 		{
 			p.imageQuadrant = ImageQuadrant.getPolygonQuadrant(p, this);
+			p.calculateDistanceFromCentre(this.dimensions[0], this.dimensions[1]);
 		}
 	}
 	

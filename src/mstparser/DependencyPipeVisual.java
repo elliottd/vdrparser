@@ -827,6 +827,8 @@ public class DependencyPipeVisual extends DependencyPipe
             
             StringBuilder feature = new StringBuilder();
 
+            // BEGIN STRUCTURE FEATURES //
+                       
     		// H=Head VHA=spatialLabel
         	feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
     		add(feature.toString(), fv);
@@ -834,17 +836,41 @@ public class DependencyPipeVisual extends DependencyPipe
     		// A=Arg VHA=spatialLabel
         	feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
     		add(feature.toString(), fv);
+    		         
+            // H=Head A=Arg VHA=spatial label
+            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+            add(feature.toString(), fv);
+    		
+    		// END STRUCTURE FEATURES //
             
     		// BEGIN POSITION FEATURES //
     		
             // H=Head HQ=quadrant
             feature = new StringBuilder("H=" + headForm + " HQ=" + headQuadrant);
     		add(feature.toString(), fv);
-    		
-    		// A=Arg AQ=quadrant
-    		feature = new StringBuilder("A=" + headForm + " AQ=" + argQuadrant);
+
+    		// A=Arg AQ
+    		feature = new StringBuilder("A=" + argForm + " AQ=" + argQuadrant);
     		add(feature.toString(), fv);
+            
+            // H=Head HDFC
+            feature = new StringBuilder("H=" + headForm + " HDFC=" + i.polygons[h].distanceFromCentre);
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
     		
+            // A=Arg ADFC
+            feature = new StringBuilder("A=" + argForm + " ADFC=" + i.polygons[a].distanceFromCentre);
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+            
+            // H= A= HDFC= ADFC=
+            feature = new StringBuilder("H=" + headForm + " HDFC=" + i.polygons[h].distanceFromCentre + " A=" + argForm + " ADFC=" + i.polygons[a].distanceFromCentre);
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+
             // END POSITION FEATURES //
 
             // BEGIN AREA FEATURES //
@@ -872,9 +898,24 @@ public class DependencyPipeVisual extends DependencyPipe
     		
             // END AREA FEATURES //
     		
-    		// H=Head A=Arg VHA=spatial label
-    		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
-            add(feature.toString(), fv);
+    		// BEGIN DISTANCE FEATURES //
+    		
+//    		feature = new StringBuilder("H=" + headForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+//            add(feature.toString(), fv);
+//            feature.append(" VHA=" + relationship);
+//            add(feature.toString(), fv);
+//            
+//            feature = new StringBuilder("A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+//            add(feature.toString(), fv);
+//            feature.append(" VHA=" + relationship);
+//            add(feature.toString(), fv);
+//    		
+//    		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+//    		add(feature.toString(), fv);
+//    		feature.append(" VHA=" + relationship);
+//    		add(feature.toString(), fv);
+    		
+    		// END DISTANCE FEATURES//
     		
     		if (label == null)
             {            	
@@ -882,6 +923,8 @@ public class DependencyPipeVisual extends DependencyPipe
                 // so we just try all of them and believe the model will make it happy.
                 for (String type: types)
                 {
+                    // BEGIN STRUCTURE FEATURES //
+
             		// H=Head VHA=spatialLabel HA=label
             		feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
             		feature.append(" HA=" + type);
@@ -891,6 +934,15 @@ public class DependencyPipeVisual extends DependencyPipe
                 	feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
             		feature.append(" HA=" + type);            
             		add(feature.toString(), fv);                  	
+                    
+                    // H=Head A=Arg VHA=spatialLabel HA=label
+                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+                    feature.append(" HA=" + type);
+                    add(feature.toString(), fv);
+                    
+                    // END STRUCTURE FEATURES //
+                    
+                    // BEGIN POSITION FEATURES //
                 	
             		// H=Head HQ=quadrant HA=label        		
                     feature = new StringBuilder("H=" + headForm + " HQ=" + headQuadrant);
@@ -901,6 +953,43 @@ public class DependencyPipeVisual extends DependencyPipe
             		feature = new StringBuilder("A=" + argForm + " HQ=" + argQuadrant);
             		feature.append(" HA=" + type);
             		add(feature.toString(), fv);
+                   
+                    // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant
+                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship + " HA=" + type);
+                    feature.append(" HQ=" + headQuadrant);
+                    add(feature.toString(), fv);
+            	
+                    // H=Head A=Arg VHA=spatialLabel HA=label AQ=quadrant
+                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship + " HA=" + type);
+                    feature.append(" AQ=" +argQuadrant);
+                    add(feature.toString(), fv);                                       
+
+                    // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant AQ=quadrant
+                    feature.append(" HQ=" + headQuadrant);
+                    add(feature.toString(), fv);            		
+            		                    
+//                    // H=Head HDFC
+//                    feature = new StringBuilder("H=" + headForm + " HDFC=" + i.polygons[h].distanceFromCentre);
+//                    feature.append(" HA=" + type);
+//                    add(feature.toString(), fv);
+//                    feature.append(" VHA=" + relationship);
+//                    add(feature.toString(), fv);
+//                    
+//                    // A=Arg ADFC
+//                    feature = new StringBuilder("A=" + argForm + " ADFC=" + i.polygons[a].distanceFromCentre);
+//                    feature.append(" HA=" + type);
+//                    add(feature.toString(), fv);
+//                    feature.append(" VHA=" + relationship);
+//                    add(feature.toString(), fv);
+//                    
+//                    // H= A= HDFC= ADFC=
+//                    feature = new StringBuilder("H=" + headForm + " HDFC=" + i.polygons[h].distanceFromCentre + " A=" + argForm + " ADFC=" + i.polygons[a].distanceFromCentre);
+//                    feature.append(" HA=" + type);
+//                    add(feature.toString(), fv);
+//                    feature.append(" VHA=" + relationship);
+//                    add(feature.toString(), fv);   
+                    
+                    // END POSITION FEATURES //
             		
                     // BEGIN AREA FEATURES //
             		
@@ -925,50 +1014,90 @@ public class DependencyPipeVisual extends DependencyPipe
 //                    feature.append(" VHA=" + relationship);
 //                    add(feature.toString(), fv);
             		
-                    // END AREA FEATURES //
-                	
-                    // H=Head A=Arg VHA=spatialLabel HA=label
-            		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
-                    feature.append(" HA=" + type);
-                    add(feature.toString(), fv);
+                    // END AREA FEATURES //                 
                     
-                    // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant
-                    feature.append(" HQ=" + headQuadrant);
-                    add(feature.toString(), fv);                    
+                    // BEGIN DISTANCE FEATURES //
                     
-                    // H=Head A=Arg VHA=spatialLabel HA=label AQ=quadrant
-            		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
-                    feature.append(" HA=" + type + " AQ=" +argQuadrant);
-                    add(feature.toString(), fv);                      
-
-                    // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant AQ=quadrant
-                    feature.append(" AQ=" + argQuadrant);
-                    add(feature.toString(), fv);
+//                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+//                    feature.append(" HA=" + type);
+//                    add(feature.toString(), fv);
+//                    feature.append(" VHA=" + relationship);
+//                    add(feature.toString(), fv);
+                    
+                    // END DISTANCE FEATURES//                    
                 }
             }
             else
             {
-        		// H=Head VHA=spatialLabel HA=label
-        		feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
-        		feature.append(" HA=" + label);
-        		add(feature.toString(), fv);
-        		
-        		// A=Arg VHA=spatialLabel HA=label
-            	feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
-        		feature.append(" HA=" + label);            
-        		add(feature.toString(), fv);             	
-            	
-        		// H=Head HQ=quadrant HA=label        		
+                // BEGIN STRUCTURE FEATURES //
+
+                // H=Head VHA=spatialLabel HA=label
+                feature = new StringBuilder("H=" + headForm + " VHA=" + relationship);
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);
+                
+                // A=Arg VHA=spatialLabel HA=label
+                feature = new StringBuilder("A=" + argForm + " VHA=" + relationship);
+                feature.append(" HA=" + label);            
+                add(feature.toString(), fv);                    
+                
+                // H=Head A=Arg VHA=spatialLabel HA=label
+                feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);
+                
+                // END STRUCTURE FEATURES //
+                
+                // BEGIN POSITION FEATURES //
+                
+                // H=Head HQ=quadrant HA=label              
                 feature = new StringBuilder("H=" + headForm + " HQ=" + headQuadrant);
-        		feature.append(" HA=" + label);
-        		add(feature.toString(), fv);  
-        		
-        		// A=Arg AQ=quadrant HA=label
-        		feature = new StringBuilder("A=" + argForm + " HQ=" + argQuadrant);
-        		feature.append(" HA=" + label);
-        		add(feature.toString(), fv); 
-        		
-        		// BEGIN AREA FEATURES //
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);
+
+                // A=Arg HQ=quadrant HA=label               
+                feature = new StringBuilder("A=" + argForm + " HQ=" + argQuadrant);
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);
+               
+                // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant
+                feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship + " HA=" + label);
+                feature.append(" HQ=" + headQuadrant);
+                add(feature.toString(), fv);
+            
+                // H=Head A=Arg VHA=spatialLabel HA=label AQ=quadrant
+                feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship + " HA=" + label);
+                feature.append(" AQ=" +argQuadrant);
+                add(feature.toString(), fv);                                       
+
+                // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant AQ=quadrant
+                feature.append(" HQ=" + headQuadrant);
+                add(feature.toString(), fv);                    
+//                                    
+//                // H=Head HDFC
+//                feature = new StringBuilder("H=" + headForm + " HDFC=" + i.polygons[h].distanceFromCentre);
+//                feature.append(" HA=" + label);
+//                add(feature.toString(), fv);
+//                feature.append(" VHA=" + relationship);
+//                add(feature.toString(), fv);
+//                
+//                // A=Arg ADFC
+//                feature = new StringBuilder("A=" + argForm + " ADFC=" + i.polygons[a].distanceFromCentre);
+//                feature.append(" HA=" + label);
+//                add(feature.toString(), fv);
+//                feature.append(" VHA=" + relationship);
+//                add(feature.toString(), fv);
+//                
+//                // H= A= HDFC= ADFC=
+//                feature = new StringBuilder("H=" + headForm + " HDFC=" + i.polygons[h].distanceFromCentre + " A=" + argForm + " ADFC=" + i.polygons[a].distanceFromCentre);
+//                feature.append(" HA=" + label);
+//                add(feature.toString(), fv);
+//                feature.append(" VHA=" + relationship);
+//                add(feature.toString(), fv);   
+                
+                // END POSITION FEATURES //
+                
+                // BEGIN AREA FEATURES //
                 
                 // H=Head HArea=area HA=label
                 feature = new StringBuilder("H=" + headForm + " HArea=" + headArea + " HA=" + label);
@@ -980,7 +1109,7 @@ public class DependencyPipeVisual extends DependencyPipe
                 // A=Arg AArea=Area HA=label
                 feature = new StringBuilder("A=" + argForm + " AArea=" + argArea + " HA=" + label);
                 add(feature.toString(), fv);
-//                // A=Arg AArea=Area HA=label VHA=label
+//              // A=Arg AArea=Area HA=label VHA=label
 //                feature.append(" VHA=" + relationship);
 //                add(feature.toString(), fv);                   
                                   
@@ -991,25 +1120,17 @@ public class DependencyPipeVisual extends DependencyPipe
 //                feature.append(" VHA=" + relationship);
 //                add(feature.toString(), fv);
                 
-                // END AREA FEATURES //		
-            	
-                // H=Head A=Arg VHA=spatialLabel HA=label
-        		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
-                feature.append(" HA=" + label);
-                add(feature.toString(), fv);
+                // END AREA FEATURES //                 
                 
-                // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant
-                feature.append(" HQ=" + headQuadrant);
-                add(feature.toString(), fv);
+                // BEGIN DISTANCE FEATURES //
                 
-                // H=Head A=Arg VHA=spatialLabel HA=label AQ=quadrant
-        		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " VHA=" + relationship);
-                feature.append(" HA=" + label + " AQ=" +argQuadrant);
-                add(feature.toString(), fv);                
-
-                // H=Head A=Arg VHA=spatialLabel HA=label HQ=quadrant AQ=quadrant
-                feature.append(" AQ=" + argQuadrant);
-                add(feature.toString(), fv);                
+//                feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+//                feature.append(" HA=" + label);
+//                add(feature.toString(), fv);
+//                feature.append(" VHA=" + relationship);
+//                add(feature.toString(), fv);
+                
+                // END DISTANCE FEATURES// 
             }
         }
     }           

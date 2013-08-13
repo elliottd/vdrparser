@@ -21,6 +21,7 @@ public class Polygon {
 	
 	public enum Area {SMALL, MEDIUM, LARGE};
 
+	public double distanceFromCentre;
 	public Point2D centroid;
 	public double convexHullArea;
 	public double relativeArea;
@@ -29,10 +30,28 @@ public class Polygon {
 	public ImageQuadrant.Quadrant imageQuadrant;
 	public String label;
 	public Point2D[] points;
+	public double imagex;
+	public double imagey;
 	
 	public Polygon(String polygonLabel)
 	{
 	    this.label = polygonLabel;
+	}
+	
+	public void calculateDistanceFromCentre(double x, double y)
+	{
+	    this.imagex = x;
+	    this.imagey = y;
+	    double cx = x / 2;
+	    double cy = y / 2;
+	    double distance = Point2D.Double.distance(cx, cy, centroid.getX(), centroid.getY());
+	    this.distanceFromCentre = Util.roundToNearestTen(100*(distance/Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))));
+	}
+	
+	public double calculateDistanceFromObject(Polygon p)
+	{
+	    double distance = Math.abs(this.centroid.distance(p.centroid));
+	    return Util.roundToNearestTen(100*(distance/Math.sqrt(Math.pow(this.imagex, 2) + Math.pow(this.imagey, 2))));
 	}
 	
 	public void calculateArea(double imageArea)
