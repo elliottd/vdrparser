@@ -28,7 +28,7 @@ import java.util.Comparator;
 
 public class Image {
 	
-	public Polygon[] polygons;
+	public ParserPolygon[] polygons;
 	public double[] dimensions;
 	public double imageArea;
 	public String filename;
@@ -68,7 +68,7 @@ public class Image {
 	
 	public void calculatePolygonAreas()
 	{
-		for (Polygon p: this.polygons)
+		for (ParserPolygon p: this.polygons)
 		{
 			p.calculateArea(this.imageArea);
 		}
@@ -100,7 +100,7 @@ public class Image {
 	{
 	    for (int i = 0; i < polygons.length; i++)
 	    {
-	        Polygon p = polygons[i];
+	        ParserPolygon p = polygons[i];
 	        if (p.label.equals(label))
 	        {
 	            // The polygon has the same label and is within two pixels
@@ -117,7 +117,7 @@ public class Image {
 	
 	public void populateQuadrants()
 	{
-		for (Polygon p: polygons)
+		for (ParserPolygon p: polygons)
 		{
 			p.imageQuadrant = ImageQuadrant.getPolygonQuadrant(p, this);
 			p.calculateDistanceFromCentre(this.dimensions[0], this.dimensions[1]);
@@ -126,11 +126,11 @@ public class Image {
 	
 	public void calculateSpatialRelationships()
 	{
-	    for (Polygon p1: polygons)
+	    for (ParserPolygon p1: polygons)
 	    {
 	        int i = 0;
 	        p1.spatialRelations = new SpatialRelation.Relations[polygons.length];
-	        for (Polygon p2: polygons)
+	        for (ParserPolygon p2: polygons)
 	        {
 	            p1.spatialRelations[i] = SpatialRelation.GetSpatialRelationship(p1, p2);
 	            i++;
@@ -154,7 +154,7 @@ public class Image {
 		        doc.getDocumentElement().normalize();
 		     		     
 		        NodeList objectNodeList = doc.getElementsByTagName("object");
-		        this.polygons = new Polygon[objectNodeList.getLength()];
+		        this.polygons = new ParserPolygon[objectNodeList.getLength()];
 		     
 		        for (int objectCounter = 0; objectCounter < objectNodeList.getLength(); objectCounter++) {
 		     
@@ -174,7 +174,7 @@ public class Image {
 		                    if (objectNode.getNodeType() == Node.ELEMENT_NODE) 
 		                    {
 		                        Element pElement = (Element) polygonNode;
-   	                            Polygon poly = new Polygon(label);
+   	                            ParserPolygon poly = new ParserPolygon(label);
    	                            
 		                        NodeList points = pElement.getElementsByTagName("pt");
 		                        Point2D[] polyPoints = new Point2D[points.getLength()];
@@ -204,9 +204,9 @@ public class Image {
 		        e.printStackTrace();
 		    }			
 		}
-		Arrays.sort(polygons, new Comparator<Polygon>()
+		Arrays.sort(polygons, new Comparator<ParserPolygon>()
         {
-		    public int compare(Polygon one, Polygon two)
+		    public int compare(ParserPolygon one, ParserPolygon two)
 		    {
 		        return one.label.compareTo(two.label);
 		    }
@@ -218,7 +218,7 @@ public class Image {
 	    StringBuilder sb = new StringBuilder();
 	    sb.append(this.xmlFilename + "\n");
 	    sb.append("---\n");
-	    for (Polygon p: this.polygons)
+	    for (ParserPolygon p: this.polygons)
 	    {
 	        sb.append(p.toString());
 	    }

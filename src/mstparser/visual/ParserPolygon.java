@@ -1,8 +1,18 @@
 package mstparser.visual;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.awt.Polygon;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 
 import mstparser.DependencyInstance;
 import mstparser.Util;
@@ -17,7 +27,7 @@ import mstparser.Util;
  *
  */
 
-public class Polygon {
+public class ParserPolygon {
 	
 	public enum Area {SMALL, MEDIUM, LARGE};
 
@@ -32,10 +42,32 @@ public class Polygon {
 	public Point2D[] points;
 	public double imagex;
 	public double imagey;
+	public Polygon poly;
+	public Coordinate[] coords;
 	
-	public Polygon(String polygonLabel)
+	public ParserPolygon(String polygonLabel)
 	{
 	    this.label = polygonLabel;
+	}
+	
+	public boolean overlaps(ParserPolygon p)
+	{
+	    
+	    GeometryFactory gf = new GeometryFactory();
+	    MultiPoint thisMP = gf.createMultiPoint(this.coords);
+	    Geometry thisCH = thisMP.convexHull();
+	    
+	    MultiPoint pMP = gf.createMultiPoint(p.coords);
+	    Geometry pCH = pMP.convexHull();
+	    
+	    Geometry intersection = thisCH.intersection(pCH);
+	    Geometry union = thisCH.union(pCH);
+	    
+	    if ((intersection.getArea() / union.getArea() - Util.epsilon) > 0.5)
+	    {
+	        return true;
+	    }
+	    return false;
 	}
 	
 	public void calculateDistanceFromCentre(double x, double y)
@@ -48,7 +80,7 @@ public class Polygon {
 	    this.distanceFromCentre = Util.roundToNearestTen(100*(distance/Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))));
 	}
 	
-	public double calculateDistanceFromObject(Polygon p)
+	public double calculateDistanceFromObject(ParserPolygon p)
 	{
 	    double distance = Math.abs(this.centroid.distance(p.centroid));
 	    return Util.roundToNearestTen(100*(distance/Math.sqrt(Math.pow(this.imagex, 2) + Math.pow(this.imagey, 2))));
@@ -65,6 +97,15 @@ public class Polygon {
 	    this.points = parsedPoints;
 	    this.centroid = Point2Df.centerOfMass(this.points);
 	    this.convexHullArea = Point2Df.area(this.points);
+	    this.poly = new Polygon();
+	    List<Coordinate> l = new LinkedList<Coordinate>();
+	    for (Point2D p: this.points)
+	    {
+	        this.poly.addPoint((int)p.getX(), (int)p.getY());
+	        l.add(new Coordinate((int)p.getX(), (int)p.getY()));
+	    }
+	    this.coords = l.toArray(new Coordinate[0]);
+	    
 	}
 	
 	public String toString()
