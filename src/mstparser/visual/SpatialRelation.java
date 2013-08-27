@@ -9,14 +9,15 @@ package mstparser.visual;
  */
 public class SpatialRelation {
 	
-	public enum Relations {ABOVE, BEHIND, BELOW, BESIDE, INFRONT, OPPOSITE, SURROUNDS, ROOT, NONE};
+	public enum Relations {ABOVE, BEHIND, BELOW, BESIDE, INFRONT, OPPOSITE, SURROUNDS, ROOT, NONE, OVERLAPS};
 	
-	public static Relations GetSpatialRelationship(Polygon p1, Polygon p2)
+	public static Relations GetSpatialRelationship(ParserPolygon p1, ParserPolygon p2)
 	{
 	    if (p1.equals(p2))
         {
             return Relations.NONE;
         }
+	    	  	    
 	    double angle = getAngle(p1, p2);
 	    //System.out.println(p1.label + "-" + p2.label + ":" + angle);
 	    double mAngle = angle - 0.00001;	    
@@ -41,7 +42,7 @@ public class SpatialRelation {
      * @param 
      * @return angle in degress from 0-360.
      */
-    public static double getAngle(Polygon one, Polygon two)
+    public static double getAngle(ParserPolygon one, ParserPolygon two)
     {
         double dx = two.centroid.getX() - one.centroid.getX();
         double dy = two.centroid.getY() - one.centroid.getY();

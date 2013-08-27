@@ -3,7 +3,7 @@ package mstparser;
 import mstparser.io.*;
 import mstparser.visual.Image;
 import mstparser.visual.ImageQuadrant.Quadrant;
-import mstparser.visual.Polygon.Area;
+import mstparser.visual.ParserPolygon.Area;
 import mstparser.visual.SpatialRelation;
 
 import java.awt.geom.Point2D;
@@ -900,22 +900,41 @@ public class DependencyPipeVisual extends DependencyPipe
     		
     		// BEGIN DISTANCE FEATURES //
     		
-//    		feature = new StringBuilder("H=" + headForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
-//            add(feature.toString(), fv);
-//            feature.append(" VHA=" + relationship);
-//            add(feature.toString(), fv);
-//            
-//            feature = new StringBuilder("A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
-//            add(feature.toString(), fv);
-//            feature.append(" VHA=" + relationship);
-//            add(feature.toString(), fv);
-//    		
-//    		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
-//    		add(feature.toString(), fv);
-//    		feature.append(" VHA=" + relationship);
-//    		add(feature.toString(), fv);
+    		feature = new StringBuilder("H=" + headForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+            
+            feature = new StringBuilder("A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+    		
+    		feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+    		add(feature.toString(), fv);
+    		feature.append(" VHA=" + relationship);
+    		add(feature.toString(), fv);
     		
     		// END DISTANCE FEATURES//
+    		
+    		// BEGIN OVERLAP FEATURES //
+    		
+    		feature = new StringBuilder("H=" + headForm + " OL=" + i.polygons[h].overlaps(i.polygons[a]));
+    		add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+            
+            feature = new StringBuilder("A=" + argForm + " OL=" + i.polygons[h].overlaps(i.polygons[a]));
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+            
+            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " OL=" + i.polygons[h].overlaps(i.polygons[a]));
+            add(feature.toString(), fv);
+            feature.append(" VHA=" + relationship);
+            add(feature.toString(), fv);
+    		
+    		// END OVERLAP FEATURES //
     		
     		if (label == null)
             {            	
@@ -1018,13 +1037,13 @@ public class DependencyPipeVisual extends DependencyPipe
                     
                     // BEGIN DISTANCE FEATURES //
                     
-//                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
-//                    feature.append(" HA=" + type);
-//                    add(feature.toString(), fv);
-//                    feature.append(" VHA=" + relationship);
-//                    add(feature.toString(), fv);
+                    feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+                    feature.append(" HA=" + type);
+                    add(feature.toString(), fv);
+                    feature.append(" VHA=" + relationship);
+                    add(feature.toString(), fv);                                      
                     
-                    // END DISTANCE FEATURES//                    
+                    // END DISTANCE FEATURES//    
                 }
             }
             else
@@ -1124,13 +1143,13 @@ public class DependencyPipeVisual extends DependencyPipe
                 
                 // BEGIN DISTANCE FEATURES //
                 
-//                feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
-//                feature.append(" HA=" + label);
-//                add(feature.toString(), fv);
-//                feature.append(" VHA=" + relationship);
-//                add(feature.toString(), fv);
+                feature = new StringBuilder("H=" + headForm + " A=" + argForm + " DBO=" + i.polygons[h].calculateDistanceFromObject(i.polygons[a]));
+                feature.append(" HA=" + label);
+                add(feature.toString(), fv);
+                feature.append(" VHA=" + relationship);
+                add(feature.toString(), fv);
                 
-                // END DISTANCE FEATURES// 
+                // END DISTANCE FEATURES//                
             }
         }
     }           

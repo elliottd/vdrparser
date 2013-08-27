@@ -12,6 +12,8 @@ import org.apache.commons.math3.util.Precision;
 public class Util
 {
     
+    public static double epsilon = 0.000000001;
+    
     public static double roundToNearestTen(double value)
     {
         return Precision.round(value, -1);

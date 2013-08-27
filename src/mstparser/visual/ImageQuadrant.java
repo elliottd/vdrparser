@@ -6,7 +6,7 @@ public class ImageQuadrant {
 
 	public enum Quadrant {TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT, NONE};
 	
-	public static Quadrant getPolygonQuadrant(Polygon p, Image i)
+	public static Quadrant getPolygonQuadrant(ParserPolygon p, Image i)
 	{
 		if (i.dimensions[0] == -1)
 		{
