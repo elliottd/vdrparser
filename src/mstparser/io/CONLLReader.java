@@ -33,10 +33,41 @@ public class CONLLReader extends DependencyReader
 {
 
     protected boolean discourseMode = false;
+    public Hashtable<String, String> clusteredLabels;
 
     public CONLLReader(boolean discourseMode)
     {
         this.discourseMode = discourseMode;
+        this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
+    }
+    
+    private void readClusterAssignments(String string)
+    {
+        this.clusteredLabels = new Hashtable<String, String>();
+        try
+        {
+            BufferedReader reader = new BufferedReader(new FileReader(string));
+            String line;
+            
+            while((line = reader.readLine()) != null)
+            {
+                if (line.indexOf(":") != -1)
+                {
+                    String assignment = line.split(":")[0];
+                    String labels = line.split(":")[1];
+                    String[] splitLabels = labels.split(",");
+                    for(String s: splitLabels)
+                    {
+                        this.clusteredLabels.put(s, assignment);
+                    }
+                }
+            }
+            reader.close();
+        }
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
     }
 
     public DependencyInstance getNext() throws IOException
@@ -83,6 +114,10 @@ public class CONLLReader extends DependencyReader
         for (int i = 0; i < length; i++)
         {
             String[] info = lineList.get(i);
+//            String normalisedForm = normalize(info[1]);
+//            normalisedForm = this.clusteredLabels.get(normalisedForm) != null ? 
+//                    this.clusteredLabels.get(normalisedForm) : normalisedForm;
+//            forms[i + 1] = normalisedForm;
             forms[i + 1] = normalize(info[1]);
             lemmas[i + 1] = normalize(info[2]);
             cpos[i + 1] = info[3];

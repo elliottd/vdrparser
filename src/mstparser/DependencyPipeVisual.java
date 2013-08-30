@@ -66,13 +66,15 @@ public class DependencyPipeVisual extends DependencyPipe
     		ioe.printStackTrace();
     	}
     	
+        this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
+    	
     	if (options.train)
     	{
     		if (options.qg)
     		{
                 this.readDescriptions(options.sourceFile);
                 this.readAlignments(options.alignmentsFile);
-                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v1clusters/clusters");
+                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
     		}
     		
     		if (options.visualFeatures)
@@ -88,7 +90,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                 this.readDescriptions(options.testSourceFile);
                 this.readAlignments(options.testAlignmentsFile);
-                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v1clusters/clusters");
+                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
     		}
     		if (options.visualFeatures)
     		{
@@ -132,6 +134,8 @@ public class DependencyPipeVisual extends DependencyPipe
     {
 
         createAlphabet(file);
+        
+        System.out.println(super.typeAlphabet.toString());
 
         System.out.println(featFileName.getAbsolutePath());
 
@@ -150,10 +154,9 @@ public class DependencyPipeVisual extends DependencyPipe
         System.out.println("Creating Feature Vector Instances: ");
         while (instance != null)
         {            
-            /*if (options.verbose)
-            {
-                System.out.println(instance.toString());
-            }*/
+            
+            //System.out.println(instance.toString());
+            
             System.out.print(depReader.getCount() + " ");
 
             FeatureVector fv = this.createFeatureVector(instance);
@@ -561,15 +564,20 @@ public class DependencyPipeVisual extends DependencyPipe
         int[] heads = instance.heads;
         String[] forms = instance.forms;
         String headForm = checkForRootAttach(headIndex, heads) ? "ROOT" : forms[headIndex];
+        headForm = this.clusteredLabels.get(headForm) != null ?
+              this.clusteredLabels.get(headForm) : headForm;
         String argForm = forms[argIndex];
+        argForm = this.clusteredLabels.get(argForm) != null ?
+                this.clusteredLabels.get(argForm) : argForm;
         StringBuilder feature;
         
     	//1. H=Head
         feature = new StringBuilder("H=" + headForm);
         this.add(feature.toString(), fv);
 
-        // A=Arg
-        feature = new StringBuilder("A=" + argForm);            
+//        // A=Arg
+//        feature = new StringBuilder("A=" + argForm);
+//        this.add(feature.toString(), fv);
         
         //13. H=Head A=Arg
         feature = new StringBuilder("H=" + headForm + " A=" + argForm);
@@ -583,9 +591,9 @@ public class DependencyPipeVisual extends DependencyPipe
                 feature = new StringBuilder("H=" + headForm + " HA=" + type);
                 this.add(feature.toString(), fv);
             
-				// A=Arg HA=label
-				feature = new StringBuilder("A=" + argForm + " HA=" + type);
-                //this.add(feature.toString(), fv);
+//				// A=Arg HA=label
+//				feature = new StringBuilder("A=" + argForm + " HA=" + type);
+//                this.add(feature.toString(), fv);
 
                 //14. H=Head A=Arg HA=labelhead−arg
                 feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + type);
@@ -599,9 +607,9 @@ public class DependencyPipeVisual extends DependencyPipe
             feature = new StringBuilder("H=" + headForm + " HA=" + label);
             this.add(feature.toString(), fv);          
         	
-			// A=Arg HA=label
-			feature = new StringBuilder("A=" + argForm + " HA=" + label);
-            //this.add(feature.toString(), fv);
+//			// A=Arg HA=label
+//			feature = new StringBuilder("A=" + argForm + " HA=" + label);
+//            this.add(feature.toString(), fv);
             
             //14. H=Head A=Arg HA=labelhead−arg
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + label);
@@ -818,7 +826,11 @@ public class DependencyPipeVisual extends DependencyPipe
             // We need to have found valid polygons for these points to continue                
             
         	String headForm = forms[headIndex];
+        	headForm = this.clusteredLabels.get(headForm) != null ?
+                    this.clusteredLabels.get(headForm) : headForm;
         	String argForm = forms[argIndex];
+        	argForm = this.clusteredLabels.get(argForm) != null ?
+                    this.clusteredLabels.get(argForm) : argForm;
             Quadrant headQuadrant = i.polygons[h].imageQuadrant;
             Quadrant argQuadrant = i.polygons[a].imageQuadrant;  
             double headArea = i.polygons[h].relativeArea;
@@ -1198,6 +1210,8 @@ public class DependencyPipeVisual extends DependencyPipe
         else
         {
             w = forms[wordIndex]; // word
+            w = this.clusteredLabels.get(w) != null ?
+                this.clusteredLabels.get(w) : w;            
             wP = pos[wordIndex]; // postag
            
         }
