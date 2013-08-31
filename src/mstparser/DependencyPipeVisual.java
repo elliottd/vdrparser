@@ -574,7 +574,7 @@ public class DependencyPipeVisual extends DependencyPipe
     	//1. H=Head
         feature = new StringBuilder("H=" + headForm);
         this.add(feature.toString(), fv);
-
+        
 //        // A=Arg
 //        feature = new StringBuilder("A=" + argForm);
 //        this.add(feature.toString(), fv);
