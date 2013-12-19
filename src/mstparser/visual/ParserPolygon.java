@@ -1,8 +1,6 @@
 package mstparser.visual;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.Polygon;
 import java.util.LinkedList;
@@ -12,8 +10,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
-
 import mstparser.DependencyInstance;
 import mstparser.Util;
 

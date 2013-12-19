@@ -57,7 +57,8 @@ public class DependencyParser
 
         params.averageParams(i * instanceLengths.length);
 
-        System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 50));
+        if (options.verbose)
+          System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 50));
         
         FileWriter w = new FileWriter("featureWeights");
         w.write(pipe.dataAlphabet.topNFeaturesByWeight(params, 5000));
@@ -96,7 +97,14 @@ public class DependencyParser
 
             DependencyInstance inst;
 
-            if (options.secondOrder)
+            if (options.pipeName.equals("DependencyPipeVisual") && options.secondOrder)
+            {
+            	inst = ((VisualDependencyPipe2O) pipe).readInstance(in, length, fvs, probs,
+                        fvs_trips, probs_trips,
+                        fvs_sibs, probs_sibs,
+                        nt_fvs, nt_probs, params);
+            }
+            else if (options.secondOrder)
             {
                 inst = ((DependencyPipe2O) pipe).readInstance(in, length, fvs, probs,
                     fvs_trips, probs_trips,
@@ -271,7 +279,14 @@ public class DependencyParser
         double[][][] probs_trips = new double[length][length][length];
         FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
         double[][][] probs_sibs = new double[length][length][2];
-        if (options.secondOrder)
+        if (options.pipeName.equals("DependencyPipeVisual") && options.secondOrder)
+        {
+        	((VisualDependencyPipe2O) pipe).fillFeatureVectors(instance, fvs, probs,
+                    fvs_trips, probs_trips,
+                    fvs_sibs, probs_sibs,
+                    nt_fvs, nt_probs, params);
+        }
+        else if (options.secondOrder)
         {
             ((DependencyPipe2O) pipe).fillFeatureVectors(instance, fvs, probs,
                 fvs_trips, probs_trips,
@@ -370,7 +385,12 @@ public class DependencyParser
         {
 
             DependencyPipe pipe;
-            if (options.secondOrder)
+            if (options.pipeName.equals("DependencyPipeVisual") && options.secondOrder)
+            {
+            	pipe = new VisualDependencyPipe2O(options);
+            	pipe.initialisePipe();
+            }
+            else if (options.secondOrder)
             {
                 pipe = new DependencyPipe2O(options);
             }
@@ -407,7 +427,12 @@ public class DependencyParser
         if (options.test)
         {
             DependencyPipe pipe;
-            if (options.secondOrder)
+            if (options.pipeName.equals("DependencyPipeVisual") && options.secondOrder)
+            {
+            	pipe = new VisualDependencyPipe2O(options);
+            	pipe.initialisePipe();
+            }
+            else if (options.secondOrder)
             {
                 pipe = new DependencyPipe2O(options);
             }

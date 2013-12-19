@@ -134,10 +134,9 @@ public class DependencyPipeVisual extends DependencyPipe
     {
 
         createAlphabet(file);
-        
-        System.out.println(super.typeAlphabet.toString());
-
-        System.out.println(featFileName.getAbsolutePath());
+       
+        if (options.verbose)
+          System.out.println(super.typeAlphabet.toString());
 
         System.out.println("Num Features: " + dataAlphabet.size());
 
@@ -455,6 +454,16 @@ public class DependencyPipeVisual extends DependencyPipe
             }
         }  
     }
+    
+    /**
+     * Override this method if you have extra features that need to be written
+     * to disk. For the basic DependencyPipe, nothing happens.
+     * 
+     */
+    protected void writeExtendedFeatures(DependencyInstance instance,
+            ObjectOutputStream out) throws IOException
+    {
+    }
          
     /**
      * Save the features in a gold standard DependencyInstance to disk at test time.
@@ -513,6 +522,8 @@ public class DependencyPipeVisual extends DependencyPipe
                 out.writeInt(-3);
             }
             
+            writeExtendedFeatures(instance, out);
+            
             out.writeObject(instance.fv.keys());
             out.writeInt(-4);
 
@@ -569,6 +580,9 @@ public class DependencyPipeVisual extends DependencyPipe
         String argForm = forms[argIndex];
         argForm = this.clusteredLabels.get(argForm) != null ?
                 this.clusteredLabels.get(argForm) : argForm;
+        String gpForm = checkForRootAttach(heads[headIndex], heads) ? "ROOT" : forms[heads[headIndex]];
+        headForm = this.clusteredLabels.get(headForm) != null ?
+              this.clusteredLabels.get(headForm) : headForm;   
         StringBuilder feature;
         
     	//1. H=Head
@@ -582,38 +596,114 @@ public class DependencyPipeVisual extends DependencyPipe
         //13. H=Head A=Arg
         feature = new StringBuilder("H=" + headForm + " A=" + argForm);
         add(feature.toString(), fv);
+
+        // Grandparent Features
         
+        // GP=Grand H=Head A=Arg
+        feature = new StringBuilder("GP=" + gpForm + " H=" + headForm + " A=" + argForm);
+        add(feature.toString(), fv);
+        
+        feature = new StringBuilder("A=" + argForm + " IRA=" + checkForRootAttach(argIndex, heads));        
+        // IsPerson?
+        
+        boolean headIsPerson = this.clusteredLabels.get(headForm) == "person";
+        boolean argIsPerson = this.clusteredLabels.get(headForm) == "person";
+        feature = new StringBuilder("A=" + argForm + " AIP=" + argIsPerson);
+        this.add(feature.toString(), fv);        
+
+        feature = new StringBuilder("H=" + headForm + "A=" + argForm + " HIP=" + headIsPerson + " AIP=" + argIsPerson);
+        this.add(feature.toString(), fv); 
+                
         if (label == null)
         {
+//            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " IRA=" + true);        
+//            add(feature.toString(), fv);
+//            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " IRA=" + false);        
+//            add(feature.toString(), fv);
+
+           	// Siblings Features            
+  	      
+//  	      feature = new StringBuilder("H=" + headForm + "A=" + argForm + "HS=" + true + "AS=" + true);
+//	      add(feature.toString(), fv);
+//	      
+//	      feature = new StringBuilder("H=" + headForm + "A=" + argForm + "HS=" + true + "AS=" + false);
+//  	      add(feature.toString(), fv);
+//  	      
+//  	      feature = new StringBuilder("H=" + headForm + "A=" + argForm + "HS=" + false + "AS=" + true);
+//	      add(feature.toString(), fv);
+//	      
+//	      feature = new StringBuilder("H=" + headForm + "A=" + argForm + "HS=" + false + "AS=" + false);
+//  	      add(feature.toString(), fv);      	
+
+  	      
             for (String type: types)
             {
                 //3. H=Head HA=labelhead−arg
                 feature = new StringBuilder("H=" + headForm + " HA=" + type);
                 this.add(feature.toString(), fv);
             
-//				// A=Arg HA=label
+//				 //A=Arg HA=label
 //				feature = new StringBuilder("A=" + argForm + " HA=" + type);
 //                this.add(feature.toString(), fv);
 
                 //14. H=Head A=Arg HA=labelhead−arg
                 feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + type);
                 add(feature.toString(), fv);
+                               
+                feature = new StringBuilder("A=" + argForm + " AIP=" + argIsPerson + " HA=" + type);
+                this.add(feature.toString(), fv);
+                
+                feature = new StringBuilder("H=" + headForm + "A=" + argForm + " HIP=" + headIsPerson + " AIP=" + argIsPerson + " HA=" + type);
+                this.add(feature.toString(), fv);
+//                
+//                //Root attached?
+//                
+//                feature = new StringBuilder("H=" + headForm + " HRA=" + checkForRootAttach(headIndex, heads) + "HA=" + type);
+//                add(feature.toString(), fv);                
             }
             
         }
         else
         {
+        	
+//            feature = new StringBuilder("H=" + headForm + " A=" + argForm + " IRA=" + checkForRootAttach(headIndex, heads));        
+//            add(feature.toString(), fv);
+        	// Siblings Features
+            
+//			// H=Head A=Arg HS=#head sibs
+//			feature = new StringBuilder("H=" + headForm + "A=" + argForm + "HS=" + (numberOfSiblings(headIndex, heads)> 0));
+//			add(feature.toString(), fv);
+  	      
+//			// H=Head A=Arg AS=#arg sibs
+//			feature = new StringBuilder("H=" + headForm + "A=" + argForm + "AS=" + (numberOfSiblings(argIndex, heads)>0));
+//			add(feature.toString(), fv);
+			  
+//			// H=Head A=Arg HS=#head sibs AS=#arg sibs
+//			feature = new StringBuilder("H=" + headForm + "A=" + argForm + "HS=" + (numberOfSiblings(headIndex, heads)>0) + "AS=" + (numberOfSiblings(argIndex, heads)>0));
+//			add(feature.toString(), fv);
+  	      
             //3. H=Head HA=labelhead−arg
             feature = new StringBuilder("H=" + headForm + " HA=" + label);
             this.add(feature.toString(), fv);          
         	
-//			// A=Arg HA=label
+			// A=Arg HA=label
 //			feature = new StringBuilder("A=" + argForm + " HA=" + label);
 //            this.add(feature.toString(), fv);
             
             //14. H=Head A=Arg HA=labelhead−arg
             feature = new StringBuilder("H=" + headForm + " A=" + argForm + " HA=" + label);
-            add(feature.toString(), fv);          
+            add(feature.toString(), fv);
+         
+            feature = new StringBuilder("A=" + argForm + " AIP=" + argIsPerson + " HA=" + label);
+            this.add(feature.toString(), fv);
+         
+            feature = new StringBuilder("H=" + headForm + "A=" + argForm + " HIP=" + headIsPerson + " AIP=" + argIsPerson + " HA=" + label);
+            this.add(feature.toString(), fv);
+            
+//            Root attached?
+//            
+//            feature = new StringBuilder("H=" + headForm + " HRA=" + checkForRootAttach(headIndex, heads) + "HA=" + label);
+//            add(feature.toString(), fv);                       
         }
     }
     
@@ -1181,8 +1271,9 @@ public class DependencyPipeVisual extends DependencyPipe
     public void labeledFeatures(DependencyInstance instance, int wordIndex,
             String dependencyType, boolean attR, boolean childFeatures, FeatureVector fv)
     {    
+
         /* The original implementation */
-        
+     	
         String[] forms = instance.forms;
         String[] pos = instance.postags;
 
@@ -1243,10 +1334,40 @@ public class DependencyPipeVisual extends DependencyPipe
      */
     public boolean checkForRootAttach(int index, int[] instanceHeads)
     {
+    	if (index == -1)
+    	{
+    		return true;
+    	}
+    	
         if (instanceHeads[index] == -1)
         {
             return true;
         }
         return false;
     } 
+    
+    public int numberOfSiblings(int index, int[] instanceHeads)
+    {
+    	if (index == -1)
+    	{
+    		return 0;
+    	}
+    	
+    	int thisHead = instanceHeads[index];
+    	int siblings = 0;
+    	
+    	for (int i: instanceHeads)
+    	{
+    		if (i == index || i == -1)
+    		{
+    			continue;
+    		}
+    		if (instanceHeads[i] == thisHead)
+    		{
+    			siblings += 1;
+    		}
+    	}
+    	
+    	return siblings;    	
+    }
 }
