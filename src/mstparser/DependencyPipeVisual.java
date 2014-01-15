@@ -19,8 +19,6 @@ import java.util.*;
  * 
  * The types of features needed for parsing these representations are so
  * different from language that it warranted a new class.
- * 
- * TODO: Read real visual data from a corresponding image and LabelMe XML file. 
  *
  * @author delliott
  * 
