@@ -147,12 +147,12 @@ public class VisualDependencyPipe2O extends DependencyPipeVisual
         String ch2_pos = pos[ch2];
 //        String ch1_word = isST ? "STWRD" : forms[ch1];
         String ch1_word = forms[ch1];
-        ch1_word = this.clusteredLabels.get(ch1_word) != null ?
-                this.clusteredLabels.get(ch1_word) : ch1_word;
+        ch1_word = this.cLabels.get(ch1_word) != null ?
+                this.cLabels.get(ch1_word) : ch1_word;
 
         String ch2_word = forms[ch2];
-        ch2_word = this.clusteredLabels.get(ch2_word) != null ?
-                this.clusteredLabels.get(ch2_word) : ch2_word;
+        ch2_word = this.cLabels.get(ch2_word) != null ?
+                this.cLabels.get(ch2_word) : ch2_word;
 
 //        add("CH_PAIR=" + ch1_pos + "_" + ch2_pos + "_" + dir, 1.0, fv);
 //        add("CH_WPAIR=" + ch1_word + "_" + ch2_word + "_" + dir, 1.0, fv);

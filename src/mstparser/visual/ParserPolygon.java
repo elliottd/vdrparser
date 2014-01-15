@@ -40,10 +40,24 @@ public class ParserPolygon {
 	public double imagey;
 	public Polygon poly;
 	public Coordinate[] coords;
+	public ParserPolygon nearestPolygon = null;
+	public int nearestIndex = -1;
 	
 	public ParserPolygon(String polygonLabel)
 	{
 	    this.label = polygonLabel;
+	}
+	
+	public boolean equals(ParserPolygon p)
+	{
+		if (this.centroid.equals(p.centroid))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	public boolean overlaps(ParserPolygon p)

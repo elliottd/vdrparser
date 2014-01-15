@@ -138,6 +138,43 @@ public class Image {
 	    }
 	}
 	
+	public void findNearestPolygons()
+	{
+		double distance = 100000000000.0;
+		ParserPolygon nearest = null;
+		int nearestIndex = -1;
+		int i = 0;
+		for (ParserPolygon p1: polygons)
+		{
+			int j = 0;
+			if (p1.nearestPolygon != null)
+			{
+				continue;
+			}
+			for (ParserPolygon p2: polygons)
+			{
+				if (p1.equals(p2))
+				{
+					j++;
+					continue;
+				}
+				double calculation = p1.calculateDistanceFromObject(p2);
+				if (calculation - 0.0000001 < distance)
+				{
+					distance = calculation;
+					nearest = p2;
+					nearestIndex = j;
+				}
+				j++;
+			}
+			p1.nearestPolygon = nearest;
+			nearest.nearestPolygon = p1;
+			p1.nearestIndex = nearestIndex;
+			nearest.nearestIndex = i;
+			i++;
+		}
+	}
+	
 	public void parseXMLFile()
 	{
 		if (this.xmlFilename != null)
