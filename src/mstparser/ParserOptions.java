@@ -127,7 +127,6 @@ public final class ParserOptions
             }
             if (pair[0].equals("create-forest"))
             {
-                System.out.println(pair[1]);
                 createForest = pair[1].equals("true") ? true : false;
             }
             if (pair[0].equals("decode-type"))
@@ -249,63 +248,63 @@ public final class ParserOptions
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("FLAGS\n[");
-        sb.append("train-file: " + trainfile);
+        sb.append("\nFLAGS\n[\n");
+        sb.append("\ttrain-file: " + trainfile);
         sb.append("\n");
-        sb.append("source-file: " + sourceFile);
+        sb.append("\tsource-file: " + sourceFile);
         sb.append("\n");
-        sb.append("test-file: " + testfile);
+        sb.append("\ttest-file: " + testfile);
         sb.append("\n");
-        sb.append("gold-file: " + goldfile);
+        sb.append("\tgold-file: " + goldfile);
         sb.append("\n");
-        sb.append("output-file: " + outfile);
+        sb.append("\toutput-file: " + outfile);
         sb.append("\n");
-        sb.append("model-name: " + modelName);
+        sb.append("\tmodel-name: " + modelName);
         sb.append("\n");
-        sb.append("train: " + train);
+        sb.append("\ttrain: " + train);
         sb.append("\n");
-        sb.append("test: " + test);
+        sb.append("\ttest: " + test);
         sb.append("\n");
-        sb.append("eval: " + eval);
+        sb.append("\teval: " + eval);
         sb.append("\n");
-        sb.append("loss-type: " + lossType);
+        sb.append("\tloss-type: " + lossType);
         sb.append("\n");
-        sb.append("second-order: " + secondOrder);
+        sb.append("\tsecond-order: " + secondOrder);
         sb.append("\n");
-        sb.append("training-iterations: " + numIters);
+        sb.append("\ttraining-iterations: " + numIters);
         sb.append("\n");
-        sb.append("training-k: " + trainK);
+        sb.append("\ttraining-k: " + trainK);
         sb.append("\n");
-        sb.append("test-k: " + testK);
+        sb.append("\ttest-k: " + testK);
         sb.append("\n");
-        sb.append("decode-type: " + decodeType);
+        sb.append("\tdecode-type: " + decodeType);
         sb.append("\n");
-        sb.append("create-forest: " + createForest);
+        sb.append("\tcreate-forest: " + createForest);
         sb.append("\n");
-        sb.append("format: " + format);
+        sb.append("\tformat: " + format);
         sb.append("\n");
-        sb.append("relational-features: " + useRelationalFeatures);
+        sb.append("\trelational-features: " + useRelationalFeatures);
         sb.append("\n");
-        sb.append("discourse-mode: " + discourseMode);
+        sb.append("\tdiscourse-mode: " + discourseMode);
         sb.append("\n");
-        sb.append("------\n");
-        sb.append("pipe-type: " + pipeName);
+        sb.append("\t------\n");
+        sb.append("\tpipe-type: " + pipeName);
         sb.append("\n");
-        sb.append("visual-features: " + visualFeatures);
+        sb.append("\tvisual-features: " + visualFeatures);
         sb.append("\n");
-        sb.append("qg: " + qg);
+        sb.append("\tqg: " + qg);
         sb.append("\n");
-        sb.append("test-alignments-file: " + testAlignmentsFile);
+        sb.append("\ttest-alignments-file: " + testAlignmentsFile);
         sb.append("\n");
-        sb.append("test-source-file: " + testSourceFile);
+        sb.append("\ttest-source-file: " + testSourceFile);
         sb.append("\n");        
-        sb.append("train-xml-file: " + xmlFile);
+        sb.append("\ttrain-xml-file: " + xmlFile);
         sb.append("\n");
-        sb.append("train-images-file: " + imagesFile);
+        sb.append("\ttrain-images-file: " + imagesFile);
         sb.append("\n");        
-        sb.append("alignments-file: " + alignmentsFile);
+        sb.append("\talignments-file: " + alignmentsFile);
         sb.append("\n");
-        sb.append("verbose: " + verbose);
+        sb.append("\tverbose: " + verbose);
         sb.append("\n]\n");
         return sb.toString();
     }
