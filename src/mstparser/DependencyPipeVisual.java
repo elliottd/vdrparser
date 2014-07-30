@@ -375,12 +375,7 @@ public class DependencyPipeVisual extends DependencyPipe
     
     /**
      * 
-     * TODO: Rewrite all the methods that add features so they don't make naive
-     *       assumptions about the data. These fill methods really need to attempt
-     *       all possible combinations.
-     *       
-     * TODO: Make sure you never read from instance.deprels[] since this can contain
-     *       the gold standard dependency relations we are trying to predict.
+     * Fill the FeatureVectors for an unparsed DependencyInstance.
      * 
      * @param fvs A three-dimension array of FeatureVectors where each [i][j][k]
      *            instance represents the features calculated between word i and 
@@ -720,10 +715,30 @@ public class DependencyPipeVisual extends DependencyPipe
     		return;
     	}
     	
-        DependencyInstance source = descriptions.get(super.depReader.getCount() * 2);    
-        List<Alignment> a = alignments.get(super.depReader.getCount() * 2);
-        
-        for (int i = 0; i < 2; i++)
+		boolean secondonly = false;
+    	
+    	DependencyInstance source;
+    	List<Alignment> a;
+    	
+    	if (secondonly)
+    	{
+    		source = descriptions.get((super.depReader.getCount() * 2) + 1);    
+    		a = alignments.get((super.depReader.getCount() * 2) + 1);
+    	}
+    	else
+    	{
+    		source = descriptions.get((super.depReader.getCount() * 2));    
+    		a = alignments.get((super.depReader.getCount() * 2));
+    	}
+    
+    	int j = secondonly == true ? 1 : 2;
+    	
+    	if (secondonly)
+    	{
+    		j = 1;    
+    	}
+    	
+        for (int i = 0; i < j; i++)
         {        	
         	// This loop runs twice to add features over the first and 
         	// second sentences
@@ -749,6 +764,16 @@ public class DependencyPipeVisual extends DependencyPipe
                 }
               verb = source.lemmas[rootPosition];
             }
+            
+            boolean noverb = false;
+            if (verb.equals("is"))
+            {
+            	noverb = true;
+            }
+            if (verb.equals("has"))
+            {
+            	noverb = true;
+            }
         	           
             for (Alignment one : a)
             {
@@ -771,25 +796,34 @@ public class DependencyPipeVisual extends DependencyPipe
                         feature = new StringBuilder("H=" + head_word + " CFG=" + c.toString());
                         add(feature.toString(), fv);
                         
+                        if (noverb == false)
+                        {
                         // H=Head V=verb CFG=config
                         feature = new StringBuilder("H=" + head_word + " V=" + verb + " CFG=" + c.toString());
                         add(feature.toString(), fv);
+                        }
                                                 
                         // A=Arg CFG=config
                         feature = new StringBuilder("A=" + arg_word + " CFG=" + c.toString());
                         add(feature.toString(), fv);
                         
+                        if (noverb == false)
+                        {
                          // A=Arg V=verb CFG=config
                         feature = new StringBuilder("A=" + arg_word + " V=" + verb + " CFG=" + c.toString());
-                        add(feature.toString(), fv);                        
+                        add(feature.toString(), fv);
+                        }
                         
                         // H=Head A=Arg CFG=config
                         feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " CFG=" + c.toString());
                         add(feature.toString(), fv);
                         
+                        if (noverb == false)
+                        {
                         // H=Head A=Arg V=verb CFG=config
                         feature = new StringBuilder("H=" + head_word + " A=" + arg_word + " V=" + verb + " CFG=" + c.toString());
-                        add(feature.toString(), fv);                        
+                        add(feature.toString(), fv);
+                        }
                     }
                 }
             }
@@ -1057,6 +1091,8 @@ public class DependencyPipeVisual extends DependencyPipe
             }
             
             // WORD + LABEL 
+            add("WORD=" + word, fv);
+
             add("WORD+L=" + word + " " + dependencyType , fv);
 
             // WORD + RIGHT? + LABEL
@@ -1107,16 +1143,20 @@ public class DependencyPipeVisual extends DependencyPipe
 				    // BEGIN POSITION FEATURES //
 				                    
 	                // WORD + DISTANCE_CENTRE + LABEL || -ROOT -LDEP -UDEP
-//	                feature = new StringBuilder("WORD+DFC+L=" + headForm + " " + i.polygons[h].distanceFromCentre + " " + dependencyType);
-//	                add(feature.toString(), fv);	
+//	                feature = new StringBuilder("WORD+DFC+L=" + word + " " + i.polygons[h].distanceFromCentre);
+//	                add(feature.toString(), fv);		                	         
 
 	                // WORD + QUAD + LABEL || --ROOT ---LDEP -UDEP
-//	                feature = new StringBuilder("WORD+WQUAD+L=" + headForm + " " + headQuadrant + " " + dependencyType);
+//	                feature = new StringBuilder("WORD+WQUAD+L=" + word + " " + headQuadrant);
 //	                add(feature.toString(), fv);
 
 	                // WORD + SIZE + LABEL || -
-//	                feature = new StringBuilder("WORD+AREA+L=" + word + " "+ headArea + " " + dependencyType);
-//	                add(feature.toString(), fv);	                             
+	                feature = new StringBuilder("WORD+AREA=" + word + " "+ headArea);
+	                add(feature.toString(), fv);
+//	                feature = new StringBuilder("WORD+AREA+ISPERSON=" + word + " "+ headArea + " " + (this.cLabels.get(word) == "person"));
+//	                add(feature.toString(), fv);
+//	                feature.append(" " + dependencyType);
+//	                add(feature.toString(), fv);
 
 	                // END AREA FEATURES //    
 	                
@@ -1124,17 +1164,37 @@ public class DependencyPipeVisual extends DependencyPipe
 	            	nForm = this.cLabels.get(nForm) != null ?
 	                        this.cLabels.get(nForm) : nForm;
 	                
-	                //add("WORD+NEARESTWORD+L=" + headForm + " " + nForm + " " + dependencyType, fv);
+	                //add("WORD+NEARESTWORD=" + headForm + " " + nForm + " " + dependencyType, fv);
 
 	            }
             }
 
         	if (options.qg)
         	{
-	            DependencyInstance source = descriptions.get(super.depReader.getCount() * 2);    
-	            List<Alignment> a = alignments.get(super.depReader.getCount() * 2);
-	            	            
-	            for (int i = 0; i < 1; i++)
+        		boolean secondonly = false;
+            	
+            	DependencyInstance source;
+            	List<Alignment> a;
+            	
+            	if (secondonly)
+            	{
+            		source = descriptions.get((super.depReader.getCount() * 2) + 1);    
+            		a = alignments.get((super.depReader.getCount() * 2) + 1);
+            	}
+            	else
+            	{
+            		source = descriptions.get((super.depReader.getCount() * 2));    
+            		a = alignments.get((super.depReader.getCount() * 2));
+            	}
+            
+            	int j = secondonly == true ? 1 : 2;
+            	
+            	if (secondonly)
+            	{
+            		j = 1;    
+            	}
+        			            	            
+	            for (int i = 0; i < j; i++)
 	            {        	
 	            	// This loop runs once because we only want the verb in the first sentence.
 	            	
@@ -1159,11 +1219,23 @@ public class DependencyPipeVisual extends DependencyPipe
 	                    }
 	                  verb = source.lemmas[rootPosition];
 	                }
-	                	               	                
+	                
+	                boolean noverb = false;
+	                if (verb.equals("is"))
+	                {
+	                	noverb = true;
+	                }
+	                if (verb.equals("has"))
+	                {
+	                	noverb = true;
+	                }
+	                
+	                if (noverb == false)
+	                {                
 	                add("WORD+UNSUPV=" + word + " " + verb, fv);
 	                
 	                add("WORD+UNSUPV+L=" + word + " " + verb + " " + dependencyType, fv);
-	            	
+	                }
 //	                for (Alignment one : a)
 //	                {
 //	                    for (Alignment two : a)
