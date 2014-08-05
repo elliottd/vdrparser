@@ -206,16 +206,17 @@ class Evaluator:
         print("Arithmetic Mean: %.3f" % lam)
         print
       
-        if len(dicts) != 0:
-          handle = open(dicts, "wb")
-          pickle.dump(self.root_bucket, handle)
-          pickle.dump(self.dep_bucket, handle)
-          handle.close()
-
-          handle = open(labels, "wb")
-          pickle.dump(self.Tlabs, handle)
-          pickle.dump(self.Plabs, handle)
-          handle.close()
+        if dicts != None:
+          if len(dicts) != 0:
+            handle = open(dicts, "wb")
+            pickle.dump(self.root_bucket, handle)
+            pickle.dump(self.dep_bucket, handle)
+            handle.close()
+  
+            handle = open(labels, "wb")
+            pickle.dump(self.Tlabs, handle)
+            pickle.dump(self.Plabs, handle)
+            handle.close()
  
         return (root, dep, am, labroot, labdep, lam, undir)
 
