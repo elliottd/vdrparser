@@ -1,0 +1,7 @@
+#!/bin/bash
+
+python runExperiment.py -p ~/Dropbox/Research/PhD/data/vdt1207/folds/ -m root -s 10 &> logs/1207root 
+python runExperiment.py -p ~/Dropbox/Research/PhD/data/vdt1207/folds/ -m dmv -u 0 -r 0.5 -s 10 &> logs/1207dmv0.5+0 
+python runExperiment.py -p ~/Dropbox/Research/PhD/data/vdt1207/folds/ -m qdgdmv -u 0 -r 0.5 -s 10 &> logs/1207qdgdmv0.5+0 
+python runExperiment.py -p ~/Dropbox/Research/PhD/data/vdt1207/folds/ -m mst -k 10 -d non-proj -s 10 &> logs/1207mst10
+python runExperiment.py -p ~/Dropbox/Research/PhD/data/vdt1207/folds/ -m qdgmst -k 10 -d non-proj -s 10 &> logs/1207qdgmst10
