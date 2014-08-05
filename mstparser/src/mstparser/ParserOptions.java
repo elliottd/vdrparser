@@ -220,7 +220,7 @@ public final class ParserOptions
         	}
         	else
         	{
-        		tmpDir = new File("/scratch/tmp");
+        		tmpDir = new File("/tmp");
         	}
         	
             if (trainfile != null)
