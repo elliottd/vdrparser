@@ -109,64 +109,6 @@ def run_mst(path, k, proj, dicts, labels, visual):
    
     return (root, dep, am, lroot, ldep, lam, undir)
  
-def run_qdgdmv(path, rightProb, unk):
-    '''
-    Run the QDG-DMV model on each of the folds
-    '''
-
-    classpath = "/home/delliott/Dropbox/Desmond/Research/PhD/src/qgdmv/target/scala-2.9.1/classes:/home/delliott/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/delliott/.ivy2/cache/org.scalala/scalala_2.9.1/jars/scalala_2.9.1-1.0.0.RC2.jar:/home/delliott/.ivy2/cache/com.googlecode.netlib-java/netlib-java/jars/netlib-java-0.9.3.jar:/home/delliott/.ivy2/cache/net.sourceforge.f2j/arpack_combined_all/jars/arpack_combined_all-0.1.jar:/home/delliott/.ivy2/cache/jfree/jcommon/jars/jcommon-1.0.16.jar:/home/delliott/.ivy2/cache/jfree/jfreechart/jars/jfreechart-1.0.13.jar:/home/delliott/.ivy2/cache/org.apache.xmlgraphics/xmlgraphics-commons/jars/xmlgraphics-commons-1.3.1.jar:/home/delliott/.ivy2/cache/commons-io/commons-io/jars/commons-io-1.3.1.jar:/home/delliott/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.0.4.jar:/home/delliott/.ivy2/cache/com.lowagie/itext/jars/itext-2.1.5.jar:/home/delliott/.ivy2/cache/bouncycastle/bcmail-jdk14/jars/bcmail-jdk14-138.jar:/home/delliott/.ivy2/cache/bouncycastle/bcprov-jdk14/jars/bcprov-jdk14-138.jar:/home/delliott/.sbt/boot/scala-2.9.1/lib/scala-compiler.jar:/home/delliott/.ivy2/cache/jline/jline/jars/jline-0.9.94.jar:/home/delliott/.ivy2/cache/junit/junit/jars/junit-3.8.1.jar:/home/delliott/.ivy2/cache/net.sf.jopt-simple/jopt-simple/jars/jopt-simple-4.3.jar:/home/delliott/Dropbox/Desmond/Research/PhD/src/qgdmv/lib/akka-actor-1.3.1.jar"
-    trainTgtTags = "%s/target-strings-train" % (path)
-    trainTgtTrees = "%s/target-parsed-train" % (path)
-    trainTgtWords = "%s/target-strings-train" % (path)
-    trainSrcTags = "%s/source-tagged-train" % (path)
-    trainSrcTrees = "%s/source-parsed-train" % (path)
-    trainSrcWords = "%s/source-strings-train" % (path)
-    trainAlignments = "%s/alignments-train" % (path)
-    testAlignments = "%s/alignments-test" % (path)
-    testTgtWords = "%s/target-strings-test" % (path)
-    rightFirst = rightProb
-    unkCutoff = unk
-    output = "%s/test-QDGDMV" % (path)
-    cmd = ["scala -classpath %s predictabilityParsing.models.QGDMV -trainTgtTags %s -trainTgtWords %s -trainTgtTrees %s -trainSrcTags %s -trainSrcWords %s -trainSrcTrees %s -trainAlignments %s -testAlignments %s -testTgtWords %s -rightFirst %s -unkCutoff %s -outputFile %s" % (classpath, trainTgtTags, trainTgtWords, trainTgtTrees, trainSrcTags, trainSrcWords, trainSrcTrees, trainAlignments, testAlignments, testTgtWords, rightFirst, unkCutoff, output)]
-    subprocess.check_call(cmd, shell=True)
-    subprocess.call(["cp " + output + " " + output+"-bak"], shell=True)
-    subprocess.call(["python left-rootfix.py -f %s > %s" % (output, output+"-tmp")], shell=True)
-    subprocess.call(["cp " + output+'-tmp ' + output], shell=True)
-    e = evaluation_measures.Evaluator()
-    gold = e.load_data("%s/test-GOLD" % (path))
-    test = e.load_data("%s/test-QDGDMV" % (path))
-    (x, y, z, a) = e.evaluate(gold, test)
-
-    return (x, y, z, a, 0, 0, 0, 0)
-
-def run_dmv(path, k, rightProb, unk):
-
-    root = []
-    dep = []
-    hm = []
-    am = []
-    
-    classpath = "/home/delliott/Dropbox/Desmond/Research/PhD/src/qgdmv/target/scala-2.9.1/classes:/home/delliott/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/delliott/.ivy2/cache/org.scalala/scalala_2.9.1/jars/scalala_2.9.1-1.0.0.RC2.jar:/home/delliott/.ivy2/cache/com.googlecode.netlib-java/netlib-java/jars/netlib-java-0.9.3.jar:/home/delliott/.ivy2/cache/net.sourceforge.f2j/arpack_combined_all/jars/arpack_combined_all-0.1.jar:/home/delliott/.ivy2/cache/jfree/jcommon/jars/jcommon-1.0.16.jar:/home/delliott/.ivy2/cache/jfree/jfreechart/jars/jfreechart-1.0.13.jar:/home/delliott/.ivy2/cache/org.apache.xmlgraphics/xmlgraphics-commons/jars/xmlgraphics-commons-1.3.1.jar:/home/delliott/.ivy2/cache/commons-io/commons-io/jars/commons-io-1.3.1.jar:/home/delliott/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.0.4.jar:/home/delliott/.ivy2/cache/com.lowagie/itext/jars/itext-2.1.5.jar:/home/delliott/.ivy2/cache/bouncycastle/bcmail-jdk14/jars/bcmail-jdk14-138.jar:/home/delliott/.ivy2/cache/bouncycastle/bcprov-jdk14/jars/bcprov-jdk14-138.jar:/home/delliott/.sbt/boot/scala-2.9.1/lib/scala-compiler.jar:/home/delliott/.ivy2/cache/jline/jline/jars/jline-0.9.94.jar:/home/delliott/.ivy2/cache/junit/junit/jars/junit-3.8.1.jar:/home/delliott/.ivy2/cache/net.sf.jopt-simple/jopt-simple/jars/jopt-simple-4.3.jar:/home/delliott/Dropbox/Desmond/Research/PhD/src/qgdmv/lib/akka-actor-1.3.1.jar"
-    trainTgtWords = "%s/target-strings-train" % (path)
-    testTgtWords = "%s/target-strings-test" % (path)
-    rightFirst = rightProb
-    unkCutoff = unk
-    output = "%s/test-DMV" % (path)
-    cmd = ["scala -classpath %s predictabilityParsing.models.VanillaDMV -trainStrings %s -testStrings %s -rightFirst %s -unkCutoff %s -oF %s" % (classpath, trainTgtWords, testTgtWords, rightFirst, unkCutoff, output)]
-    subprocess.check_call(cmd, shell=True)
-    subprocess.call(["python left-rootfix.py -f %s > %s" % (output, output+"-tmp")], shell=True)
-    subprocess.call(["mv " + output+'-tmp ' + output], shell=True)
-    e = evaluation_measures.Evaluator()
-    gold = e.load_data("%s/test-GOLD" % (path))
-    test = e.load_data("%s/test-DMV" % (path))
-    (x, y, z, a) = e.evaluate(gold, test)
-    root.append(x)
-    dep.append(y)
-    hm.append(z)
-    am.append(a)
-
-    return (root, dep, hm, am)
-
 def run_root(path):
     '''
     Run the ROOT-ATTACH model on each of the folds
