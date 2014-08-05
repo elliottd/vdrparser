@@ -1,0 +1,59 @@
+VDR
+---
+
+Labelled
+Mean Directed: 54.002 +- 4.613
+Mean Root: 87.930 +- 4.133
+Mean Dep: 21.513 +- 4.135
+
+Unlabelled
+Mean Directed: 61.844 +- 4.490
+Mean Root: 87.930 +- 4.133
+Mean Dep: 36.910 +- 5.333
+
+Mean Undirected: 76.559 +- 3.569
+
++VIS
+----
+
+Labelled
+Mean Directed: 55.218 +- 4.707
+Mean Root: 89.175 +- 2.618
+Mean Dep: 22.836 +- 4.986
+
+Unlabelled
+Mean Directed: 64.260 +- 4.608
+Mean Root: 89.175 +- 2.618
+Mean Dep: 40.587 +- 6.224
+
+Mean Undirected: 77.542 +- 3.797
+
++QDG
+----
+
+Labelled
+Mean Directed: 54.540 +- 4.348
+Mean Root: 87.574 +- 3.367
+Mean Dep: 22.908 +- 3.827
+
+Unlabelled
+Mean Directed: 64.603 +- 4.634
+Mean Root: 87.574 +- 3.367
+Mean Dep: 42.715 +- 5.658
+
+Mean Undirected: 77.572 +- 3.122
+
++VIS+QDG
+--------
+
+Labelled
+Mean Directed: 55.738 +- 4.353
+Mean Root: 90.116 +- 2.780
+Mean Dep: 22.815 +- 3.429
+
+Unlabelled
+Mean Directed: 65.685 +- 4.742
+Mean Root: 90.116 +- 2.780
+Mean Dep: 42.412 +- 5.253
+
+Mean Undirected: 78.075 +- 3.369
