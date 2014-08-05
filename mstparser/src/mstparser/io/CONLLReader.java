@@ -38,7 +38,7 @@ public class CONLLReader extends DependencyReader
     public CONLLReader(boolean discourseMode)
     {
         this.discourseMode = discourseMode;
-        this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
+        this.readClusterAssignments("data/rawData/clusters");
     }
     
     private void readClusterAssignments(String string)
