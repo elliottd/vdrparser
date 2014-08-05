@@ -64,7 +64,7 @@ public class DependencyPipeVisual extends DependencyPipe
     		ioe.printStackTrace();
     	}
     	
-        this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
+        this.readClusterAssignments("data/rawData/clusters");
     	
     	if (options.train)
     	{
@@ -72,7 +72,7 @@ public class DependencyPipeVisual extends DependencyPipe
     		{
                 this.readDescriptions(options.sourceFile);
                 this.readAlignments(options.alignmentsFile);
-                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
+                this.readClusterAssignments("data/rawData/clusters");
     		}
     		
     		if (options.visualFeatures)
@@ -88,7 +88,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                 this.readDescriptions(options.testSourceFile);
                 this.readAlignments(options.testAlignmentsFile);
-                this.readClusterAssignments("/home/delliott/Dropbox/Desmond/Research/PhD/data/vdt1199/v2clusters/clusters");
+                this.readClusterAssignments("data/rawData/clusters");
     		}
     		if (options.visualFeatures)
     		{
