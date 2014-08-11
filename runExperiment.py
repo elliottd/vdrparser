@@ -14,7 +14,7 @@ import itertools
 from collections import defaultdict
 
 from scipy.stats import normaltest, sem
-from rpy import *
+from rpy2 import *
 from numpy import mean, array, reshape
 import matplotlib
 from pylab import *

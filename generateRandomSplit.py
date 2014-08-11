@@ -64,8 +64,9 @@ def generate_random_split(image_dir, text_dir,folds):
   dotfiles = [x.replace(".desc",".dot") for x in dotfiles];
 
   trainsize = int(math.floor(len(dotfiles)*train))
-  devsize = trainsize;
   testsize = int(math.floor(len(dotfiles)*test))
+  devsize = testsize;
+
 
   testfiles = [];
   while len(testfiles) < testsize:
@@ -140,7 +141,18 @@ def generate_random_split(image_dir, text_dir,folds):
     trainimagetrees = [x.replace("dot", "conll") for x in trainfiles]
     cmd = ["cat %s > %s/target-parsed-train" % (aux.list_to_str(trainimagetrees, image_dir), tmp_dir)]
     subprocess.call(cmd, shell=True)
-    
+    #remove all triple newline character 
+    tptrainfile = open('%s/target-parsed-train' % tmp_dir);
+    tptrain = tptrainfile.read();
+
+    tptrain = tptrain.replace('\n\n\n','\n\n');
+    tptrain = tptrain.replace('\n\n\n','\n\n');
+    tptrain = tptrain.replace('\n\n\n','\n\n');
+
+    tptrainfile.close();
+    tptrainfile = open('%s/target-parsed-train' % tmp_dir,'w');
+    tptrainfile.write(tptrain);
+
     traintextdescs = [x.replace("dot", "desc") for x in trainfiles]
     cmd = ["cat %s > %s/source-strings-train" % (aux.list_to_str(traintextdescs, text_dir), tmp_dir)]
     subprocess.call(cmd, shell=True)
@@ -176,6 +188,18 @@ def generate_random_split(image_dir, text_dir,folds):
     devimagetrees = [x.replace("dot", "conll") for x in devfiles]
     cmd = ["cat %s > %s/target-parsed-dev" % (aux.list_to_str(devimagetrees, image_dir), tmp_dir)]
     subprocess.call(cmd, shell=True)
+
+    tpdevfile = open('%s/target-parsed-dev' % tmp_dir);
+    tpdev = tpdevfile.read();
+
+    tpdev = tpdev.replace('\n\n\n','\n\n');
+    tpdev = tpdev.replace('\n\n\n','\n\n');
+    tpdev = tpdev.replace('\n\n\n','\n\n');
+
+    tpdevfile.close();
+    tpdevfile = open('%s/target-parsed-dev' % tmp_dir,'w');
+    tpdevfile.write(tpdev);
+
     
     devtextdescs = [x.replace("dot", "desc") for x in devfiles]
     cmd = ["cat %s > %s/source-strings-dev" % (aux.list_to_str(devtextdescs, text_dir), tmp_dir)]
@@ -212,6 +236,18 @@ def generate_random_split(image_dir, text_dir,folds):
     testimagetrees = [x.replace("dot", "conll") for x in testfiles]
     cmd = ["cat %s > %s/target-parsed-test" % (aux.list_to_str(testimagetrees, image_dir), tmp_dir)]
     subprocess.call(cmd, shell=True)
+
+    tptestfile = open('%s/target-parsed-test' % tmp_dir);
+    tptest = tptestfile.read();
+    #darn, why there are so many blank files in a row?
+    tptest = tptest.replace('\n\n\n','\n\n');
+    tptest = tptest.replace('\n\n\n','\n\n');
+    tptest = tptest.replace('\n\n\n','\n\n');
+
+    tptestfile.close();
+    tptestfile = open('%s/target-parsed-test' % tmp_dir,'w');
+    tptestfile.write(tptest);
+
     
     testtextdescs = [x.replace("dot", "desc") for x in testfiles]
     cmd = ["cat %s > %s/source-strings-test" % (aux.list_to_str(testtextdescs, text_dir), tmp_dir)]

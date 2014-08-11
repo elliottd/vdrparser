@@ -1,7 +1,7 @@
 import os
 import sys
 import getopt
-from rpy import *
+from rpy2 import *
 import numpy
 import pickle
 from collections import defaultdict
