@@ -17,6 +17,47 @@ class Evaluator:
     Tlabs = []
     Plabs = []
 
+    def conll_f1(self, gold, system):
+      # Calculate the F1 score of this system compared to the gold standard.
+      # Decomposes all parent-child relationships into units.
+
+      precision = 0.0
+      recall = 0.0
+      f1 = 0.0
+
+      for g,s in zip(gold,system):
+        g_pairs = []
+        s_pairs = []
+        for g_tok in g:
+          g_pairs.append("%s %s %s" % (g_tok[1], g_tok[6], g_tok[7]))
+        for s_tok in s:
+          s_pairs.append("%s %s %s" % (s_tok[1], s_tok[6], s_tok[7]))
+
+        relevant = []
+        retrieved = []
+
+        for s_p in s_pairs:
+          if s_p in g_pairs:
+            relevant += s_p
+          retrieved += s_p
+
+        relevant = set(relevant)
+        retrieved = set(retrieved)
+
+        p_local = relevant.intersection(retrieved) / len(retrieved)
+        r_local = relevant.intersection(retrieved) / len(relevant) 
+        f1_local = (2 * p_local * r_local) / (p_local + r+local)
+
+        precision += p_local
+        recall += r_local
+        f1 += f1_local
+
+      precision/=len(gold)
+      recall/=len(gold)
+      f1/=len(gold)
+
+      return precision,recall,f1
+
     def conll_undirected_accuracy(self, gold, system):
         # Calculuate the proportion of nodes which are correctly connected
         # regardless of the direction of the attachment. This is an unlabelled
@@ -191,6 +232,7 @@ class Evaluator:
         self.get_labels(gold, system)
         am = float(ra+da) / (rt+dt)
         lam = float(labra+labda) / (labrt+labdt)
+        p,r,f1 = self.conll_f1(gold,system)
 
         print
         print("Undirected Accuracy: %.3f" % undir)
@@ -205,6 +247,9 @@ class Evaluator:
         print("Dependency Accuracy: %.3f" % labdep)
         print("Arithmetic Mean: %.3f" % lam)
         print
+        print("F1: %3f" % f1)
+        print("P: %3f" % p)
+        print("R: %3f" % r)
       
         if dicts != None:
           if len(dicts) != 0:
@@ -218,7 +263,7 @@ class Evaluator:
             pickle.dump(self.Plabs, handle)
             handle.close()
  
-        return (root, dep, am, labroot, labdep, lam, undir)
+        return (root, dep, am, labroot, labdep, lam, undir, f1, p, r)
 
     def load_data(self, filename):
         # Load the dependency parsed data from disk
