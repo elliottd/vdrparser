@@ -26,9 +26,9 @@ class TrainVDRParser:
       e = evaluation_measures.Evaluator()
       gold2 = e.conll_load_data(testTgtTrees)
       test2 = e.conll_load_data(outputVDRs)
-      (root, dep, am, lroot, ldep, lam, undir) = e.conll_evaluate(gold2, test2, None, None)
+      (root, dep, am, lroot, ldep, lam, undir, f1, p, r) = e.conll_evaluate(gold2, test2, None, None)
      
-      return (root, dep, am, lroot, ldep, lam, undir)
+      return (root, dep, am, lroot, ldep, lam, undir, f1, p, r)
 
   def show_mean_results(self, results_list):
   
@@ -49,6 +49,13 @@ class TrainVDRParser:
       mean_undir = numpy.mean([numpy.mean([x[6]]) for x in results_list]) * 100
       std_undir = numpy.std([x[6] for x in results_list]) * 100
   
+      mean_f1 = numpy.mean([numpy.mean([x[7]]) for x in results_list]) * 100
+      std_f1 = numpy.std([x[7] for x in results_list]) * 100
+      mean_p = numpy.mean([numpy.mean([x[8]]) for x in results_list]) * 100
+      std_p = numpy.std([x[8] for x in results_list]) * 100
+      mean_r = numpy.mean([numpy.mean([x[9]]) for x in results_list]) * 100
+      std_r = numpy.std([x[9] for x in results_list]) * 100
+
       print
       print "Mean results over k random splits"
       print 
@@ -64,6 +71,9 @@ class TrainVDRParser:
       print       
       print "Mean Undirected: %.3f +- %0.3f" % (mean_undir, std_undir)
       print 
+      print "Mean F1: %.3f +- %0.3f" % (mean_f1, std_f1)
+      print "Mean P: %.3f +- %0.3f" % (mean_p, std_p)
+      print "Mean R: %.3f +- %0.3f" % (mean_r, std_r)
   
       handle = open("results", "w")
       handle.write("Mean results over k random splits\n\n")
