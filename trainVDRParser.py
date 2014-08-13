@@ -22,30 +22,9 @@ class TrainVDRParser:
       trainXML = "%s/annotations-train" % path
       trainImages = "%s/images-train" % path
   
-      #testTgtTrees = "%s/target-parsed-test" % (path)
-      #testXML = "%s/annotations-test" % path
-      #testImages = "%s/images-test" % path
-  
-      #output = "%s/test-MST" % (path)
-      #gold = "%s/test-GOLD" % (path)
       traincmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser train create-forest:true train-file:%s xml-file:%s images-file:%s model-name:%s/trained.model training-k:%s loss-type:nopunc decode-type:%s format:CONLL pipe-name:DependencyPipeVisual %s %s order:1" % (xms, xmx, classpath, trainTgtTrees, trainXML, trainImages, path, k, proj, visual, verbose)]
-      #testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual %s order:1" % (xms, xmx, classpath, output, k, testTgtTrees, testXML, testImages, proj, output, visual)]
       print("Training VDR Parsing Model...")
       subprocess.check_call(traincmd, shell=True)
-      #print("Testing ...")
-      #subprocess.check_call(testcmd, shell=True)
-      #subprocess.check_call(["python conll_converter.py -f %s > %s" % (output, output+"-fixed")], shell=True)
-      #subprocess.call(['sed -i "s/, ]/ ]/g" %s/test-MST-fixed' % (path)], shell=True)
-      #subprocess.call(["python mst-postfix.py -f %s > %s" % (output+'-fixed', output+"-tmp")], shell=True)
-      #subprocess.call(["cp " + output+'-tmp ' + output+'-fixed'], shell=True)
-      #e = evaluation_measures.Evaluator()
-      #gold2 = e.conll_load_data(testTgtTrees)
-      #test2 = e.conll_load_data(output)
-      #e.load_dictionaries(dicts)
-      #e.load_labels(labels)
-      #(root, dep, am, lroot, ldep, lam, undir) = e.conll_evaluate(gold2, test2, dicts, labels)
-     
-      #return (root, dep, am, lroot, ldep, lam, undir)
 
   def main(self, argv):
   
@@ -80,8 +59,6 @@ class TrainVDRParser:
   
       runname = "%s-%s-%s-%s-%s-%s-%s" % (model, s, r1, u, k, d, x)
       self.runinfo_printer(base_dir, model, r1, u, k, d, s, n, runname)
-      #create_region_dictionaries(runname)
-      #create_label_lists(runname)
   
       results = []
   
@@ -103,13 +80,6 @@ class TrainVDRParser:
           else:
               processor.usage()
               sys.exit(2)
-  
-      #show_mean_results(results)
-      #to_disk(results, runname)
-      #t = strftime("%Y-%m-%d-%H%M%S", gmtime())
-      #subprocess.check_call(["mkdir output/%s-%s" % (runname, t)], shell=True)
-      #subprocess.check_call(["mv %s* output/%s-%s" % (runname, runname, t)], shell=True)
-      #subprocess.check_call(["mv results output/%s-%s" % (runname, t)], shell=True)
   
   def runinfo_printer(self, path, model, r, u, k, d, s, n, runname):
       print
