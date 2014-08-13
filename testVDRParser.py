@@ -24,7 +24,6 @@ class TestVDRParser:
       testImages = "%s/images-test" % path
   
       outputVDRs = "%s/test-MST" % (path)
-      #gold = "%s/test-GOLD" % (path)
       testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual %s order:1" % (xms, xmx, classpath, path, k, testTgtTrees, testXML, testImages, proj, outputVDRs, visual)]
       print("Predicting VDRs...")
       subprocess.check_call(testcmd, shell=True)
@@ -32,14 +31,6 @@ class TestVDRParser:
       subprocess.call(['sed -i "s/, ]/ ]/g" %s/test-MST-fixed' % (path)], shell=True)
       subprocess.call(["python mst-postfix.py -f %s > %s" % (outputVDRs+'-fixed', outputVDRs+"-tmp")], shell=True)
       subprocess.call(["cp " + outputVDRs+'-tmp ' + outputVDRs+'-fixed'], shell=True)
-      #e = evaluation_measures.Evaluator()
-      #gold2 = e.conll_load_data(testTgtTrees)
-      #test2 = e.conll_load_data(output)
-      #e.load_dictionaries(dicts)
-      #e.load_labels(labels)
-      #(root, dep, am, lroot, ldep, lam, undir) = e.conll_evaluate(gold2, test2, dicts, labels)
-     
-      #return (root, dep, am, lroot, ldep, lam, undir)
 
   def main(self, argv):
   
@@ -74,8 +65,6 @@ class TestVDRParser:
   
       runname = "%s-%s-%s-%s-%s-%s-%s" % (model, s, r1, u, k, d, x)
       self.runinfo_printer(base_dir, model, r1, u, k, d, s, n, runname)
-      #create_region_dictionaries(runname)
-      #create_label_lists(runname)
   
       results = []
   
@@ -97,13 +86,6 @@ class TestVDRParser:
           else:
               processor.usage()
               sys.exit(2)
-  
-      #show_mean_results(results)
-      #to_disk(results, runname)
-      #t = strftime("%Y-%m-%d-%H%M%S", gmtime())
-      #subprocess.check_call(["mkdir output/%s-%s" % (runname, t)], shell=True)
-      #subprocess.check_call(["mv %s* output/%s-%s" % (runname, runname, t)], shell=True)
-      #subprocess.check_call(["mv results output/%s-%s" % (runname, t)], shell=True)
   
   def runinfo_printer(self, path, model, r, u, k, d, s, n, runname):
       print

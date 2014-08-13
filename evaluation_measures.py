@@ -47,7 +47,10 @@ class Evaluator:
 
         p_local = float(len(relevant.intersection(retrieved))) / len(retrieved)
         r_local = float(len(relevant.intersection(retrieved))) / len(relevant) 
-        f1_local = (2 * p_local * r_local) / (p_local + r_local)
+        if p_local + r_local == 0:
+          f1_local = 0
+        else:
+          f1_local = (2 * p_local * r_local) / (p_local + r_local)
 
         precision += p_local
         recall += r_local

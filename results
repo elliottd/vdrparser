@@ -2,65 +2,65 @@ Mean results over k random splits
 
 Labelled
 
-Mean Directed: 54.033 +- 4.687
-Mean Root: 87.861 +- 4.234
-Mean Dep: 21.654 +- 4.311
+Mean Directed: 55.182 +- 4.963
+Mean Root: 89.280 +- 2.625
+Mean Dep: 22.616 +- 4.905
 
 Unlabelled
 
-Mean Directed: 61.959 +- 4.765
-Mean Root: 87.861 +- 4.234
-Mean Dep: 37.217 +- 5.812
+Mean Directed: 64.120 +- 5.082
+Mean Root: 89.280 +- 2.625
+Mean Dep: 40.183 +- 6.538
 
-Mean Undirected: 76.541 +- 3.608
-
-Split %d results
-Directed: 0.275
-Root: 0.911
-Dep: 0.592
+Mean Undirected: 77.284 +- 4.171
 
 Split %d results
-Directed: 0.183
-Root: 0.872
-Dep: 0.525
+Directed: 0.289
+Root: 0.921
+Dep: 0.604
 
 Split %d results
-Directed: 0.234
-Root: 0.924
-Dep: 0.598
+Directed: 0.200
+Root: 0.894
+Dep: 0.545
 
 Split %d results
-Directed: 0.163
+Directed: 0.239
+Root: 0.929
+Dep: 0.602
+
+Split %d results
+Directed: 0.198
 Root: 0.907
-Dep: 0.511
+Dep: 0.530
 
 Split %d results
-Directed: 0.228
-Root: 0.892
-Dep: 0.550
+Directed: 0.214
+Root: 0.901
+Dep: 0.548
 
 Split %d results
-Directed: 0.238
-Root: 0.887
-Dep: 0.565
+Directed: 0.233
+Root: 0.911
+Dep: 0.574
 
 Split %d results
-Directed: 0.288
-Root: 0.810
-Dep: 0.568
+Directed: 0.317
+Root: 0.857
+Dep: 0.606
 
 Split %d results
-Directed: 0.161
-Root: 0.792
-Dep: 0.425
+Directed: 0.127
+Root: 0.856
+Dep: 0.433
 
 Split %d results
-Directed: 0.226
-Root: 0.874
-Dep: 0.542
+Directed: 0.230
+Root: 0.899
+Dep: 0.557
 
 Split %d results
-Directed: 0.171
-Root: 0.916
-Dep: 0.526
+Directed: 0.213
+Root: 0.854
+Dep: 0.518
 
