@@ -36,17 +36,18 @@ class Evaluator:
         relevant = []
         retrieved = []
 
-        for s_p in s_pairs:
-          if s_p in g_pairs:
-            relevant += s_p
-          retrieved += s_p
+#        for g_p in g_pairs:
+#          # Iterate over all 
+#          if g_p in s_pairs:
+#            relevant += g_p
+#          retrieved += g_p
 
-        relevant = set(relevant)
-        retrieved = set(retrieved)
+        relevant = set(g_pairs)
+        retrieved = set(s_pairs)
 
-        p_local = relevant.intersection(retrieved) / len(retrieved)
-        r_local = relevant.intersection(retrieved) / len(relevant) 
-        f1_local = (2 * p_local * r_local) / (p_local + r+local)
+        p_local = float(len(relevant.intersection(retrieved))) / len(retrieved)
+        r_local = float(len(relevant.intersection(retrieved))) / len(relevant) 
+        f1_local = (2 * p_local * r_local) / (p_local + r_local)
 
         precision += p_local
         recall += r_local
