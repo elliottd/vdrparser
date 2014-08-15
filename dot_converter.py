@@ -113,15 +113,14 @@ class DotConverter:
         #print data.keys()
         root = ""
         heads = collections.defaultdict(int)
-        #s = str.format("%d\t%s\t%s\t_\t_\t_\t%s\t%s\t_\t_\n" % (1, "ROOT", "ROOT", 0, "-"))
-        #handle.write(s)
+        s = str.format("%d\t%s\t%s\t_\t_\t_\t%s\t%s\t_\t_\n" % (1, "ROOT", "ROOT", 0, "-"))
+        handle.write(s)
         for key in data.keys():
             if not key.find("-") > 0:
-                '''if data[key] == "ROOT":
+                if data[key] == "ROOT":
                     root = key
                     continue
-                else:'''
-                if data[key]:
+                elif data[key]:
                     head = ""
                     rel = ""
                     for innerkey in data.keys():
