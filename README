@@ -1,5 +1,0 @@
-python splitData.py -x /home/delliott/Dropbox/Research/PhD/data/vdt/xmlfiles/ -d /home/delliott/Dropbox/Research/PhD/data/vdt/dotfiles/ -l /home/delliott/Dropbox/Research/PhD/data/vdt/text/ -k 10 -o /home/delliott/Dropbox/Research/PhD/data/vdt/
-
-python transformData.py -p /home/delliott/Dropbox/Research/PhD/data/vdt/folds/
-
-python mergeData.py -p ~/Dropbox/Research/PhD/data/vdt/folds/
