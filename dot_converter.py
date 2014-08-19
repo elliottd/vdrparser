@@ -46,6 +46,7 @@ class DotConverter:
         label = 0
         found_arc = 0
         for e in data:
+            e = e.strip(" ")
             if e.startswith('\"n') and not e.find("-") > 0:
                 # nX [
                 found_label=1
@@ -74,7 +75,7 @@ class DotConverter:
                 word = word.lstrip()
                 word = word.rstrip()
                 labels[label] = word
-            if e.startswith('comment'):
+            if e.startswith('#comment') or e.startswith("comment"):
                 splite = e.split("=")
                 xy = splite[1]
                 xy = xy.replace("(", "")
@@ -100,7 +101,7 @@ class DotConverter:
         centroids = data[1]
         #print centroids
         data = data[0]
-        #print data
+        print data
         for key in data.keys():
             if not key.find("-") > 0:
                 if data[key] == "ROOT":
@@ -123,6 +124,7 @@ class DotConverter:
                 elif data[key]:
                     head = ""
                     rel = ""
+                    innerkey_set = 0
                     for innerkey in data.keys():
                         if innerkey.find(str.format("-> %s") % key) > 0:
                             head = innerkey.split("-")[0].rstrip()
@@ -140,6 +142,12 @@ class DotConverter:
                             print rel
                             #print s
                             handle.write(s)
+                            innerkey_set=1
+                    if innerkey_set == 0:
+                      xy = centroids[key]
+                      rel = "-"
+                      s = str.format("%d\t%s\t%s\tNN\tNN\t%s|%s\t%s\t%s\t_\t_\n" % (fmap[key], data[key], data[key], xy[0], xy[1], "", rel))
+                      handle.write(s)
         for x in heads.keys():
             if heads[x] > 1:
                 print "ERROR"
