@@ -124,7 +124,15 @@ public class CONLLReader extends DependencyReader
             pos[i + 1] = info[4];
             feats[i + 1] = info[5].split("\\|");
             deprels[i + 1] = labeled ? info[7] : "<no-type>";
-            heads[i + 1] = Integer.parseInt(info[6]);
+            // Test-time data won't contain heads.
+            try 
+            { 
+            	int h = Integer.parseInt(info[6]);
+            	heads[i + 1] = h;
+            }
+            catch (NumberFormatException nfe) { 
+            	heads[i+1] = -1;
+            }             
             if (confScores)
             {
                 confscores[i + 1] = Double.parseDouble(info[10]);
