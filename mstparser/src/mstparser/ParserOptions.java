@@ -62,9 +62,9 @@ public final class ParserOptions
     public String testXmlFile = null;
     public String testImagesFile = null;
     public boolean qg = false;
-    public boolean eddie = false;
     public boolean verbose = false;
     public boolean visualFeatures = false;
+    public String clustersFile = null;
 
     public ParserOptions(String[] args)
     {
@@ -189,9 +189,9 @@ public final class ParserOptions
             {
                 testSourceFile = pair[1];
             }
-            if (pair[0].equals("eddie"))
+            if (pair[0].equals("clusters-file"))
             {
-                eddie = true;
+                clustersFile = pair[1];
             }
             if (pair[0].equals("verbose"))
             {
@@ -295,6 +295,8 @@ public final class ParserOptions
         sb.append("\ttrain-images-file: " + imagesFile);
         sb.append("\n");        
         sb.append("\talignments-file: " + alignmentsFile);
+        sb.append("\n");
+        sb.append("\tclusters-file: " + clustersFile);
         sb.append("\n");
         sb.append("\tverbose: " + verbose);
         sb.append("\n]\n");
