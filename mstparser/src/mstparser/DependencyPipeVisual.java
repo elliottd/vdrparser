@@ -72,7 +72,7 @@ public class DependencyPipeVisual extends DependencyPipe
     		{
                 this.readDescriptions(options.sourceFile);
                 this.readAlignments(options.alignmentsFile);
-                this.readClusterAssignments("data/rawData/clusters");
+                this.readClusterAssignments(options.clustersFile);
     		}
     		
     		if (options.visualFeatures)
@@ -88,7 +88,7 @@ public class DependencyPipeVisual extends DependencyPipe
 
                 this.readDescriptions(options.testSourceFile);
                 this.readAlignments(options.testAlignmentsFile);
-                this.readClusterAssignments("data/rawData/clusters");
+                this.readClusterAssignments(options.clustersFile);
     		}
     		if (options.visualFeatures)
     		{
