@@ -21,8 +21,8 @@ And evaluate the accuracy of the parsing model:
 
 > python evaluateVDRParser.py -p data/emnlp2013/ -s 10 -f true
 
-EMNLP 2013
-----------
+EMNLP 2013 [1]
+--------------
 
 The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted representation. To reproduce the EMNLP 2013 results, ./runEMNLP2013.sh
 
@@ -42,10 +42,10 @@ The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted repre
     Mean P: 61.082 +- 2.887
     Mean R: 56.844 +- 3.654
 
-COLING 2014
------------
+COLING 2014 [2]
+---------------
 
-The COLING2014 VDRParser [2] also extracts features from the image regions to improve the parsing results. To reproduce these results, ./runCOLING2014.sh
+The COLING2014 VDRParser also extracts features from the image regions to improve the parsing results. To reproduce these results, ./runCOLING2014.sh
 
     Labelled
     Mean Directed: 55.182 +- 4.963
