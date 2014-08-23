@@ -39,6 +39,12 @@ class Evaluator:
         relevant = set(g_pairs)
         retrieved = set(s_pairs)
 
+        # Divide by zero error handling
+        if len(retrieved) == 0:
+          p_local = 0
+        if len(relevant) == 0:
+          r_local = 0
+
         p_local = float(len(relevant.intersection(retrieved))) / len(retrieved)
         r_local = float(len(relevant.intersection(retrieved))) / len(relevant) 
         if p_local + r_local == 0:
@@ -73,7 +79,13 @@ class Evaluator:
                     correct +=1
                 total += 1
 
-        return (float(correct) / total, correct, total)
+        # Divide by zero error handling
+        if total == 0:
+          acc = 0.0
+        else:
+          acc = float(correct) / total
+
+        return (acc, correct, total)
                 
 
     def conll_root_accuracy(self, gold, system):
@@ -101,7 +113,11 @@ class Evaluator:
                         this_correct += 1
                     total_root += 1
                     this_total +=1
-            bucketed[bucket_id].append(float(this_correct)/this_total)
+            # Divide by zero error handling
+            if this_total == 0:
+              bucketed[bucket_id].append(0.0)
+            else:
+              bucketed[bucket_id].append(float(this_correct)/this_total)
 
         for i in range(1,11):
             if len(bucketed[i]) > 1:
@@ -132,8 +148,11 @@ class Evaluator:
                         this_correct += 1
                     total_root += 1
                     this_total += 1
-
-            self.root_bucket[num_regions].append(float(this_correct)/this_total)
+            # Divide by zero error handling
+            if this_total == 0:
+              self.root_bucket[num_regions].append(0.0)
+            else:
+              self.root_bucket[num_regions].append(float(this_correct)/this_total)
 
         if total_root == 0:
             return (0, 0, 0)
@@ -186,8 +205,12 @@ class Evaluator:
                         this_correct += 1
                     total += 1
                     this_total += 1
-            
-            self.dep_bucket[num_regions].append(float(this_correct)/this_total)
+             
+            # Divide by zero error handling
+            if this_total == 0:
+              self.dep_bucket[num_regions].append(0.0)
+            else:
+              self.dep_bucket[num_regions].append(float(this_correct)/this_total)
 
         if total == 0:
           return (0,0,0)
