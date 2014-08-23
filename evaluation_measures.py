@@ -36,12 +36,6 @@ class Evaluator:
         relevant = []
         retrieved = []
 
-#        for g_p in g_pairs:
-#          # Iterate over all 
-#          if g_p in s_pairs:
-#            relevant += g_p
-#          retrieved += g_p
-
         relevant = set(g_pairs)
         retrieved = set(s_pairs)
 
