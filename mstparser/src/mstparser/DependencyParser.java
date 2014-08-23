@@ -60,7 +60,7 @@ public class DependencyParser
         if (options.verbose)
           System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 50));
         
-        FileWriter w = new FileWriter("featureWeights");
+        FileWriter w = new FileWriter("output/featureWeights");
         w.write(pipe.dataAlphabet.topNFeaturesByWeight(params, 5000));
         w.close();
     }
