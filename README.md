@@ -24,7 +24,12 @@ And evaluate the accuracy of the parsing model:
 EMNLP 2013 [1]
 --------------
 
-The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted representation. To reproduce the EMNLP 2013 results, ./runEMNLP2013.sh
+The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted
+representation. To reproduce the EMNLP 2013 results, download the Visual and
+Linguistic Treebank Dataset from
+http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into data/emnlp2013
+
+run ./runEMNLP2013.sh
 
     Labelled
     Mean Directed: 54.033 +- 4.687
@@ -45,7 +50,13 @@ The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted repre
 COLING 2014 [2]
 ---------------
 
-The COLING2014 VDRParser also extracts features from the image regions to improve the parsing results. To reproduce these results, ./runCOLING2014.sh
+The COLING2014 VDRParser also extracts features from the image regions to
+improve the parsing results.  representation. To reproduce the EMNLP 2013
+results, download the Visual and Linguistic Treebank Dataset from
+http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into
+data/coling2014
+
+run ./runCOLING2014.sh
 
     Labelled
     Mean Directed: 55.182 +- 4.963
