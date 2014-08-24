@@ -1,8 +1,12 @@
 VDRParser
 ---------
 
+##Contact
 
-###Dependencies:
+    d.elliott@ed.ac.uk
+    @delliott
+
+###Dependencies
 
     apache ant
     python-rpy2
