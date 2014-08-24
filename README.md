@@ -1,11 +1,6 @@
 VDRParser
 ---------
 
-##Contact
-
-    d.elliott@ed.ac.uk
-    @delliott
-
 ###Dependencies
 
     apache ant
@@ -84,3 +79,10 @@ References
 [1] D. Elliott and F. Keller. 2013. Image Description using Visual Dependency Representations. In Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing (EMNLP '13), Seattle, Washington, U.S.A
 
 [2] D. Elliott, V. Lavrenko, and F. Keller. 2014. Query-by-Example Image Retrieval using Visual Dependency Representations. In Proceedings of the 25th International Conference on Computational Linguistics (COLING '14), Dublin, Ireland.
+
+Contact
+-------
+d.elliott@ed.ac.uk
+
+@delliott
+
