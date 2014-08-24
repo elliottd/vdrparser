@@ -10,15 +10,15 @@ VDRParser
 
 You can train the VDRParser using the following command:
 
-> python trainVDRParser.py -p data/emnlp2013/ -m mst -k 5 -d non-proj -s 10 -f true
+> python trainVDRParser.py -p {path to split data} -m mst -k 5 -d non-proj -s 10 -f true
 
 Use a trained VDRParser model to predict VDRs on test data:
 
-> python testVDRParser.py -p data/emnlp2013/ -m mst -k 5 -d non-proj -s 10 -f true
+> python testVDRParser.py -p {path to split data} -m mst -k 5 -d non-proj -s 10 -f true
 
 And evaluate the accuracy of the parsing model:
 
-> python evaluateVDRParser.py -p data/emnlp2013/ -s 10 -f true
+> python evaluateVDRParser.py -p {path to split data} -s 10 -f true
 
 EMNLP 2013 [1]
 --------------
