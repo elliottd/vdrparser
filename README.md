@@ -1,6 +1,8 @@
 VDRParser
 ---------
 
+VDRParser is a fork of the MSTParser [1] to predict Visual Dependency Representations of images. Visual Dependency Representations capture the spatial relationships between objects in an image and have been used for image description [2] and example-based image search [3]. Further details on the representation can also be found on the data set page http://homepages.inf.ed.ac.uk/s0128995/dataset/
+
 ###Dependencies
 
     apache ant
@@ -20,7 +22,7 @@ And evaluate the accuracy of the parsing model:
 
 > python evaluateVDRParser.py -p {path to split data} -s 10 -f true
 
-EMNLP 2013 [1]
+EMNLP 2013 Results [2]
 --------------
 
 The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted
@@ -46,7 +48,7 @@ run ./runEMNLP2013.sh
     Mean P: 61.082 +- 2.887
     Mean R: 56.844 +- 3.654
 
-COLING 2014 [2]
+COLING 2014 Results [3]
 ---------------
 
 The COLING2014 VDRParser also extracts features from the image regions to
@@ -76,9 +78,11 @@ run ./runCOLING2014.sh
 References
 ----------
 
-[1] D. Elliott and F. Keller. 2013. Image Description using Visual Dependency Representations. In Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing (EMNLP '13), Seattle, Washington, U.S.A
+[1] R. McDonald, F. Pereira, K. Ribarov and J. Hajič. 2005. Non-Projective Dependency Parsing using Spanning Tree Algorithms. Human Language Technologies and Empirical Methods in Natural Language Processing (HLT-EMNLP), Vancouver, British Columbia, Canada.
 
-[2] D. Elliott, V. Lavrenko, and F. Keller. 2014. Query-by-Example Image Retrieval using Visual Dependency Representations. In Proceedings of the 25th International Conference on Computational Linguistics (COLING '14), Dublin, Ireland.
+[2] D. Elliott and F. Keller. 2013. Image Description using Visual Dependency Representations. In Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing (EMNLP '13), Seattle, Washington, U.S.A
+
+[3] D. Elliott, V. Lavrenko, and F. Keller. 2014. Query-by-Example Image Retrieval using Visual Dependency Representations. In Proceedings of the 25th International Conference on Computational Linguistics (COLING '14), Dublin, Ireland.
 
 Contact
 -------
