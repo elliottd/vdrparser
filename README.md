@@ -7,6 +7,9 @@ VDRParser is a fork of the MSTParser [1] to predict Visual Dependency Representa
 
     apache ant
     python-rpy2
+    python2.7
+    java7
+    python-numpy
 
 ###Usage
 
