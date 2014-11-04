@@ -17,7 +17,7 @@ verbose = ""
 class TrainVDRParser:
 
   def evaluate_parser(self, path):
-      testTgtTrees = "%s/target-parsed-test" % (path)
+      testTgtTrees = "%s/target-parsed-GOLD" % (path)
   
       outputVDRs = "%s/test-MST" % (path)
       goldVDRs = "%s/test-GOLD" % (path)
