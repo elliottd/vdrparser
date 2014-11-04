@@ -283,7 +283,13 @@ class Evaluator:
             pickle.dump(self.Tlabs, handle)
             pickle.dump(self.Plabs, handle)
             handle.close()
- 
+
+            # Write the labels in a format suitable for drawing a confusion matrix
+            handle = open(labels+"-cmdata", "wb")
+            for x in zip(self.Tlabs, self.Plabs):
+              handle.write("%s,%s\n" % (x[0], x[1]))
+            handle.close()
+
         return (root, dep, am, labroot, labdep, lam, undir, f1, p, r)
 
     def load_data(self, filename):
@@ -402,7 +408,7 @@ def main(argv):
         print("Result lists are not the same length. Quitting!")
         system.exit(2)
 
-    e.conll_evaluate(gold, system, [], [])
+    e.conll_evaluate(gold, system, "dicts", "labels")
 
 def usage():
     # This function is used by process_arguments to echo the purpose and usage 
