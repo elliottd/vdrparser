@@ -14,6 +14,7 @@ package mstparser.io;
 
 import java.io.*;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 
 import mstparser.DependencyInstance;
 
@@ -57,7 +58,12 @@ public class CONLLWriter extends DependencyWriter
             writer.write('\t');
             writer.write(instance.postags[i]);
             writer.write('\t');
-            writer.write("-");
+           	String centroid = Arrays.toString(instance.feats[i+1]);
+           	centroid = centroid.replace("[","");
+           	centroid = centroid.replace("]","");
+           	centroid = centroid.replace(",", "|");
+           	centroid = centroid.replace(" ","");
+           	writer.write(centroid);
             writer.write('\t');
             writer.write(Integer.toString(instance.heads[i]));
             writer.write('\t');

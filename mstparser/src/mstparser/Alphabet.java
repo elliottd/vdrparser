@@ -33,7 +33,7 @@ public class Alphabet implements Serializable
         
         for (Object s: map.keys())
         {
-            sb.append(s);
+            sb.append("'"+s+"'");
             sb.append("\n");
         }
         return sb.toString();

@@ -64,7 +64,7 @@ public class DependencyPipeVisual extends DependencyPipe
     		ioe.printStackTrace();
     	}
     	
-        this.readClusterAssignments("data/rawData/clusters");
+        this.readClusterAssignments(options.clustersFile);
     	
     	if (options.train)
     	{
@@ -125,6 +125,7 @@ public class DependencyPipeVisual extends DependencyPipe
 	    {
 	        ioe.printStackTrace();
 	    }
+	    //this.cLabels = new Hashtable<String,String>();
     }
 
     public int[] createInstances(String file, File featFileName)
@@ -220,6 +221,8 @@ public class DependencyPipeVisual extends DependencyPipe
             instance = depReader.getNext();
             depReader.incCount();
         }
+        
+        System.out.println(typeAlphabet.toString());
 
         closeAlphabets();
 

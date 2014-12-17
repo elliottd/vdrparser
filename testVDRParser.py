@@ -22,7 +22,7 @@ class TestVDRParser:
       testTgtTrees = "%s/target-parsed-test" % (path)
       testXML = "%s/annotations-test" % path
       testImages = "%s/images-test" % path
-      clustersFile = "data/rawData/clusters"
+      clustersFile = path+"/../../clusters"
   
       outputVDRs = "%s/test-MST" % (path)
       testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s order:1" % (xms, xmx, classpath, path, k, testTgtTrees, testXML, testImages, proj, outputVDRs, clustersFile, visual)]

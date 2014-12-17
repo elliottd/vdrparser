@@ -245,7 +245,8 @@ class Evaluator:
             and output data is formatted in CoNLL format.
         '''
 
-        undir, udc, udt = self.conll_undirected_accuracy(gold, system)
+        #undir, udc, udt = self.conll_undirected_accuracy(gold, system)
+        undir,udc,udt = (0,0,0)
         root, ra, rt, rbuck = self.conll_root_accuracy(gold, system)
         labroot, labra, labrt = self.conll_labelled_root_accuracy(gold, system)
         dep, da, dt = self.conll_dependency_accuracy(gold, system)

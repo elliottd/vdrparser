@@ -1,6 +1,7 @@
 package mstparser;
 
 import java.io.*;
+import java.util.Arrays;
 
 import mstparser.io.*;
 
@@ -60,7 +61,9 @@ public class DependencyParser
         if (options.verbose)
           System.out.println("\nTop features by weight: \n\n" + pipe.dataAlphabet.topNFeaturesByWeight(params, 50));
         
-        FileWriter w = new FileWriter("output/featureWeights");
+        String fwDirectory = options.trainfile;
+        fwDirectory = fwDirectory.replace("target-parsed-train","");
+        FileWriter w = new FileWriter(fwDirectory + "featureWeights");
         w.write(pipe.dataAlphabet.topNFeaturesByWeight(params, 5000));
         w.close();
     }
@@ -236,10 +239,12 @@ public class DependencyParser
             }
             else
             {
-                pipe.outputInstance(new DependencyInstance(formsNoRoot, posNoRoot, labels, heads));
+            	DependencyInstance di = new DependencyInstance(formsNoRoot, posNoRoot, labels, heads);
+            	di.feats = instance.feats;
+                pipe.outputInstance(di);
             }
 
-            //String line1 = ""; String line2 = ""; String line3 = ""; String line4 = "";
+            String line1 = ""; String line2 = ""; String line3 = ""; String line4 = "";
             //for(int j = 1; j < pos.length; j++) {
             //	String[] trip = res[j-1].split("[\\|:]");
             //	line1+= sent[j] + "\t"; line2 += pos[j] + "\t";
@@ -279,14 +284,8 @@ public class DependencyParser
         double[][][] probs_trips = new double[length][length][length];
         FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
         double[][][] probs_sibs = new double[length][length][2];
-        if (options.pipeName.equals("DependencyPipeVisual") && options.secondOrder)
-        {
-        	((VisualDependencyPipe2O) pipe).fillFeatureVectors(instance, fvs, probs,
-                    fvs_trips, probs_trips,
-                    fvs_sibs, probs_sibs,
-                    nt_fvs, nt_probs, params);
-        }
-        else if (options.secondOrder)
+        
+        if (options.secondOrder)
         {
             ((DependencyPipe2O) pipe).fillFeatureVectors(instance, fvs, probs,
                 fvs_trips, probs_trips,
@@ -329,6 +328,7 @@ public class DependencyParser
         }
 
         String[] res = ((String) d[0][1]).split(" ");
+        //System.out.println(Arrays.toString(res));
         return res;
     }
 
