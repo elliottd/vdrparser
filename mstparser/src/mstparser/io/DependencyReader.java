@@ -54,6 +54,28 @@ public abstract class DependencyReader
         }
     }
 
+    public static DependencyReader createDependencyReader(String format,
+                                                          boolean discourseMode,
+                                                          String clusters)
+        throws IOException
+    {
+
+        if (format.equals("MST"))
+        {
+            return new MSTReader();
+        }
+        else if (format.equals("CONLL"))
+        {
+            return new CONLLReader(discourseMode, clusters);
+        }
+        else
+        {
+            System.out.println("!!!!!!!  Not a supported format: " + format);
+            System.out.println("********* Assuming CONLL format. **********");
+            return new CONLLReader(discourseMode);
+        }
+    }
+
     public void incCount()
     {
         this.cnt++;

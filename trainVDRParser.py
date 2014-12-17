@@ -21,7 +21,7 @@ class TrainVDRParser:
       trainTgtTrees = "%s/target-parsed-train" % (path)
       trainXML = "%s/annotations-train" % path
       trainImages = "%s/images-train" % path
-      clustersFile = "data/rawData/clusters"
+      clustersFile = path+"/../../clusters"
   
       traincmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser train create-forest:true train-file:%s xml-file:%s images-file:%s model-name:%s/trained.model training-k:%s loss-type:nopunc decode-type:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s %s order:1" % (xms, xmx, classpath, trainTgtTrees, trainXML, trainImages, path, k, proj, clustersFile, visual, verbose)]
       print("Training VDR Parsing Model...")

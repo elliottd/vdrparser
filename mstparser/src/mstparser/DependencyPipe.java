@@ -37,7 +37,7 @@ public class DependencyPipe
         typeAlphabet = new Alphabet();
 
         depReader = DependencyReader.createDependencyReader(options.format,
-                options.discourseMode);
+                options.discourseMode, options.clustersFile);
     }
     
     public void initialisePipe()

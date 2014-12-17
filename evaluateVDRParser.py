@@ -71,9 +71,9 @@ class TrainVDRParser:
       print       
       print "Mean Undirected: %.3f +- %0.3f" % (mean_undir, std_undir)
       print 
-      print "Mean F1: %.3f +- %0.3f" % (mean_f1, std_f1)
       print "Mean P: %.3f +- %0.3f" % (mean_p, std_p)
       print "Mean R: %.3f +- %0.3f" % (mean_r, std_r)
+      print "Mean F1: %.3f +- %0.3f" % (mean_f1, std_f1)
   
       handle = open("results", "w")
       handle.write("Mean results over k random splits\n\n")

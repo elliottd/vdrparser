@@ -38,7 +38,12 @@ public class CONLLReader extends DependencyReader
     public CONLLReader(boolean discourseMode)
     {
         this.discourseMode = discourseMode;
-        this.readClusterAssignments("data/rawData/clusters");
+    }
+
+    public CONLLReader(boolean discourseMode, String clusters)
+    {
+        this.discourseMode = discourseMode;
+        this.readClusterAssignments(clusters);
     }
     
     private void readClusterAssignments(String string)
@@ -123,7 +128,7 @@ public class CONLLReader extends DependencyReader
             cpos[i + 1] = info[3];
             pos[i + 1] = info[4];
             feats[i + 1] = info[5].split("\\|");
-            deprels[i + 1] = labeled ? info[7] : "<no-type>";
+            deprels[i + 1] = labeled ? info[7] : "<no-type>";            
             // Test-time data won't contain heads.
             try 
             { 
@@ -131,7 +136,7 @@ public class CONLLReader extends DependencyReader
             	heads[i + 1] = h;
             }
             catch (NumberFormatException nfe) { 
-            	heads[i+1] = -1;
+            	heads[i+1] = 0;
             }             
             if (confScores)
             {
