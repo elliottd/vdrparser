@@ -1,7 +1,7 @@
 VDRParser
 ---------
 
-VDRParser is a fork of the MSTParser [1] to predict Visual Dependency Representations of images. Visual Dependency Representations capture the spatial relationships between objects in an image and have been used for image description [2] and example-based image search [3]. Further details on the representation can also be found on the data set page http://homepages.inf.ed.ac.uk/s0128995/dataset/
+VDRParser is a fork of the MSTParser [1] to predict Visual Dependency Representations of images. Visual Dependency Representations capture the spatial relationships between objects in an image and have been used for image description [2] and example-based image search [3]. Further details on the representation can also be found on the data set page http://homepages.inf.ed.ac.uk/s0128959/dataset/
 
 ###Dependencies
 
