@@ -21,7 +21,7 @@ class TrainVDRParser:
       trainTgtTrees = "%s/target-parsed-train" % (path)
       trainXML = "%s/annotations-train" % path
       trainImages = "%s/images-train" % path
-      clustersFile = path+"/../../clusters"
+      clustersFile = "%s/objectClusters" % path
   
       traincmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser train create-forest:true train-file:%s xml-file:%s images-file:%s model-name:%s/trained.model training-k:%s loss-type:nopunc decode-type:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s %s order:1" % (xms, xmx, classpath, trainTgtTrees, trainXML, trainImages, path, k, proj, clustersFile, visual, verbose)]
       print("Training VDR Parsing Model...")
@@ -62,10 +62,10 @@ class TrainVDRParser:
       self.runinfo_printer(base_dir, model, r1, u, k, d, s, n, runname)
   
       results = []
+
+      for i in range(0, len(dirs)):
   
-      for i in range(0, int(s)):
-  
-          print("Fold %s of %s." % (i+1, s))
+          print("Fold %s of %s." % (i+1, len(dirs)))
   
           if args.get("-f"):
             dir = base_dir+"/"+dirs[i]

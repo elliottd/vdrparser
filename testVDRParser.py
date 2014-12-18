@@ -22,7 +22,7 @@ class TestVDRParser:
       testTgtTrees = "%s/target-parsed-test" % (path)
       testXML = "%s/annotations-test" % path
       testImages = "%s/images-test" % path
-      clustersFile = path+"/../../clusters"
+      clustersFile = "%s/objectClusters" % path
   
       outputVDRs = "%s/test-MST" % (path)
       testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s order:1" % (xms, xmx, classpath, path, k, testTgtTrees, testXML, testImages, proj, outputVDRs, clustersFile, visual)]
@@ -69,9 +69,9 @@ class TestVDRParser:
   
       results = []
   
-      for i in range(0, int(s)):
+      for i in range(0, len(dirs)):
   
-          print("Fold %s of %s." % (i+1, s))
+          print("Fold %s of %s." % (i+1, len(dirs)))
   
           if args.get("-f"):
             dir = base_dir+"/"+dirs[i]
