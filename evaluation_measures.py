@@ -13,6 +13,7 @@ class Evaluator:
 
     root_bucket = defaultdict(list)
     dep_bucket = defaultdict(list)
+    verbose = False
 
     Tlabs = []
     Plabs = []
@@ -256,22 +257,23 @@ class Evaluator:
         lam = float(labra+labda) / (labrt+labdt)
         p,r,f1 = self.conll_f1(gold,system)
 
-        print
-        print("Undirected Accuracy: %.3f" % undir)
-        print
-        print("Unlabelled measures")
-        print("Root Accuracy: %.3f" % root)
-        print("Dependency Accuracy: %.3f" % dep)
-        print("Arithmetic Mean: %.3f" % am)
-        print       
-        print("Labelled measures")
-        print("Root Accuracy: %.3f" % labroot)
-        print("Dependency Accuracy: %.3f" % labdep)
-        print("Arithmetic Mean: %.3f" % lam)
-        print
-        print("F1: %3f" % f1)
-        print("P: %3f" % p)
-        print("R: %3f" % r)
+        if self.verbose:
+          print
+          print("Undirected Accuracy: %.3f" % undir)
+          print
+          print("Unlabelled measures")
+          print("Root Accuracy: %.3f" % root)
+          print("Dependency Accuracy: %.3f" % dep)
+          print("Arithmetic Mean: %.3f" % am)
+          print       
+          print("Labelled measures")
+          print("Root Accuracy: %.3f" % labroot)
+          print("Dependency Accuracy: %.3f" % labdep)
+          print("Arithmetic Mean: %.3f" % lam)
+          print
+          print("F1: %3f" % f1)
+          print("P: %3f" % p)
+          print("R: %3f" % r)
       
         if dicts != None:
           if len(dicts) != 0:
@@ -322,10 +324,11 @@ class Evaluator:
         dep, da, dt = self.dependency_accuracy(gold, system)
         am = float(ra+da) / (rt+dt)
 
-        print("Undirected Accuracy: %.3f" % undir)
-        print("Root Accuracy: %.3f" % root)
-        print("Dependency Accuracy: %.3f" % dep)
-        print("Arithmetic Mean: %.3f" % am)
+        if self.verbose:
+          print("Undirected Accuracy: %.3f" % undir)
+          print("Root Accuracy: %.3f" % root)
+          print("Dependency Accuracy: %.3f" % dep)
+          print("Arithmetic Mean: %.3f" % am)
 
         return (root, dep, am, 0, 0, 0, undir)
     
