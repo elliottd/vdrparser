@@ -115,9 +115,9 @@ class TrainVDRParser:
   
       results = []
   
-      for i in range(0, int(s)):
+      for i in range(0, len(dirs)):
   
-          print("Fold %s of %s." % (i+1, s))
+          print("Fold %s of %s." % (i+1, len(dirs)))
   
           if args.get("-f"):
             dir = base_dir+"/"+dirs[i]
