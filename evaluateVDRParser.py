@@ -30,6 +30,52 @@ class TrainVDRParser:
      
       return (root, dep, am, lroot, ldep, lam, undir, f1, p, r)
 
+  def run_root(self, path):
+    '''
+    Run the ROOT-ATTACH model on each of the folds to establish the baseline
+    '''
+    
+    subprocess.call(["python root-attach.py -f %s/test-GOLD > %s/test-ROOT" % (path, path)], shell=True)
+    e = evaluation_measures.Evaluator()
+    gold = e.load_data("%s/test-GOLD" % (path))
+    test = e.load_data("%s/test-ROOT" % (path))
+    (root, dep, am, lroot, ldep, lam, undir) = e.evaluate(gold, test)
+    
+    return (root, dep, am, lroot, ldep, lam, undir)
+
+  def show_baseline_results(self, results_list):
+  
+      mean_root = numpy.mean([numpy.mean([x[0]]) for x in results_list]) * 100
+      std_root = numpy.std([x[0] for x in results_list]) * 100
+      mean_dep = numpy.mean([numpy.mean([x[1]]) for x in results_list]) * 100
+      std_dep = numpy.std([x[1] for x in results_list]) * 100
+      mean_am = numpy.mean([numpy.mean([x[2]]) for x in results_list]) * 100
+      std_am = numpy.std([x[2] for x in results_list]) * 100
+      
+      mean_lroot = numpy.mean([numpy.mean([x[3]]) for x in results_list]) * 100
+      std_lroot = numpy.std([x[3] for x in results_list]) * 100
+      mean_ldep = numpy.mean([numpy.mean([x[4]]) for x in results_list]) * 100
+      std_ldep = numpy.std([x[4] for x in results_list]) * 100
+      mean_lam = numpy.mean([numpy.mean([x[5]]) for x in results_list]) * 100
+      std_lam = numpy.std([x[5] for x in results_list]) * 100
+  
+      mean_undir = numpy.mean([numpy.mean([x[6]]) for x in results_list]) * 100
+      std_undir = numpy.std([x[6] for x in results_list]) * 100
+  
+      print
+      print "Root attachment baseline over k random splits"
+      print "================================================="
+      print 
+      print "Labelled / Unlabelled"
+      print "---------------------"
+      print "Mean Directed: %.3f +- %0.3f" % (mean_am, std_am)
+      print "Mean Root: %.3f +- %0.3f" % (mean_root, std_root)
+      print "Mean Dep: %.3f +- %0.3f" % (mean_dep, std_dep)
+      print
+      print "Undirected"
+      print "----------"
+      print "%.3f +- %0.3f" % (mean_undir, std_undir)
+
   def show_mean_results(self, results_list):
   
       mean_root = numpy.mean([numpy.mean([x[0]]) for x in results_list]) * 100
@@ -58,19 +104,26 @@ class TrainVDRParser:
 
       print
       print "Mean results over k random splits"
+      print "================================="
       print 
       print "Labelled"
+      print "--------"
       print "Mean Directed: %.3f +- %0.3f" % (mean_lam, std_lam)
       print "Mean Root: %.3f +- %0.3f" % (mean_lroot, std_lroot)
       print "Mean Dep: %.3f +- %0.3f" % (mean_ldep, std_ldep)
       print
       print "Unlabelled"
+      print "----------"
       print "Mean Directed: %.3f +- %0.3f" % (mean_am, std_am)
       print "Mean Root: %.3f +- %0.3f" % (mean_root, std_root)
       print "Mean Dep: %.3f +- %0.3f" % (mean_dep, std_dep)
       print       
-      print "Mean Undirected: %.3f +- %0.3f" % (mean_undir, std_undir)
+      print "Undirected"
+      print "----------"
+      print "%.3f +- %0.3f" % (mean_undir, std_undir)
       print 
+      print "Harmonic"
+      print "--------"
       print "Mean P: %.3f +- %0.3f" % (mean_p, std_p)
       print "Mean R: %.3f +- %0.3f" % (mean_r, std_r)
       print "Mean F1: %.3f +- %0.3f" % (mean_f1, std_f1)
@@ -114,6 +167,7 @@ class TrainVDRParser:
         dirs = os.listdir(base_dir)
   
       results = []
+      baseline = []
   
       for i in range(0, len(dirs)):
   
@@ -125,8 +179,10 @@ class TrainVDRParser:
             dir = generate_random_split(base_dir+"/dotfiles", base_dir+"/textfiles")
   
           results.append(self.evaluate_parser(dir))
+          baseline.append(self.run_root(dir))
   
       self.show_mean_results(results)
+      self.show_baseline_results(baseline)
       #to_disk(results, runname)
       #t = strftime("%Y-%m-%d-%H%M%S", gmtime())
       #subprocess.check_call(["mkdir output/%s-%s" % (runname, t)], shell=True)
