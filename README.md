@@ -25,10 +25,10 @@ And evaluate the accuracy of the parsing model:
 
 > python evaluateVDRParser.py -p {path to split data} -s 10 -f true
 
-EMNLP 2013 Results [2]
+EMNLP 2013 Results
 --------------
 
-The EMNLP 2013 VDRParser only extracts features from the CoNLL-X formatted
+The EMNLP 2013 VDRParser [2] only extracts features from the CoNLL-X formatted
 representation. To reproduce the EMNLP 2013 results, download the Visual and
 Linguistic Treebank Dataset from
 http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into data/emnlp2013
@@ -51,10 +51,10 @@ run ./runEMNLP2013.sh
     Mean P: 61.082 +- 2.887
     Mean R: 56.844 +- 3.654
 
-COLING 2014 Results [3]
+COLING 2014 Results
 ---------------
 
-The COLING2014 VDRParser also extracts features from the image regions to
+The COLING2014 VDRParser [3] also extracts features from the image regions to
 improve the parsing results.  representation. To reproduce the EMNLP 2013
 results, download the Visual and Linguistic Treebank Dataset from
 http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into
