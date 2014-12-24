@@ -1,8 +1,6 @@
-output/*
 build/*
 .idea/*
 *.model
-/output
 data/
 featureWeights
 mstparser/output/
