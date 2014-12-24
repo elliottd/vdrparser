@@ -7,4 +7,4 @@ python trainVDRParser.py -p data/vlt/emnlp2013/ -m mst -k 5 -d non-proj -s 10 -f
 python testVDRParser.py -p data/vlt/emnlp2013/ -m mst -k 5 -d non-proj -s 10 -f true
 
 # Evaluate the performance of the EMNLP VDR Parsing Model
-python evaluateVDRParser.py -p data/vlt/emnlp2013/ -s 10 -f true
+python evaluateVDRParser.py -p data/vlt/emnlp2013/ -s 10 -f true -m mst -k 5 -d non-proj

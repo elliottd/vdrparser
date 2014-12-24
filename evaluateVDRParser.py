@@ -76,6 +76,16 @@ class TrainVDRParser:
       print "----------"
       print "%.3f +- %0.3f" % (mean_undir, std_undir)
 
+      handle = open("results", "a")
+      handle.write("Root attachment baseline over k random splits\n")
+      handle.write("Mean results over k random splits\n\n")
+      handle.write("Labelled / Unlabelled\n\n")
+      handle.write("Mean Directed: %.3f +- %1.3f\n" % (mean_am, std_am))
+      handle.write("Mean Root: %.3f +- %1.3f\n" % (mean_root, std_root))
+      handle.write("Mean Dep: %.3f +- %1.3f\n\n" % (mean_dep, std_dep))
+      handle.write("Mean Undirected: %.3f +- %1.3f" % (mean_undir, std_undir))
+      handle.write("\n\n")
+
   def show_mean_results(self, results_list):
   
       mean_root = numpy.mean([numpy.mean([x[0]]) for x in results_list]) * 100
@@ -140,40 +150,34 @@ class TrainVDRParser:
       handle.write("Mean Dep: %.3f +- %1.3f\n\n" % (mean_dep, std_dep))
       handle.write("Mean Undirected: %.3f +- %1.3f" % (mean_undir, std_undir))
       handle.write("\n\n")
-      z = 1
-      for r in results_list:
-        handle.write("Split %d results\n")
+      for idx,r in enumerate(results_list):
+        handle.write("Split %d results\n" % idx)
         handle.write("Directed: %.3f\n" % (r[4]))
         handle.write("Root: %.3f\n" % (r[3]))
         handle.write("Dep: %.3f\n\n" % (r[5]))
-        z += 1
       handle.close()
 
   def main(self, argv):
   
       # Get the arguments passed to the script by the user
       processor = Arguments()
-      args = processor.process_arguments(argv)
+      self.args = processor.process_arguments(argv)
   
-      base_dir = args['-p']
-      s = args['-s']
-      n = 100
-      try:
-          n = int(args['-n'])
-      except KeyError:
-          print("Default value of n")
+      base_dir = self.args['-p']
   
-      if args.get("-f"):
+      if self.args.get("-f"):
         dirs = os.listdir(base_dir)
   
       results = []
       baseline = []
+
+      runname = "%s-%s" % (self.args.get("-m"), self.args.get("-x"))
   
       for i in range(0, len(dirs)):
   
           print("Fold %s of %s." % (i+1, len(dirs)))
   
-          if args.get("-f"):
+          if self.args.get("-f"):
             dir = base_dir+"/"+dirs[i]
           else:
             dir = generate_random_split(base_dir+"/dotfiles", base_dir+"/textfiles")
@@ -183,11 +187,9 @@ class TrainVDRParser:
   
       self.show_mean_results(results)
       self.show_baseline_results(baseline)
-      #to_disk(results, runname)
-      #t = strftime("%Y-%m-%d-%H%M%S", gmtime())
-      #subprocess.check_call(["mkdir output/%s-%s" % (runname, t)], shell=True)
-      #subprocess.check_call(["mv %s* output/%s-%s" % (runname, runname, t)], shell=True)
-      #subprocess.check_call(["mv results output/%s-%s" % (runname, t)], shell=True)
+      t = strftime("%Y-%m-%d-%H%M%S", gmtime())
+      subprocess.check_call(["mkdir output/%s-%s" % (runname, t)], shell=True)
+      subprocess.check_call(["mv results output/%s-%s" % (runname, t)], shell=True)
   
   def runinfo_printer(self, path, model, r, u, k, d, s, n, runname):
       print
