@@ -11,11 +11,13 @@ http://homepages.inf.ed.ac.uk/s0128959/dataset/
 Dependencies
 ------------
 
-    apache ant
-    python-rpy2
-    python2.7
-    java7
-    python-numpy
+The VDRParser depends on the following libraries.
+
+ * apache ant
+ * python-rpy2
+ * python2.7
+ * java7
+ * python-numpy
 
 Usage
 -----
