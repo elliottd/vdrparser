@@ -43,24 +43,28 @@ Linguistic Treebank Dataset from
 http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into
 `data/vlt/emnlp2013`
 
-Run `./runEMNLP2013.sh` to train, predict, and evaluate this parsing model. You
-should expect to see the following results on the `test` data:
+Run `./runEMNLP2013.sh` to train, predict, and evaluate this parsing model. By
+default, we evaluate on the `dev` data, but you can run on the `test` data by 
+adding the argument `--test true` in the `testVDR` and `evalauteVDR` commands. 
 
-    Labelled
-    Mean Directed: 54.033 +- 4.687
-    Mean Root: 87.861 +- 4.234
-    Mean Dep: 21.654 +- 4.311
+You should expect to see the following results:
 
-    Unlabelled
-    Mean Directed: 61.959 +- 4.765
-    Mean Root: 87.861 +- 4.234
-    Mean Dep: 37.217 +- 5.812
+|                | Dev         | Test        |
+| -------------  | ---------   | ----------- |
+| **Labelled**   |             |             |
+| Mean Directed  | 53.7 +- 3.5 | 54.0 +- 4.7 |
+| Mean Root      | 87.4 +- 3.2 | 87.9 +- 4.2 |
+| Mean Dep       | 21.3 +- 4.3 | 21.7 +- 4.3 |
+|                |             |             |
+| Mean F1        | 60.0 +- 2.7 | 58.4 +- 3.4 |
+| Mean P         | 58.5 +- 2.8 | 61.1 +- 2.9 |
+| Mean R         | 60.0 +- 2.7 | 56.8 +- 3.7 |
+|                |             |             |
+| **Unlabelled** |             |             |
+| Mean Directed  | 62.4 +- 3.2 | 62.0 +- 4.8 |
+| Mean Root      | 87.3 +- 3.2 | 87.9 +- 4.2 |
+| Mean Dep       | 38.4 +- 4.7 | 37.2 +- 5.8 |
 
-    Mean Undirected: 76.541 +- 3.608
-
-    Mean F1: 58.433 +- 3.356
-    Mean P: 61.082 +- 2.887
-    Mean R: 56.844 +- 3.654
 
 COLING 2014 Results
 ---------------
