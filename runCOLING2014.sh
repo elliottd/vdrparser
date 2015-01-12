@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # Train the VDR Parsing Model. No visual features for the EMNLP paper.
-python trainVDRParser.py -p data/vlt/emnlp2013/ -m mst -k 5 -d non-proj -s 10 -f true -i true
+python trainVDRParser.py --path data/vlt/emnlp2013/ --model mst -k 5 --decoder non-proj --split true --useImageFeats true --runString VDR-IMG
 
 # Predict the VDRs for the test splits.
-python testVDRParser.py -p data/vlt/emnlp2013/ -m mst -k 5 -d non-proj -s 10 -f true -i true
+python testVDRParser.py -p data/vlt/emnlp2013/ --model mst -k 5 --decoder non-proj --split true --useImageFeats true --runString VDR-IMG
 
 # Evaluate the performance of the EMNLP VDR Parsing Model
-python evaluateVDRParser.py -p data/vlt/emnlp2013/ -s 10 -f true
+python evaluateVDRParser.py --path data/vlt/emnlp2013/ --model mst -k 5 --decoder non-proj --split true --runString VDR-IMG
