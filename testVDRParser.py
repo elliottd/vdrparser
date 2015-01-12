@@ -5,6 +5,7 @@ import subprocess
 import pickle
 from collections import defaultdict
 from time import gmtime, strftime
+import argparse
 
 # Some global variables #
 xms = "512m"
@@ -12,6 +13,9 @@ xmx = "2048m"
 verbose = ""
 
 class TestVDRParser:
+
+  def __init__(self, args):
+    self.args = args
 
   def run_mst(self, path, k, proj, dicts, labels, visual):
       '''
@@ -33,39 +37,29 @@ class TestVDRParser:
       subprocess.call(["python mst-postfix.py -f %s > %s" % (outputVDRs+'-fixed', outputVDRs+"-tmp")], shell=True)
       subprocess.call(["cp " + outputVDRs+'-tmp ' + outputVDRs+'-fixed'], shell=True)
 
-  def main(self, argv):
+  def main(self):
   
       # Get the arguments passed to the script by the user
-      processor = Arguments()
-      args = processor.process_arguments(argv)
-      r1 = args.get('-r')
-      u = args.get('-u')
-      k = args.get('-k')
-      d = args.get('-d')
-      x = args.get('-x')
-      model = args['-m']
+      k = self.args.k
+      d = self.args.decoder
+      x = self.args.runString
+      model = self.args.model
       visual = ""
-      if args.get('-i'):
+      if self.args.useImageFeats == "true":
         visual = "visual-features"
   
       global verbose
-      if args.get("-v"):
+      if self.args.verbose == "true":
           verbose = "verbose"
       if model == "mst" or "qdgmst":
           subprocess.call(["ant -f mstparser/build.xml package"], shell=True)
-      base_dir = args['-p']
-      s = args['-s']
-      n = 100
-      try:
-          n = int(args['-n'])
-      except KeyError:
-          print("Default value of n")
+      base_dir = self.args.path
   
-      if args.get("-f"):
+      if self.args.split == "true":
         dirs = os.listdir(base_dir)
   
-      runname = "%s-%s-%s-%s-%s-%s-%s" % (model, s, r1, u, k, d, x)
-      self.runinfo_printer(base_dir, model, r1, u, k, d, s, n, runname)
+      runname = "%s-%s-%s-%s" % (model, k, d, x)
+      self.runinfo_printer(base_dir, model, k, d, runname)
   
       results = []
   
@@ -73,22 +67,19 @@ class TestVDRParser:
   
           print("Fold %s of %s." % (i+1, len(dirs)))
   
-          if args.get("-f"):
+          if self.args.split == "true":
             dir = base_dir+"/"+dirs[i]
           else:
             dir = generate_random_split(base_dir+"/dotfiles", base_dir+"/textfiles")
   
-          if model == "root":
-              self.run_root(dir)
-          elif model == "mst":
+          if model == "mst":
               self.run_mst(dir, k, d, runname+"-dicts", runname+"-labs", visual)
           elif model == "qdgmst":
               self.run_qdgmst(dir, k, d, runname+"-dicts", runname+"-labs", visual)          
           else:
-              processor.usage()
               sys.exit(2)
   
-  def runinfo_printer(self, path, model, r, u, k, d, s, n, runname):
+  def runinfo_printer(self, path, model, k, d, runname):
       print
       print(runname)
       print
@@ -96,78 +87,24 @@ class TestVDRParser:
       print("Model: "+ model)
       print("K: %s" % k)
       print("D: %s" % d)
-      print("S: %s" % s)
-      print("N: %d" % n)
       print
 
-class Arguments:
-
-    options = ["-p", "-m", "-k", "-s", "-r", "-u", "-d", "-n", "-l", "-x", "-v", "-f", "-i"] # -h is reserved.
-
-    def options_string(self, options):
-        # This function turns a list of options into the string format required by
-        # getopt.getopt
-
-        stringified = ""
-
-        for opt in options:
-            # We remove the first character since it is a dash
-            stringified += opt[1:] + ":"
-
-        return stringified
-
-    def process_arguments(self, argv):
-        # This function extracts the script arguments and returns them as a tuple.
-        # It almost always has to be defined from scratch for each new file =/
-
-        if (len(argv) == 0):
-            usage()
-            sys.exit(2)
-
-        arguments = dict()
-        stroptions = self.options_string(self.options)
-
-        try:
-            opts, args = getopt.getopt(argv, stroptions)
-        except getopt.GetoptError:
-            usage()
-            sys.exit(2)
-
-        # Process command line arguments
-        for opt, arg in opts:
-            if opt in ("-h"):      
-                usage()                     
-                sys.exit()
-            for o in self.options:
-                if opt in o:
-                    arguments[o] = arg
-                    continue
-
-        return arguments
-
-def usage():
-    # This function is used by process_arguments to echo the purpose and usage 
-    # of this script to the user. It is called when the user explicitly
-    # requests it or when no arguments are passed
-
-    print
-    print("runExperiments takes the data from the folds and runs the required")
-    print("number of experiments. The output of each experiment is saved in")
-    print("a meaningful file, which is then post-processed (if necessary).")
-    print("Then an evaluation script is run over each result file and the")
-    print("mean and std. dev. are reported across the number of folds.")
-    print
-    print("Usage: python runExperiments.py -p {path} -m {model} -k {k-best} -d {proj, non-proj} -s {num. splits}")
-    print("-p, path to the raw data. Expect dotfiles/, textfiles/, and xmlfiles/ subdirectories.")
-    print("-m, the model to use {mst, qdgmst, root}")
-    print("-k, k-best parses, MST models only")
-    print("-d, decode type {proj, non-proj}, MST models only")
-    print("-s, number of splits.")
-    print("-x, an extra string to append to the runstring. Should be used to more succinctly identify runs.")
-    print("-i, use features from the image in the model.")
-    print("-f, has the data already been split?")
-    print
-
 if __name__ == "__main__":
-    p = TestVDRParser()
-    p.main(sys.argv[1:])
+
+    parser = argparse.ArgumentParser(description = "Predict Visual Dependency Representations for unseen images.")
+    parser.add_argument("-p", "--path", help="path to the data")
+    parser.add_argument("-a", "--split", help="is the data already split?", default="true")
+    parser.add_argument("-m", "--model", help="Which parsing model? {mst, qdgmst}", default="mst")
+    parser.add_argument("-k", help="How many possible parses?", default=5)
+    parser.add_argument("-d", "--decoder", help="Decoder type: proj / non-proj", default="non-proj")
+    parser.add_argument("-x", "--runString", help="A useful runstring for your own reference")
+    parser.add_argument("-i", "--useImageFeats", help="Should extra features be extracted for the parsing model?", default="false")
+    parser.add_argument("-v", "--verbose", help="Verbose parser output?", default="false")
+    parser.add_argument("-t", "--test", help="Run on the test data? Default=false, which runs on dev data", default="false")
+
+    if len(sys.argv)==1:
+      parser.print_help()
+      sys.exit(1)
+
+    p = TestVDRParser(parser.parse_args())
+    p.main()
