@@ -36,7 +36,7 @@ class TrainVDRParser:
       # Get the arguments passed to the script by the user
       k = self.args.k
       d = self.args.decoder
-      x = self.args.runString
+      runString = self.args.runString
       model = self.args.model
       visual = ""
       if self.args.useImageFeats == "true":
@@ -51,8 +51,9 @@ class TrainVDRParser:
   
       if self.args.split == "true":
         dirs = os.listdir(base_dir)
+        dirs = [x for x in dirs if x.startswith("tmp")]
   
-      runname = "%s-%s-%s-%s" % (model, k, d, x)
+      runname = "%s-%s-%s-%s" % (model, k, d, runString)
       self.runinfo_printer(base_dir, model, k, d, runname)
   
       results = []

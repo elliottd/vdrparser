@@ -1,9 +1,15 @@
 VDRParser
 ---------
 
-VDRParser is a fork of the MSTParser [1] to predict Visual Dependency Representations of images. Visual Dependency Representations capture the spatial relationships between objects in an image and have been used for image description [2] and example-based image search [3]. Further details on the representation can also be found on the data set page http://homepages.inf.ed.ac.uk/s0128959/dataset/
+VDRParser is a fork of the MSTParser [1] to predict Visual Dependency
+Representations of images. Visual Dependency Representations capture the
+spatial relationships between objects in an image and have been used for image
+description [2] and example-based image search [3]. Further details on the
+representation can also be found on the data set page
+http://homepages.inf.ed.ac.uk/s0128959/dataset/
 
-###Dependencies
+Dependencies
+------------
 
     apache ant
     python-rpy2
@@ -11,19 +17,20 @@ VDRParser is a fork of the MSTParser [1] to predict Visual Dependency Representa
     java7
     python-numpy
 
-###Usage
+Usage
+-----
 
 You can train the VDRParser using the following command:
 
-> python trainVDRParser.py -p {path to split data} -m mst -k 5 -d non-proj -s 10 -f true
+`python trainVDRParser.py --path {path to split data} -`-model mst -k 5 --decoder non-proj --split true`
 
 Use a trained VDRParser model to predict VDRs on test data:
 
-> python testVDRParser.py -p {path to split data} -m mst -k 5 -d non-proj -s 10 -f true
+`python testVDRParser.py --path {path to split data} -`-model mst -k 5 --decoder non-proj --split true`
 
 And evaluate the accuracy of the parsing model:
 
-> python evaluateVDRParser.py -p {path to split data} -s 10 -f true
+`python evaluateVDRParser.py --path {path to split data} --model mst -k 5 --decoder non-proj --split true`
 
 EMNLP 2013 Results
 --------------
@@ -31,9 +38,11 @@ EMNLP 2013 Results
 The EMNLP 2013 VDRParser [2] only extracts features from the CoNLL-X formatted
 representation. To reproduce the EMNLP 2013 results, download the Visual and
 Linguistic Treebank Dataset from
-http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into data/emnlp2013
+http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into
+`data/vlt/emnlp2013`
 
-run ./runEMNLP2013.sh
+Run `./runEMNLP2013.sh` to train, predict, and evaluate this parsing model. You
+should expect to see the following results on the `test` data:
 
     Labelled
     Mean Directed: 54.033 +- 4.687
@@ -57,10 +66,14 @@ COLING 2014 Results
 The COLING2014 VDRParser [3] also extracts features from the image regions to
 improve the parsing results.  representation. To reproduce the EMNLP 2013
 results, download the Visual and Linguistic Treebank Dataset from
-http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into
-data/coling2014
+http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into data/emnlp2013
 
-run ./runCOLING2014.sh
+You need to run modify the absolute paths to the image files using
+`updateAnnotationLocations.sh` in the `data/vlt/emnlp2013` directory before
+continuing or the parser will not work.
+
+Run `./runCOLING2014.sh` to train, predict, and evaluate this parsing model.
+You should expect to see the following results on the `test` data:
 
     Labelled
     Mean Directed: 55.182 +- 4.963
@@ -81,15 +94,23 @@ run ./runCOLING2014.sh
 References
 ----------
 
-[1] R. McDonald, F. Pereira, K. Ribarov and J. Hajič. 2005. Non-Projective Dependency Parsing using Spanning Tree Algorithms. Human Language Technologies and Empirical Methods in Natural Language Processing (HLT-EMNLP), Vancouver, British Columbia, Canada.
+[1] R. McDonald, F. Pereira, K. Ribarov and J. Hajič. 2005. Non-Projective
+Dependency Parsing using Spanning Tree Algorithms. Human Language Technologies
+and Empirical Methods in Natural Language Processing (HLT-EMNLP), Vancouver,
+British Columbia, Canada.
 
-[2] D. Elliott and F. Keller. 2013. Image Description using Visual Dependency Representations. In Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing (EMNLP '13), Seattle, Washington, U.S.A
+[2] D. Elliott and F. Keller. 2013. Image Description using Visual Dependency
+Representations. In Proceedings of the 2013 Conference on Empirical Methods in
+Natural Language Processing (EMNLP '13), Seattle, Washington, U.S.A
 
-[3] D. Elliott, V. Lavrenko, and F. Keller. 2014. Query-by-Example Image Retrieval using Visual Dependency Representations. In Proceedings of the 25th International Conference on Computational Linguistics (COLING '14), Dublin, Ireland.
+[3] D. Elliott, V. Lavrenko, and F. Keller. 2014. Query-by-Example Image
+Retrieval using Visual Dependency Representations. In Proceedings of the 25th
+International Conference on Computational Linguistics (COLING '14), Dublin,
+Ireland.
 
 Contact
 -------
-d.elliott@ed.ac.uk
+elliott@cwi.nl
 
 or
 
