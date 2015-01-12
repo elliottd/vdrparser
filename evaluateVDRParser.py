@@ -20,11 +20,14 @@ class EvaluateVDRParser:
   def __init__(self, args):
     self.args = args
 
-  def evaluate_parser(self, path):
-      testTgtTrees = "%s/target-parsed-GOLD" % (path)
+  def evaluate_parser(self, path, testTarget):
+
+      target = "test" if testTarget == "true" else "dev"
+
+      testTgtTrees = "%s/target-parsed-%s-GOLD" % (path, target)
   
-      outputVDRs = "%s/test-MST" % (path)
-      goldVDRs = "%s/test-GOLD" % (path)
+      outputVDRs = "%s/%s-MST" % (path, target)
+      goldVDRs = "%s/%s-GOLD" % (path, target)
 
       print("Evaluating VDR Parsing Performance...")
       e = evaluation_measures.Evaluator()
@@ -34,15 +37,19 @@ class EvaluateVDRParser:
      
       return (root, dep, am, lroot, ldep, lam, undir, f1, p, r)
 
-  def run_root(self, path):
+  def run_root(self, path, testTarget):
     '''
     Run the ROOT-ATTACH model on each of the folds to establish the baseline
     '''
+
+    target = "test" if testTarget == "true" else "dev"
+    goldData = "%s/%s-GOLD" % (path, target)
+    output = "%s/%s-ROOT" % (path, target)
     
-    subprocess.call(["python root-attach.py -f %s/test-GOLD > %s/test-ROOT" % (path, path)], shell=True)
+    subprocess.call(["python root-attach.py -f %s > %s" % (goldData, output)], shell=True)
     e = evaluation_measures.Evaluator()
-    gold = e.load_data("%s/test-GOLD" % (path))
-    test = e.load_data("%s/test-ROOT" % (path))
+    gold = e.load_data("%s" % goldData)
+    test = e.load_data("%s" % output)
     (root, dep, am, lroot, ldep, lam, undir) = e.evaluate(gold, test)
     
     return (root, dep, am, lroot, ldep, lam, undir)
@@ -165,15 +172,16 @@ class EvaluateVDRParser:
 
       # Get the arguments passed to the script by the user
       model = self.args.model
-      x = self.args.runString
+      runString = self.args.runString
       base_dir = self.args.path
       k = self.args.k
       d = self.args.decoder
   
       if self.args.split == "true":
         dirs = os.listdir(base_dir)
+        dirs = [x for x in dirs if x.startswith("tmp")]
   
-      runname = "%s-%s-%s-%s" % (model, k, d, x)
+      runname = "%s-%s-%s-%s" % (model, k, d, runString)
       self.runinfo_printer(base_dir, model, k, d, runname)
   
       results = []
@@ -188,8 +196,8 @@ class EvaluateVDRParser:
           else:
             dir = generate_random_split(base_dir+"/dotfiles", base_dir+"/textfiles")
   
-          results.append(self.evaluate_parser(dir))
-          baseline.append(self.run_root(dir))
+          results.append(self.evaluate_parser(dir, self.args.test))
+          baseline.append(self.run_root(dir, self.args.test))
   
       self.show_mean_results(results)
       self.show_baseline_results(baseline)
@@ -218,6 +226,7 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--runString", help="A useful runstring for your own reference")
     parser.add_argument("-i", "--useImageFeats", help="Should extra features be extracted for the parsing model?", default="false")
     parser.add_argument("-v", "--verbose", help="Verbose parser output?", default="false")
+    parser.add_argument("-t", "--test", help="Run on the test data? Default=false, which runs on dev data", default="false")
 
     if len(sys.argv)==1:
       parser.print_help()

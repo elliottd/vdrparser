@@ -17,23 +17,25 @@ class TestVDRParser:
   def __init__(self, args):
     self.args = args
 
-  def run_mst(self, path, k, proj, dicts, labels, visual):
+  def run_mst(self, path, k, proj, dicts, labels, visual, testTarget):
       '''
       Run the MST parser on each of the folds.
       '''
       classpath = "mstparser/output/mstparser.jar:mstparser/lib/ant.jar:mstparser/lib/trove.jar:mstparser/lib/commons-math3-3.2.jar:mstparser/lib/jts-1.13.jar:mstparser/lib/javaGeom-0.11.1.jar"
+
+      target = "test" if testTarget == "true" else "dev"
   
-      testTgtTrees = "%s/target-parsed-test" % (path)
-      testXML = "%s/annotations-test" % path
-      testImages = "%s/images-test" % path
+      targetTrees = "%s/target-parsed-%s" % (path, target)
+      targetXML = "%s/annotations-%s" % (path, target)
+      targetImages = "%s/images-%s" % (path, target)
       clustersFile = "%s/objectClusters" % path
   
-      outputVDRs = "%s/test-MST" % (path)
-      testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s order:1" % (xms, xmx, classpath, path, k, testTgtTrees, testXML, testImages, proj, outputVDRs, clustersFile, visual)]
+      outputVDRs = "%s/%s-MST" % (path, target)
+      testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s order:1" % (xms, xmx, classpath, path, k, targetTrees, targetXML, targetImages, proj, outputVDRs, clustersFile, visual)]
       print("Predicting VDRs...")
       subprocess.check_call(testcmd, shell=True)
       subprocess.check_call(["python conll_converter.py -f %s > %s" % (outputVDRs, outputVDRs+"-fixed")], shell=True)
-      subprocess.call(['sed -i "s/, ]/ ]/g" %s/test-MST-fixed' % (path)], shell=True)
+      subprocess.call(['sed -i "s/, ]/ ]/g" %s/%s-MST-fixed' % (path, target)], shell=True)
       subprocess.call(["python mst-postfix.py -f %s > %s" % (outputVDRs+'-fixed', outputVDRs+"-tmp")], shell=True)
       subprocess.call(["cp " + outputVDRs+'-tmp ' + outputVDRs+'-fixed'], shell=True)
 
@@ -42,7 +44,7 @@ class TestVDRParser:
       # Get the arguments passed to the script by the user
       k = self.args.k
       d = self.args.decoder
-      x = self.args.runString
+      runString = self.args.runString
       model = self.args.model
       visual = ""
       if self.args.useImageFeats == "true":
@@ -57,8 +59,9 @@ class TestVDRParser:
   
       if self.args.split == "true":
         dirs = os.listdir(base_dir)
+        dirs = [x for x in dirs if x.startswith("tmp")]
   
-      runname = "%s-%s-%s-%s" % (model, k, d, x)
+      runname = "%s-%s-%s-%s" % (model, k, d, runString)
       self.runinfo_printer(base_dir, model, k, d, runname)
   
       results = []
@@ -73,9 +76,9 @@ class TestVDRParser:
             dir = generate_random_split(base_dir+"/dotfiles", base_dir+"/textfiles")
   
           if model == "mst":
-              self.run_mst(dir, k, d, runname+"-dicts", runname+"-labs", visual)
+              self.run_mst(dir, k, d, runname+"-dicts", runname+"-labs", visual, self.args.test)
           elif model == "qdgmst":
-              self.run_qdgmst(dir, k, d, runname+"-dicts", runname+"-labs", visual)          
+              self.run_qdgmst(dir, k, d, runname+"-dicts", runname+"-labs", visual, self.args.test)
           else:
               sys.exit(2)
   
