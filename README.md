@@ -38,9 +38,8 @@ EMNLP 2013 Results
 --------------
 
 The EMNLP 2013 VDRParser [2] only extracts features from the CoNLL-X formatted
-representation. To reproduce the EMNLP 2013 results, download the Visual and
-Linguistic Treebank Dataset from
-http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into
+representation. To reproduce the EMNLP 2013 results, download the [Visual and
+Linguistic Treebank Dataset](http://homepages.inf.ed.ac.uk/s0128959/dataset/) and extract into
 `data/vlt/emnlp2013`
 
 Run `./runEMNLP2013.sh` to train, predict, and evaluate this parsing model. By
@@ -71,8 +70,8 @@ COLING 2014 Results
 
 The COLING2014 VDRParser [3] also extracts features from the image regions to
 improve the parsing results.  representation. To reproduce the EMNLP 2013
-results, download the Visual and Linguistic Treebank Dataset from
-http://homepages.inf.ed.ac.uk/s0128959/dataset/ and extract into data/emnlp2013
+results, download the [Visual and
+Linguistic Treebank Dataset](http://homepages.inf.ed.ac.uk/s0128959/dataset/) and extract into `data/emnlp2013`
 
 You need to run modify the absolute paths to the image files using
 `updateAnnotationLocations.sh` in the `data/vlt/emnlp2013` directory before
