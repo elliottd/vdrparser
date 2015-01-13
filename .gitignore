@@ -6,4 +6,4 @@ featureWeights
 mstparser/output/
 *.pyc
 results
-vdrgeneration/
+vdrDescription/
