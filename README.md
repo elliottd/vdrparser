@@ -77,25 +77,28 @@ You need to run modify the absolute paths to the image files using
 `updateAnnotationLocations.sh` in the `data/vlt/emnlp2013` directory before
 continuing or the parser will not work.
 
-Run `./runCOLING2014.sh` to train, predict, and evaluate this parsing model.
-You should expect to see the following results on the `test` data:
+Run `./runCOLING2014.sh` to train, predict, and evaluate this parsing model. By
+default, we evaluate on the `dev` data, but you can run on the `test` data by 
+adding the argument `--test true` in the `testVDR` and `evalauteVDR` commands. 
 
-    Labelled
-    Mean Directed: 55.182 +- 4.963
-    Mean Root: 89.280 +- 2.625
-    Mean Dep: 22.616 +- 4.905
+You should expect to see the following results:
 
-    Unlabelled
-    Mean Directed: 64.120 +- 5.082
-    Mean Root: 89.280 +- 2.625
-    Mean Dep: 40.183 +- 6.538
+|                | Dev         | Test        |
+| -------------  | ---------   | ----------- |
+| **Labelled**   |             |             |
+| Mean Directed  | 54.5 +- 2.6 | 55.2 +- 5.0 |
+| Mean Root      | 88.9 +- 3.1 | 89.3 +- 2.6 |
+| Mean Dep       | 21.2 +- 3.4 | 22.6 +- 4.9 |
+|                |             |             |
+| Mean F1        | 60.1 +- 1.7 | 59.8 +- 3.5 |
+| Mean P         | 62.1 +- 1.8 | 61.8 +- 3.2 |
+| Mean R         | 59.0 +- 1.8 | 58.6 +- 3.7 |
+|                |             |             |
+| **Unlabelled** |             |             |
+| Mean Directed  | 63.4 +- 3.0 | 64.1 +- 5.1 |
+| Mean Root      | 88.9 +- 3.1 | 89.3 +- 2.6 |
+| Mean Dep       | 38.9 +- 4.5 | 40.2 +- 6.5 |
 
-    Mean Undirected: 77.284 +- 4.171
-
-    Mean F1: 59.825 +- 3.464
-    Mean P: 61.842 +- 3.233
-    Mean R: 58.599 +- 3.694
-    
 References
 ----------
 
