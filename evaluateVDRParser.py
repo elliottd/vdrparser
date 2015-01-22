@@ -33,9 +33,9 @@ class EvaluateVDRParser:
       e = evaluation_measures.Evaluator()
       gold2 = e.conll_load_data(testTgtTrees)
       test2 = e.conll_load_data(outputVDRs)
-      (root, dep, am, lroot, ldep, lam, undir, f1, p, r) = e.conll_evaluate(gold2, test2, None, None)
+      (root, dep, am, lroot, ldep, lam, undir, f1, p, r, uf1, up, ur) = e.conll_evaluate(gold2, test2, None, None)
      
-      return (root, dep, am, lroot, ldep, lam, undir, f1, p, r)
+      return (root, dep, am, lroot, ldep, lam, undir, f1, p, r, uf1, up, ur)
 
   def run_root(self, path, testTarget):
     '''
@@ -88,7 +88,7 @@ class EvaluateVDRParser:
       print "%.3f +- %0.3f" % (mean_undir, std_undir)
 
       handle = open("results", "a")
-      handle.write("Root attachment baseline over k random splits\n")
+      handle.write("Root attachment baseline over %d random splits\n" % (len(results_list)))
       handle.write("Mean results over k random splits\n\n")
       handle.write("Labelled / Unlabelled\n\n")
       handle.write("Mean Directed: %.3f +- %1.3f\n" % (mean_am, std_am))
@@ -123,6 +123,13 @@ class EvaluateVDRParser:
       mean_r = numpy.mean([numpy.mean([x[9]]) for x in results_list]) * 100
       std_r = numpy.std([x[9] for x in results_list]) * 100
 
+      mean_uf1 = numpy.mean([numpy.mean([x[10]]) for x in results_list]) * 100
+      std_uf1 = numpy.std([x[10] for x in results_list]) * 100
+      mean_up = numpy.mean([numpy.mean([x[11]]) for x in results_list]) * 100
+      std_up = numpy.std([x[11] for x in results_list]) * 100
+      mean_ur = numpy.mean([numpy.mean([x[12]]) for x in results_list]) * 100
+      std_ur = numpy.std([x[12] for x in results_list]) * 100
+
       print
       print "Mean results over k random splits"
       print "================================="
@@ -145,27 +152,43 @@ class EvaluateVDRParser:
       print 
       print "Harmonic"
       print "--------"
+      print "Mean F1: %.3f +- %0.3f" % (mean_f1, std_f1)
       print "Mean P: %.3f +- %0.3f" % (mean_p, std_p)
       print "Mean R: %.3f +- %0.3f" % (mean_r, std_r)
-      print "Mean F1: %.3f +- %0.3f" % (mean_f1, std_f1)
+      print
+      print "Unlabelled Harmonic"
+      print "--------"
+      print "Mean F1: %.3f +- %0.3f" % (mean_uf1, std_uf1)
+      print "Mean P: %.3f +- %0.3f" % (mean_up, std_up)
+      print "Mean R: %.3f +- %0.3f" % (mean_ur, std_ur)
   
       handle = open("results", "w")
-      handle.write("Mean results over k random splits\n\n")
-      handle.write("Labelled\n\n")
+      handle.write("Mean results over %d random splits\n\n" % len(results_list))
+      handle.write("Labelled\n")
+      handle.write("--------\n")
       handle.write("Mean Directed: %.3f +- %1.3f\n" % (mean_lam, std_lam))
       handle.write("Mean Root: %.3f +- %1.3f\n" % (mean_lroot, std_lroot))
-      handle.write("Mean Dep: %.3f +- %1.3f\n\n" % (mean_ldep, std_ldep))
-      handle.write("Unlabelled\n\n")
+      handle.write("Mean Dep: %.3f +- %1.3f\n" % (mean_ldep, std_ldep))
+      handle.write("\n")
+      handle.write("Unlabelled\n")
+      handle.write("--------\n")
       handle.write("Mean Directed: %.3f +- %1.3f\n" % (mean_am, std_am))
       handle.write("Mean Root: %.3f +- %1.3f\n" % (mean_root, std_root))
       handle.write("Mean Dep: %.3f +- %1.3f\n\n" % (mean_dep, std_dep))
-      handle.write("Mean Undirected: %.3f +- %1.3f" % (mean_undir, std_undir))
-      handle.write("\n\n")
-      for idx,r in enumerate(results_list):
-        handle.write("Split %d results\n" % idx)
-        handle.write("Directed: %.3f\n" % (r[4]))
-        handle.write("Root: %.3f\n" % (r[3]))
-        handle.write("Dep: %.3f\n\n" % (r[5]))
+      handle.write("Mean Undirected: %.3f +- %1.3f\n" % (mean_undir, std_undir))
+      handle.write("\n")
+      handle.write("Harmonic\n")
+      handle.write("--------\n")
+      handle.write("Mean F1: %.3f +- %0.3f\n" % (mean_f1, std_f1))
+      handle.write("Mean P: %.3f +- %0.3f\n" % (mean_p, std_p))
+      handle.write("Mean R: %.3f +- %0.3f\n" % (mean_r, std_r))
+      handle.write("\n")
+      handle.write("Unlabelled Harmonic\n")
+      handle.write("--------\n")
+      handle.write("Mean F1: %.3f +- %0.3f\n" % (mean_uf1, std_uf1))
+      handle.write("Mean P: %.3f +- %0.3f\n" % (mean_up, std_up))
+      handle.write("Mean R: %.3f +- %0.3f\n" % (mean_ur, std_ur))
+      handle.write("\n")
       handle.close()
 
   def main(self):

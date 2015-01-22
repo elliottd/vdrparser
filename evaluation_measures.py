@@ -18,6 +18,51 @@ class Evaluator:
     Tlabs = []
     Plabs = []
 
+    def conll_f1_unlabelled(self, gold, system):
+      # Calculate the F1 score of this system compared to the gold standard.
+      # Decomposes all parent-child relationships into units.
+
+      precision = 0.0
+      recall = 0.0
+      f1 = 0.0
+
+      for g,s in zip(gold,system):
+        g_pairs = []
+        s_pairs = []
+        for g_tok in g:
+          g_pairs.append("%s %s" % (g_tok[1], g_tok[6]))
+        for s_tok in s:
+          s_pairs.append("%s %s" % (s_tok[1], s_tok[6]))
+
+        relevant = []
+        retrieved = []
+
+        relevant = set(g_pairs)
+        retrieved = set(s_pairs)
+
+        # Divide by zero error handling
+        if len(retrieved) == 0:
+          p_local = 0
+        if len(relevant) == 0:
+          r_local = 0
+
+        p_local = float(len(relevant.intersection(retrieved))) / len(retrieved)
+        r_local = float(len(relevant.intersection(retrieved))) / len(relevant) 
+        if p_local + r_local == 0:
+          f1_local = 0
+        else:
+          f1_local = (2 * p_local * r_local) / (p_local + r_local)
+
+        precision += p_local
+        recall += r_local
+        f1 += f1_local
+
+      precision/=len(gold)
+      recall/=len(gold)
+      f1/=len(gold)
+
+      return precision,recall,f1
+
     def conll_f1(self, gold, system):
       # Calculate the F1 score of this system compared to the gold standard.
       # Decomposes all parent-child relationships into units.
@@ -256,6 +301,7 @@ class Evaluator:
         am = float(ra+da) / (rt+dt)
         lam = float(labra+labda) / (labrt+labdt)
         p,r,f1 = self.conll_f1(gold,system)
+        up,ur,uf1 = self.conll_f1_unlabelled(gold,system)
 
         if self.verbose:
           print
@@ -293,7 +339,7 @@ class Evaluator:
               handle.write("%s,%s\n" % (x[0], x[1]))
             handle.close()
 
-        return (root, dep, am, labroot, labdep, lam, undir, f1, p, r)
+        return (root, dep, am, labroot, labdep, lam, undir, f1, p, r, uf1, up, ur)
 
     def load_data(self, filename):
         # Load the dependency parsed data from disk
