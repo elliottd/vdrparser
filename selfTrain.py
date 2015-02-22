@@ -28,9 +28,8 @@ class Train:
     self.args = args
 
   def train(self):
-    #self.descriptions()
+    self.descriptions()
     self.images()
-    self.trainParser()
 
   '''
    POS Tag and Dependency Parse the descriptions
@@ -60,28 +59,9 @@ class Train:
     iargs.descriptions = self.args.descriptions
     iargs.clusters = "%s/objectClusters" % self.args.descriptions
     iargs.verbose = self.args.verbose
+    iargs.vlt = self.args.vlt
     semi = SemiSupervisedVDR(iargs)
     semi.createTrainingData()
-
-  '''
-  Use the semi-supervised training data to train a VDR Parsing model.
-  '''
-  def trainParser(self):
-    print "==============================="
-    print "Step 3: Training the VDR Parser"
-    print "==============================="
-    pargs = argparse.Namespace()
-    pargs.path = self.args.images
-    pargs.split = "true"
-    pargs.model = "mst"
-    pargs.k = 5
-    pargs.decoder = "non-proj"
-    pargs.semi = "true"
-    pargs.runString = "RCNNSemi"
-    pargs.useImageFeats = "false"
-    pargs.verbose = "false"
-    vdrParser = TrainVDRParser(pargs)
-    vdrParser.trainParser()
 
 if __name__ == "__main__":
 
@@ -90,6 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--descriptions", help="path to the descriptions. Expects X-{1-N} files per image")
     parser.add_argument("-v", "--verbose", help="Do you want verbose output?", action="store_true")
     parser.add_argument("-t", "--test", help="Run on the test data? Default is dev data", action="store_true")
+    parser.add_argument("--vlt", help="Running on the VLT data set? Has implications for how the descriptions are processed. Default is false.", action="store_true", default=False)
 
     if len(sys.argv)==1:
       parser.print_help()
