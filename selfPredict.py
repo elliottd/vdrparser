@@ -27,8 +27,8 @@ class Test:
     self.args = args
 
   def test(self):
-    #self.extractObjects()
-    #self.predictVDR()
+    self.extractObjects()
+    self.predictVDR()
     self.generateDescriptions()
 
   '''
@@ -54,12 +54,13 @@ class Test:
     rcnn_args.training = False
     rcnn_args.verbose = self.args.verbose
     rcnn_args.n = self.args.numobjects
+    rcnn_args.output = self.args.images
 
     useful_detections = []
 
     for f in targetfiles:
       detector = RCNNObjectExtractor(rcnn_args)
-      detector.args.imagefilename = "%s/%s" % (self.args.images, f)
+      detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub("jpg","hdf", f))
       detector_output = detector.process_hdf()
       conll_file = self.__xml2conll__(rcnn_args.output, f)
       useful_detections.append(conll_file)
