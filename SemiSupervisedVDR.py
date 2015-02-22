@@ -10,6 +10,7 @@ import glob
 import timeit
 from timeit import default_timer as timer
 import gc
+from nltk.stem.wordnet import WordNetLemmatizer
 
 class SemiSupervisedVDR:
 
@@ -45,28 +46,59 @@ class SemiSupervisedVDR:
         sub = None
         obj = None
         others = []
-        i += 1
         training_image = training_files[idx]
   
         if self.args.verbose:
+          print "---------------------"
           print "Processing example %s" % training_image
   
         # Extract the most conservative subject and object from the first
         # sentence description of the image
-        #sentence = training_parsed[2*idx]
-        sentence = training_parsed[idx]
+        if self.args.vlt:
+          sentence = training_parsed[2*idx]
+        else:
+          sentence = training_parsed[idx]
+
         for word in sentence:
           if sub == None and word[7] == "nsubj":
             sub = word[2].translate(string.maketrans("",""), string.punctuation)
+            sub = sub.lower()
+            sub = WordNetLemmatizer().lemmatize(sub, pos="n")
           if (obj == None and word[7] == "pobj") or (obj == None and word[7] == "dobj"):
             obj = word[2].translate(string.maketrans("",""), string.punctuation)
+            obj = obj.lower()
+            obj = WordNetLemmatizer().lemmatize(obj, pos="n")
+
+        # The sentence did not contain a verb, so we need to back-off to
+        # using the tokens tagged with NN (word[4]). Brute-force take the first
+        # two tokens tagged with NN.
+        #
+        # Example use : A big cow in a field. -> cow, field.
+        #if sub == None:
+        #  for word in sentence:
+        #    if word[4] == "NN":
+        #      sub = word[2].translate(string.maketrans("",""), string.punctuation)
+        #      sub = sub.lower()
+        #      sub = WordNetLemmatizer().lemmatize(sub, pos="n")
+        #      break
+
+        #if obj == None:
+        #  for word in sentence:
+        #    if word[4] == "NN":
+        #      proposal = word[2].translate(string.maketrans("",""), string.punctuation)
+        #      proposal = proposal.lower()
+        #      proposal = WordNetLemmatizer().lemmatize(proposal, pos="n")
+        #      if proposal != sub:
+        #        obj = proposal
+        #        break
   
-        # Extract the most likely background objects from the second sentence
-        #sentence = training_parsed[(2*idx)+1]
-        #for word in sentence:
-        #  if word[4] == "NN":
-        #    others.append(word[2])
-  
+        # Extract the most likely background objects from the second sentence in the VLT data
+        #if self.args.vlt:
+        #  sentence = training_parsed[(2*idx)+1]
+        #  for word in sentence:
+        #    if word[4] == "NN":
+        #      others.append(word[2])
+
         # Only try to create a semi-supervised training instance if we have
         # found both a subject and an object.
         detector_output = False
@@ -79,7 +111,7 @@ class SemiSupervisedVDR:
             detector.args.sub = sub
             detector.args.obj = obj
             detector.args.others = others
-            detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub(r"-[\d].malt",".hdf", image_path))
+            detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub(r".malt",".hdf", image_path))
             detector_output = detector.process_hdf()
   
         if detector_output == False:
@@ -87,7 +119,7 @@ class SemiSupervisedVDR:
             print "Didn't find the desired objects, continuing to the next image\n"
           continue
   
-        conll_file = self.xml2conll(rcnn_args.output, image_path, subj, obj, clusters)
+        conll_file = self.xml2conll(rcnn_args.output, image_path, sub, obj, clusters)
         useful_detections.append(conll_file)
   
     # Now we create target-parsed-train-semi from the examples we managed to find in the data
@@ -98,7 +130,7 @@ class SemiSupervisedVDR:
     os.remove("semi_supervised_list")
 
     end = timer()
-    print "SemiSupervisedVDR execution time: %f" % (end - start)
+    print "Created NoisyVDR training data in %f seconds" % (end - start)
   
   def clustered_label(self, name, clusters):
     if name in clusters:
@@ -116,16 +148,19 @@ class SemiSupervisedVDR:
     handle = open("%s/%s" % (output_directory, re.sub(r".malt", ".semi.conll", filename)), "w")
     clustered_target = self.clustered_label(object_label, clusters)
   
-    # First pass over the XML data to find the persons because will want to attach objects to them
+    # First pass over the XML data to find the subject because will want to attach objects to it
     subject_idx = None
     for idx,o in enumerate(semi_objects):
-      if self.clustered_label(o[0], clusters) == subject:
+      if self.clustered_label(o[0], clusters) == subject_label:
+        subject_idx = idx
+      elif o[0] == subject_label:
         subject_idx = idx
   
   
     # We will always write idx+1 because CoNLL-X format is 1-indexed, not 0-indexed
     for idx,o in enumerate(semi_objects):
-      cobject = self.clustered_label(o[0], clusters)
+      #cobject = self.clustered_label(o[0], clusters)
+      cobject = o[0]
   
       # People get special ROOT attachments (idx=0)
       if idx == subject_idx:
@@ -133,7 +168,7 @@ class SemiSupervisedVDR:
         s_centroid = "%s|%s|%s" % (sc[0], sc[1], o[5])
         s = str.format("%d\t%s\t%s\tNN\tNN\t%s\t%s\t%s\t_\t_\n" % (idx+1, o[0], o[0], s_centroid, 0, "-"))
   
-      elif cobject == clustered_target:
+      elif cobject == clustered_target or cobject == object_label:
         if subject_idx == None:
           # Unusual situation but it needs to be covered
           oc = aux.centroid(o[1:4])
@@ -155,7 +190,7 @@ class SemiSupervisedVDR:
           s = str.format("%d\t%s\t%s\tNN\tNN\t%s\t%s\t%s\t_\t_\n" % (idx+1, o[0], o[0], o_centroid, subject_idx+1, relationship))
   
       # This is a background object; attach it to the ROOT (idx = 0)
-      elif cobject != subj:
+      elif cobject != subject_label:
         oc = aux.centroid(o[1:4])
         o_centroid = "%s|%s|%s" % (oc[0], oc[1], o[5])
         s = str.format("%d\t%s\t%s\tNN\tNN\t%s\t%s\t%s\t_\t_\n" % (idx+1, o[0], o[0], o_centroid, 0, "-"))
@@ -175,6 +210,7 @@ if __name__ == "__main__":
   parser.add_argument("--descriptions", help="Path to all the text files.")
   parser.add_argument("--clusters", help="Path to all the clusters file.")
   parser.add_argument("--verbose", help="Should the output be verbose?", action="store_true")
+  parser.add_argument("--vlt", help="VLT data set?", action="store_true")
 
   if len(sys.argv)==1:
     parser.print_help()
