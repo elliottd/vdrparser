@@ -12,6 +12,8 @@ from matplotlib import cm
 from shapely.geometry import Polygon
 import operator
 import re
+from nltk.corpus import wordnet as wn
+import nltk
 
 def main(arguments):
 
@@ -27,8 +29,8 @@ class RCNNObjectExtractor:
 
   def process_hdf(self):
 
-    self.df = pd.read_hdf(re.sub("jpg","hdf", self.args.imagefilename) , 'df')
-    with open('/export/scratch1/elliott/caffe/data/ilsvrc12/synset_words_first.txt') as f:
+    self.df = pd.read_hdf(re.sub("-[\d]","", self.args.imagefilename), 'df')
+    with open('/export/scratch1/elliott/caffe/data/ilsvrc12/det_synset_words.txt') as f:
         self.labels_df = pd.DataFrame([
             {
                 'synset_id': l.strip().split(' ')[0],
@@ -47,16 +49,19 @@ class RCNNObjectExtractor:
   
     # Map the raw HDF data into a object-label centric structure
     self.predictions_df = defaultdict(pd.DataFrame)
+
     for x in self.image_cols:
       self.predictions_df[x] = pd.DataFrame(np.vstack(self.df.prediction.values[self.image_cols[x][0:-1]]), columns=self.labels_df['name'])
+
+    self.predictions_df = pd.DataFrame(np.vstack(self.df.prediction.values), columns=self.labels_df['name'])
 
     if self.args.verbose:
       print "Initialised RCNN Extractor with annotations for %s" % self.args.imagefilename
 
     if self.args.training:
-      return self.single_image(self.args.imagefilename, self.df, self.predictions_df, self.image_cols, self.labels_df)
+      return self.single_image(self.args.imagefilename, self.df, self.predictions_df, self.labels_df)
     else:
-      self.extract_topn(self.df, self.predictions_df, self.image_cols, self.labels_df)
+      self.extract_topn(self.df, self.predictions_df, self.labels_df)
  
   def clustered_label(self, name):
     if name in self.clusters:
@@ -85,73 +90,158 @@ class RCNNObjectExtractor:
 
     return exists
     
- 
+
+  '''
+  Search through the list of detected objects using Wordnet hypernyms to guide
+  the detection process. This is only called when a direct label matching does not
+  succeed but there may be a suitable candidate in the image: e.g. looking for 
+  "bus" but the detected object is "trolleybus" or "minibus".
+  '''
+  def wordnet_search(self, predictions_df, labels_df, target_label):
+    # Get the top predictions for this image and sort them from highest to
+    # lowest confidence
+    if self.args.verbose:
+      print "Wordnet-searching for %s" % target_label
+
+    top = predictions_df.max()
+    top.sort(ascending=False)
+
+    for idx,x in enumerate(top.index):
+      if type(predictions_df[x]) == pd.DataFrame:
+        continue
+      df_row = predictions_df[x].argmax()
+      detection_data = [df_row, pd.Series(self.df['prediction'].iloc[df_row], index=labels_df['name'])]
+      detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
+      label = detection_data[1].index[0]
+
+      try:
+        hypernym_labels = wn.synset('%s.n.01' % label).hypernyms()
+        hypernym_lemmas = [x.lemmas() for x in hypernym_labels]
+        hypernym_lemmas = [x for h in hypernym_lemmas for x in h]
+        hypernym_lemmas = [x.name() for x in hypernym_lemmas]
+      except nltk.corpus.reader.wordnet.WordNetError:
+        # This word does not have a synset
+        hypernym_lemmas = [] 
+
+      for hypernym in hypernym_lemmas:        
+        if hypernym == target_label:
+          print "Found Wordnet-backoff for %s in %s" % (target_label, hypernym)
+          return detection_data
+
+    return None
+
+  '''
+  Search through the list of detected objects using the annotator-defined 
+  clusters to guide the detection process. This is only called when both
+  direct label and Wordnet matching does not find a suitable candidate:
+  e.g. looking for "girl" -> "woman" in Wordnet but we want "person".
+  '''
+  def cluster_search(self, predictions_df, labels_df, target_label):
+    # We didn't find both a subject and an object using the original labels
+    # so let's backoff to the clustered labels
+    clusteredLabel = self.clustered_label(target_label)
+
+    if self.args.verbose:
+      print "Cluster-searching for %s" % clusteredLabel
+
+    try:
+      detection = predictions_df[clusteredLabel]
+      if type(detection) == pd.Series and self.args.verbose:
+        print "Found cluster-backoff for %s in %s" % (target_label, clusteredLabel)
+      df_row = predictions_df[clusteredLabel].argmax()
+      detection = [df_row, pd.Series(self.df['prediction'].iloc[df_row], index=labels_df['name'])]
+      detection[1].sort(ascending=False) # Sort by confidence over labels for each detected object
+    except KeyError:
+      detection = None
+
+    return detection
+
   '''
   Get the highest-ranked bounding boxes for the subject and object from the data
   for this specific image. 
 
   Returns None if we cannot match both the subject and object.
   '''
-  def single_image(self, image_name, df, predictions_df, image_cols, labels_df):
+  def single_image(self, image_name, df, predictions_df, labels_df):
     split_image_name = image_name.split("/")
     pure_image_name = re.sub(r"-[1-3]","", split_image_name[-1])
+    pure_image_name = re.sub(r"hdf","jpg", pure_image_name)
     df_image_name = pure_image_name
 
     if self.args.sub != None and self.args.obj != None:
 
       # Get the top predictions for this image and sort them from highest to
       # lowest confidence
-      this_image = predictions_df[df_image_name]
-      top = predictions_df[df_image_name].max()
+      top = predictions_df.max()
       top.sort(ascending=False)
 
       # store the accepted detections in a dictionary.
       # label -> [data concerning that label]
       detections = dict() 
 
-      for idx,x in enumerate(top.index):
+      try:
+        subj = predictions_df[self.args.sub]
+        print "Found %s directly" % (self.args.sub)
+        df_row = predictions_df[self.args.sub].argmax()
+        subj = [df_row, pd.Series(self.df['prediction'].iloc[df_row], index=labels_df['name'])]
+        subj[1].sort(ascending=False) # Sort by confidence over labels for each detected object
+      except KeyError:
+        subj = self.wordnet_search(predictions_df, labels_df, self.args.sub)
+        if not subj:
+          subj = self.cluster_search(predictions_df, labels_df, self.args.sub)
 
-        df_row = image_cols[df_image_name][predictions_df[df_image_name][x].argmax()]
-        detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
-        detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
-        label = detection_data[1].index[0]
+      if subj:
+        detections[self.args.sub] = subj
 
-        if label not in detections:
-          if label == self.args.sub or label == self.args.obj:
-            if self.nms_discard(detection_data, detections, df) == False:
-              print label, detections.keys()
-              detections[label] = detection_data
-              detections[label][1].sort(ascending=False)  
+      print
 
-      if len(detections) < 2:
-        if self.args.verbose:
-          print "Only found %s in detections, backing off to clustered labels" % detections.keys()
-        # We didn't find both a subject and an object using the original labels
-        # so let's backoff to the clustered labels
-        clusteredSub = self.clustered_label(self.args.sub)
-        clusteredObj = self.clustered_label(self.args.obj)
+      try:
+        obj = predictions_df[self.args.obj]
+        print "Found %s directly" % (self.args.obj)
+        df_row = predictions_df[self.args.obj].argmax()
+        obj = [df_row, pd.Series(self.df['prediction'].iloc[df_row], index=labels_df['name'])]
+        obj[1].sort(ascending=False) # Sort by confidence over labels for each detected object
+      except KeyError:
+        obj = self.wordnet_search(predictions_df, labels_df, self.args.obj)
+        if not obj:
+          obj = self.cluster_search(predictions_df, labels_df, self.args.obj)
 
-        for idx,x in enumerate(top.index):
-  
-          if len(detections) == 2:
-            # found candidates for both the subject and object
-            break
- 
-          df_row = image_cols[df_image_name][predictions_df[df_image_name][x].argmax()]
-          detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
-          detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
-          label = detection_data[1].index[0]
-          clustered_label = self.clustered_label(detection_data[1].index[0])
-  
-          if not self.already_detected(label, detections, True):
-            if clustered_label == clusteredSub:
-              if not self.nms_discard(detection_data, detections, df):
-                detections[label] = detection_data
-                detections[label][1].sort(ascending=False)
-            if clustered_label == clusteredObj:
-              if not self.nms_discard(detection_data, detections, df):
-                detections[label] = detection_data
-                detections[label][1].sort(ascending=False)
+      if obj:
+        detections[self.args.obj] = obj
+
+      print
+
+#      if len(detections) < 2:
+#        if self.args.verbose:
+#          print "Only found %s in detections, backing off to clustered labels" % detections.keys()
+#        # We didn't find both a subject and an object using the original labels
+#        # so let's backoff to the clustered labels
+#        clusteredSub = self.clustered_label(self.args.sub)
+#        clusteredObj = self.clustered_label(self.args.obj)
+#
+#        for idx,x in enumerate(top.index):
+#  
+#          if len(detections) == 2:
+#            # found candidates for both the subject and object
+#            break
+# 
+#          if type(predictions_df[df_image_name][x]) == pd.DataFrame:
+#            continue
+#          df_row = predictions_df[df_image_name][x].argmax()
+#          detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
+#          detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
+#          label = detection_data[1].index[0]
+#          clustered_label = self.clustered_label(detection_data[1].index[0])
+#  
+#          if not self.already_detected(label, detections, True):
+#            if clustered_label == clusteredSub:
+#              if not self.nms_discard(detection_data, detections, df):
+#                detections[label] = detection_data
+#                detections[label][1].sort(ascending=False)
+#            if clustered_label == clusteredObj:
+#              if not self.nms_discard(detection_data, detections, df):
+#                detections[label] = detection_data
+#                detections[label][1].sort(ascending=False)
 
     # Try to find the background objects and add these to the detections
     # We go straight to the clustered representation here.
@@ -160,7 +250,7 @@ class RCNNObjectExtractor:
       clustered_back = self.clustered_label(back)
 
       for idx,x in enumerate(top.index):
-        df_row = image_cols[df_image_name][predictions_df[df_image_name][x].argmax()]
+        df_row = [predictions_df[x].argmax()]
         detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
         detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
         label = detection_data[1].index[0]
@@ -177,7 +267,7 @@ class RCNNObjectExtractor:
       return True
     return False
 
-  def extract_topn(self, df, predictions_df, image_cols, labels_df):
+  def extract_topn(self, df, predictions_df, labels_df):
     # Get the top N predicted bounding boxes from the data
     image = self.args.imagefilename
     if self.args.verbose:
@@ -185,12 +275,11 @@ class RCNNObjectExtractor:
 
     split_image_name = self.args.imagefilename.split("/")
     pure_image_name = re.sub(r"-[1-3]","", split_image_name[-1])
-    df_image_name = pure_image_name
+    df_image_name = "%s/%s" % ("/export/scratch2/elliott/caffe/data/vlt", pure_image_name)
 
     # Get the top predictions for this image and sort them from highest to
     # lowest confidence
-    this_image = predictions_df[df_image_name]
-    top = predictions_df[df_image_name].max()
+    top = predictions_df.max()
     top.sort(ascending=False)
 
     # store the accepted detections in a dictionary.
@@ -198,20 +287,18 @@ class RCNNObjectExtractor:
     detections = dict() 
 
     for idx,x in enumerate(top.index):
-
-      df_row = image_cols[df_image_name][predictions_df[df_image_name][x].argmax()]
+      df_row = predictions_df[x].argmax()
       detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
       detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
       label = detection_data[1].index[0]
       if label not in detections:
         if self.nms_discard(detection_data, detections, df) == False:
           detections[label] = detection_data
-          detections[label][1].sort(ascending=False)  
 
       if len(detections) >= self.args.n:
         break
 
-    self.write_detections(df, detections, image, ".")
+    self.write_detections(df, detections, image, self.args.output)
 
   '''
   Write the detected objects to an LabelMe XML-style file on disk.
@@ -226,9 +313,13 @@ class RCNNObjectExtractor:
   We also run the graphviz identify command to get the dimensions of the image.  
   '''
   def write_detections(self, original_df, prediction_data, image_name, output_dir):
+
+    sorted_predictions = prediction_data.items()
+    sorted_predictions = sorted(sorted_predictions, key=lambda x: x[1][1][0], reverse=True)
   
-    xml_output_name = re.sub(r".jpg", ".semi.xml", image_name) 
-    jpg_name = re.sub(r"-[1-3]","", image_name)
+    xml_output_name = re.sub(r".hdf", ".semi.xml", self.args.imagefilename.split("/")[-1]) 
+    jpg_name = re.sub(r"-[\d]","", self.args.imagefilename.split("/")[-1])
+    jpg_name = re.sub(r"hdf","jpg", jpg_name)
     output = open("%s/%s" % (output_dir, xml_output_name), "w")
 
     # Open a new plotting output so we can write the annotations
@@ -244,30 +335,28 @@ class RCNNObjectExtractor:
     output.write("  <source><sourceImage>Caffe RCNN</sourceImage></source>\n")
     output.write("  <sourceAnnotation>Caffe RCNN</sourceAnnotation>\n")
   
-    sorted_predictions = prediction_data.items()
-    sorted_predictions = sorted(sorted_predictions, key=lambda x: float(x[1][1][0]), reverse=True)
-  
     color=iter(cm.Set1(np.linspace(0,1,len(prediction_data)+1)))
 
     if self.args.verbose:
-      print "Found the following objects:"
+      print "Saving the following detections to disk:"
 
     for idx,detection in enumerate(sorted_predictions):
       # Iterate through the detections and write them into the XML file
   
       bordercolor = color.next()
-  
+
+      label = detection[0]
       df_idx = detection[1][0]
-      o = detection[1][1]
+      confidence = detection[1][1][0] 
       if self.args.verbose:
-        print "%s" % (o[0:1].to_string())
+        print "%s | conf: %f" % (label, confidence)
       xmin = original_df.iloc[df_idx]['xmin']
       xmax = original_df.iloc[df_idx]['xmax']
       ymin = original_df.iloc[df_idx]['ymin']
       ymax = original_df.iloc[df_idx]['ymax']
   
       output.write("  <object>\n")
-      output.write("    <name>%s</name>\n" % o.index[0])
+      output.write("    <name>%s</name>\n" % label)
       output.write("    <deleted>0</deleted>\n")
       output.write("    <verified>0</verified>\n")
       output.write("    <date>0</date>\n")
@@ -278,17 +367,19 @@ class RCNNObjectExtractor:
       output.write("      <pt><x>%d</x><y>%d</y></pt>\n" % (xmax, ymax))
       output.write("      <pt><x>%d</x><y>%d</y></pt>\n" % (xmax, ymin))
       output.write("    </polygon>\n")
-      output.write("    <confidence>%s</confidence>\n" % o[0])
+      output.write("    <confidence>%s</confidence>\n" % confidence)
       output.write("    <color>%f,%f,%f</color>\n " % (bordercolor[0], bordercolor[1], bordercolor[2]))
       output.write("  </object>\n")
   
       # Add the detected object to the annotated image file we are creating
       coords = (xmin, ymin), xmax-xmin, ymax-ymin
-      currentAxis.add_patch(plt.Rectangle(*coords, fill=False, linewidth=5, edgecolor=bordercolor, label="%s %.2f" % (o.index[0], o[0])))
+      currentAxis.add_patch(plt.Rectangle(*coords, fill=False, linewidth=5, edgecolor=bordercolor, label="%s %.2f" % (label, confidence)))
   
     # Close the object annotations plot
     ax.axis("off")
-    plt.savefig("%s/%s-objects.pdf" % (output_dir, re.sub(r".jpg", "", image_name)), bbox_inches='tight')
+    plt.savefig("%s/%s-objects.pdf" % (output_dir, re.sub(r".hdf", "", image_name.split("/")[-1])), bbox_inches='tight')
+    if self.args.verbose:
+      print "Visualised detection output to %s" % ("%s/%s-objects.pdf" % (output_dir, re.sub(r".hdf", "", image_name)))
     plt.close()
     size = subprocess.check_output(['identify', "%s/%s" % (output_dir, jpg_name)])
     size = size.split(" ")
