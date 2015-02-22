@@ -17,6 +17,12 @@ class TestVDRParser:
   def __init__(self, args):
     self.args = args
 
+  def testVDRParser(self):
+    if self.args.semi == "true":
+      self.testSemi()
+    else:
+      self.testGold()
+
   def run_mst(self, path, k, proj, dicts, labels, visual, testTarget):
       '''
       Run the MST parser on each of the folds.
@@ -25,22 +31,22 @@ class TestVDRParser:
 
       target = "test" if testTarget == "true" else "dev"
   
-      targetTrees = "%s/target-parsed-%s" % (path, target)
+      targetCONLL = "%s/target-parsed-%s" % (path, target)
       targetXML = "%s/annotations-%s" % (path, target)
       targetImages = "%s/images-%s" % (path, target)
       clustersFile = "%s/objectClusters" % path
   
       outputVDRs = "%s/%s-MST" % (path, target)
-      testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s order:1" % (xms, xmx, classpath, path, k, targetTrees, targetXML, targetImages, proj, outputVDRs, clustersFile, visual)]
+      testcmd = ["java -Xms%s -Xmx%s -classpath %s mstparser.DependencyParser test model-name:%s/trained.model test-k:%s test-file:%s test-xml-file:%s test-images-file:%s loss-type:nopunc decode-type:%s output-file:%s format:CONLL pipe-name:DependencyPipeVisual clusters-file:%s %s order:1" % (xms, xmx, classpath, path, k, targetCONLL, targetXML, targetImages, proj, outputVDRs, clustersFile, visual)]
       print("Predicting VDRs...")
       subprocess.check_call(testcmd, shell=True)
       subprocess.check_call(["python conll_converter.py -f %s > %s" % (outputVDRs, outputVDRs+"-fixed")], shell=True)
       subprocess.call(['sed -i "s/, ]/ ]/g" %s/%s-MST-fixed' % (path, target)], shell=True)
       subprocess.call(["python mst-postfix.py -f %s > %s" % (outputVDRs+'-fixed', outputVDRs+"-tmp")], shell=True)
       subprocess.call(["cp " + outputVDRs+'-tmp ' + outputVDRs+'-fixed'], shell=True)
+      os.remove(outputVDRs+"-tmp")
 
-  def main(self):
-  
+  def testGold(self):
       # Get the arguments passed to the script by the user
       k = self.args.k
       d = self.args.decoder
@@ -81,7 +87,34 @@ class TestVDRParser:
               self.run_qdgmst(dir, k, d, runname+"-dicts", runname+"-labs", visual, self.args.test)
           else:
               sys.exit(2)
+
+  def testSemi(self):
+      # Get the arguments passed to the script by the user
+      k = self.args.k
+      d = self.args.decoder
+      runString = self.args.runString
+      model = self.args.model
+      visual = ""
+      base_dir = self.args.path
+      if self.args.useImageFeats == "true":
+        visual = "visual-features"
   
+      global verbose
+      if self.args.verbose == "true":
+          verbose = "verbose"
+      if model == "mst" or "qdgmst":
+          subprocess.call(["ant -f mstparser/build.xml package"], shell=True)
+  
+      runname = "%s-%s-%s-%s" % (model, k, d, runString)
+      self.runinfo_printer(base_dir, model, k, d, runname)
+  
+      if model == "mst":
+          self.run_mst(base_dir, k, d, runname+"-dicts", runname+"-labs", visual, self.args.test)
+      elif model == "qdgmst":
+          self.run_qdgmst(base_dir, k, d, runname+"-dicts", runname+"-labs", visual, self.args.test)
+      else:
+          sys.exit(2)
+
   def runinfo_printer(self, path, model, k, d, runname):
       print
       print(runname)
@@ -104,10 +137,11 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--useImageFeats", help="Should extra features be extracted for the parsing model?", default="false")
     parser.add_argument("-v", "--verbose", help="Verbose parser output?", default="false")
     parser.add_argument("-t", "--test", help="Run on the test data? Default=false, which runs on dev data", default="false")
+    parser.add_argument("-s", "--semi", help="Semi-supervised training process?", default="false")
 
     if len(sys.argv)==1:
       parser.print_help()
       sys.exit(1)
 
     p = TestVDRParser(parser.parse_args())
-    p.main()
+    p.testVDRParser()

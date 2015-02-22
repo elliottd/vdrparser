@@ -31,8 +31,34 @@ class TrainVDRParser:
       print("Training VDR Parsing Model...")
       subprocess.check_call(traincmd, shell=True)
 
-  def main(self):
+  def semiTraining(self):
+      # Get the arguments passed to the script by the user
+      k = self.args.k
+      d = self.args.decoder
+      runString = self.args.runString
+      model = self.args.model
+      base_dir = self.args.path
+      visual = ""
+      if self.args.useImageFeats == "true":
+        visual = "visual-features"
+  
+      global verbose
+      if self.args.verbose == "true":
+          verbose = "verbose"
+      if model == "mst" or "qdgmst":
+          subprocess.call(["ant -f mstparser/build.xml package"], shell=True)
 
+      runname = "%s-%s-%s-%s" % (model, k, d, runString)
+      self.runinfo_printer(base_dir, model, k, d, runname)
+  
+      if model == "mst":
+          self.run_mst(base_dir, k, d, runname+"-dicts", runname+"-labs", visual)
+      elif model == "qdgmst":
+          self.run_qdgmst(base_dir, k, d, runname+"-dicts", runname+"-labs", visual)          
+      else:
+          sys.exit(2)
+
+  def goldTraining(self):
       # Get the arguments passed to the script by the user
       k = self.args.k
       d = self.args.decoder
@@ -73,6 +99,12 @@ class TrainVDRParser:
               self.run_qdgmst(dir, k, d, runname+"-dicts", runname+"-labs", visual)          
           else:
               sys.exit(2)
+
+  def trainParser(self):
+    if self.args.semi == "true":
+      self.semiTraining()
+    else:
+      self.goldTraining()
   
   def runinfo_printer(self, path, model, k, d, runname):
       print
@@ -95,10 +127,11 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--runString", help="A useful runstring for your own reference")
     parser.add_argument("-i", "--useImageFeats", help="Should extra features be extracted for the parsing model?", default="false")
     parser.add_argument("-v", "--verbose", help="Verbose parser output?", default="false")
+    parser.add_argument("-s", "--semi", help="Semi-supervised training process?", default="false")
 
     if len(sys.argv)==1:
       parser.print_help()
       sys.exit(1)
 
     p = TrainVDRParser(parser.parse_args())
-    p.main()
+    p.trainParser()

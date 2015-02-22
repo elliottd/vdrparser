@@ -52,46 +52,43 @@ def calculate_spatial_relation(c1, c2, bounds1, bounds2):
   b2 = bounds2.split("|")
   b2 = b2[0:4]
 
-  b1 = [float(x) for x in b1]
-  b2 = [float(x) for x in b2]
+  overlapping = overlap(b1, b2)
 
-  overlapping = overlaps(b1, b2)
+  angle = __get_angle(c1,c2)
+  mAngle = angle - 0.0001
 
-  if overlapping == True:
-    return "on"
+  label = ""
 
-  else:
-    angle = __get_angle(c1,c2)
-    mAngle = angle - 0.0001
-    if mAngle > 315.0 and mAngle < 360.0:
-      return "beside"
-    elif mAngle > 1.0 and mAngle < 45.0:
-      return "beside"
-    elif mAngle > 135.0 and mAngle < 225.0:
-      return "beside"
-    elif mAngle > 45.0 and mAngle < 135.0:
-      return "below"
-    elif mAngle > 225.0 and mAngle < 315.0:
-      return "above"
+  if mAngle > 315.0 and mAngle < 360.0:
+    label ="beside"
+  if mAngle > 1.0 and mAngle < 45.0:
+    label = "beside"
+  if mAngle > 135.0 and mAngle < 225.0:
+    label = "beside"
+  if mAngle > 45.0 and mAngle < 135.0:
+    label = "below"
+  if mAngle > 225.0 and mAngle < 315.0:
+    label = "above"
+  if overlapping > 0.7:
+    label = "on"
+  if overlapping > 0.9:
+    label = "surrounds"
+
+  return label
 
 def get_polygon(data):
-    for line in data:
-        if line[1].isalpha():
-            polygon.append(line[:-1])
-            continue
-        if len(line) == 0:
-            continue
-        else:
-            line = line[:-2].split(" ")
-            points = []
-            for i in range(0, len(line), 2):
-                points.append((int(line[i]), int(line[i+1])))
-            p = Polygon(points)
-            return p
+    points = []
+    for point in data:
+            point = point.replace("[","")
+            point = point.replace("]","")
+            point = point.replace("'","")
+            point = point.split(",")
+            points.append((int(point[0]), int(point[1])))
+    
+    p = Polygon(points)
+    return p
 
-    return None
-
-def overlaps(rect1, rect2):
+def overlap(rect1, rect2):
 
   rect1_poly = get_polygon(rect1)
   rect2_poly = get_polygon(rect2)
@@ -100,16 +97,14 @@ def overlaps(rect1, rect2):
   rect2_hull = rect2_poly.convex_hull
 
   intersect = rect1_hull.intersection(rect2_hull).area
-  union = rect1_hull.intersection(rect2_hull).area
+  union = rect1_hull.union(rect2_hull).area
 
   if intersect == 0.0:
     overlap = 0.0
   else:
     overlap = intersect/union
 
-  if overlap > 0.5:
-    return True
-  return False
+  return overlap
 
 def area(pts):
     # Taken from http://paulbourke.net/geometry/polygonmesh/python.txt

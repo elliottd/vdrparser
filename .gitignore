@@ -7,3 +7,7 @@ mstparser/output/
 *.pyc
 results
 vdrDescription/
+*.tex
+*.pdf
+*.aux
+*.log

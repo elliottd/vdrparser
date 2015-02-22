@@ -25,23 +25,10 @@ class RCNNObjectExtractor:
     self.args = args
     self.clusters = None if self.args.clustersfile == None else aux.load_clusters(self.args.clustersfile)
 
-    # Load the HDF into memory here because it is a very expensive operation
-    # and associate everything with labels
+  def process_hdf(self):
 
-    files = os.listdir("/export/scratch1/elliott/caffe/data/vlt/_output/")
-    files = [x for x in files if x.startswith("x")]
-    files = sorted(files)
-
-    print "Loading HDF5 files ... "
-    self.df = pd.read_hdf("/export/scratch1/elliott/caffe/data/vlt/_output/"+files[0], 'df')
-
-    for idx,x in enumerate(files[1:]):
-      ndf = pd.read_hdf("/export/scratch1/elliott/caffe/data/vlt/_output/"+x, 'df')
-      self.df = self.df.append(ndf)
-      if idx % 100 == 0:
-        print "Loaded from %d/%d files" % (idx+1, len(files))
-
-    with open('/export/scratch1/elliott/caffe/data/ilsvrc12/det_synset_words.txt') as f:
+    self.df = pd.read_hdf(re.sub("jpg","hdf", self.args.imagefilename) , 'df')
+    with open('/export/scratch1/elliott/caffe/data/ilsvrc12/synset_words_first.txt') as f:
         self.labels_df = pd.DataFrame([
             {
                 'synset_id': l.strip().split(' ')[0],
@@ -63,14 +50,13 @@ class RCNNObjectExtractor:
     for x in self.image_cols:
       self.predictions_df[x] = pd.DataFrame(np.vstack(self.df.prediction.values[self.image_cols[x][0:-1]]), columns=self.labels_df['name'])
 
-    print "Initialised RCNN Extractor with annotations for %d images" % len(self.image_cols)
+    if self.args.verbose:
+      print "Initialised RCNN Extractor with annotations for %s" % self.args.imagefilename
 
-  def process_hdf(self, filename=None):
-
-    if filename != None:
-      return self.single_image(filename, self.df, self.predictions_df, self.image_cols, self.labels_df)
+    if self.args.training:
+      return self.single_image(self.args.imagefilename, self.df, self.predictions_df, self.image_cols, self.labels_df)
     else:
-      self.all_images(self.df, self.predictions_df, self.image_cols, self.labels_df)
+      self.extract_topn(self.df, self.predictions_df, self.image_cols, self.labels_df)
  
   def clustered_label(self, name):
     if name in self.clusters:
@@ -85,17 +71,15 @@ class RCNNObjectExtractor:
   '''
   def already_detected(self, objectLabel, detections, useClusters=False):
 
-  #  print "Checking if %s is already in %s" % (objectLabel, detections)
- 
     exists = False
 
-    for d in detections:
+    for d in detections.keys():
       if d == objectLabel:
         exists = True
 
     if useClusters:
       clusteredLabel = self.clustered_label(objectLabel)
-      for d in detections:
+      for d in detections.keys():
         if self.clustered_label(d) == clusteredLabel or d == clusteredLabel:
           exists = True
 
@@ -110,8 +94,8 @@ class RCNNObjectExtractor:
   '''
   def single_image(self, image_name, df, predictions_df, image_cols, labels_df):
     split_image_name = image_name.split("/")
-    image_name = re.sub(r"-[1-3]","", split_image_name[4])
-    df_image_name = "/export/scratch2/elliott/caffe/data/vlt/" + image_name
+    pure_image_name = re.sub(r"-[1-3]","", split_image_name[-1])
+    df_image_name = pure_image_name
 
     if self.args.sub != None and self.args.obj != None:
 
@@ -123,27 +107,25 @@ class RCNNObjectExtractor:
 
       # store the accepted detections in a dictionary.
       # label -> [data concerning that label]
-      detections = {} 
+      detections = dict() 
 
       for idx,x in enumerate(top.index):
-
-        if len(detections) == 2:
-          # found candidates for both the subject and object
-          break
 
         df_row = image_cols[df_image_name][predictions_df[df_image_name][x].argmax()]
         detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
         detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
         label = detection_data[1].index[0]
 
-        if not self.already_detected(label, detections):
+        if label not in detections:
           if label == self.args.sub or label == self.args.obj:
-            if not self.nms_discard(detection_data, detections, df):
-              detections[x] = detection_data
-              detections[x][1].sort(ascending=False)  
+            if self.nms_discard(detection_data, detections, df) == False:
+              print label, detections.keys()
+              detections[label] = detection_data
+              detections[label][1].sort(ascending=False)  
 
       if len(detections) < 2:
-        print "Only found %s in detections, backing off to clustered labels" % detections.keys()
+        if self.args.verbose:
+          print "Only found %s in detections, backing off to clustered labels" % detections.keys()
         # We didn't find both a subject and an object using the original labels
         # so let's backoff to the clustered labels
         clusteredSub = self.clustered_label(self.args.sub)
@@ -164,12 +146,12 @@ class RCNNObjectExtractor:
           if not self.already_detected(label, detections, True):
             if clustered_label == clusteredSub:
               if not self.nms_discard(detection_data, detections, df):
-                detections[x] = detection_data
-                detections[x][1].sort(ascending=False)
+                detections[label] = detection_data
+                detections[label][1].sort(ascending=False)
             if clustered_label == clusteredObj:
               if not self.nms_discard(detection_data, detections, df):
-                detections[x] = detection_data
-                detections[x][1].sort(ascending=False)
+                detections[label] = detection_data
+                detections[label][1].sort(ascending=False)
 
     # Try to find the background objects and add these to the detections
     # We go straight to the clustered representation here.
@@ -187,37 +169,49 @@ class RCNNObjectExtractor:
         if not self.already_detected(label, detections, True):
           if clustered_label == clustered_back:
             if not self.nms_discard(detection_data, detections, df):
-              detections[x] = detection_data
-              detections[x][1].sort(ascending=False)
+              detections[clustered_label] = detection_data
+              detections[clustered_label][1].sort(ascending=False)
 
     if len(detections) > 0:
-      self.write_detections(df, detections, image_name, self.args.output)
+      self.write_detections(df, detections, split_image_name[-1], self.args.output)
       return True
     return False
 
-  def all_images(self, df, predictions_df, image_cols, labels_df):
+  def extract_topn(self, df, predictions_df, image_cols, labels_df):
     # Get the top N predicted bounding boxes from the data
-    for image in predictions_df:
-      print "Top %d predictions for %s" % (self.args.n, image)
-      top = predictions_df[image].max()
-      top.sort(ascending=False)
-      top_detections = {}
-      for idx,x in enumerate(top.index):
-        df_row = image_cols[image][predictions_df[image][x].argmax()]
-        detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
-        detection_data[1].sort(ascending=False)
-        if self.clusters == None:
-          if not self.nms_discard(detection_data, top_detections, df):
-            top_detections[x] = detection_data
-            top_detections[x][1].sort(ascending=False)
-        elif self.clusters != None and detection_data[1].index[0] in self.clusters:
-          if not self.nms_discard(detection_data, top_detections, df):
-            top_detections[x] = detection_data
-            top_detections[x][1].sort(ascending=False)      
-        if len(top_detections) >= self.args.n:
-          break
-  
-      self.write_detections(df, top_detections, image, self.args.output)
+    image = self.args.imagefilename
+    if self.args.verbose:
+      print "Extracting the top %d predictions for %s" % (self.args.n, image)
+
+    split_image_name = self.args.imagefilename.split("/")
+    pure_image_name = re.sub(r"-[1-3]","", split_image_name[-1])
+    df_image_name = pure_image_name
+
+    # Get the top predictions for this image and sort them from highest to
+    # lowest confidence
+    this_image = predictions_df[df_image_name]
+    top = predictions_df[df_image_name].max()
+    top.sort(ascending=False)
+
+    # store the accepted detections in a dictionary.
+    # label -> [data concerning that label]
+    detections = dict() 
+
+    for idx,x in enumerate(top.index):
+
+      df_row = image_cols[df_image_name][predictions_df[df_image_name][x].argmax()]
+      detection_data = [df_row, pd.Series(df['prediction'].iloc[df_row], index=labels_df['name'])]
+      detection_data[1].sort(ascending=False) # Sort by confidence over labels for each detected object
+      label = detection_data[1].index[0]
+      if label not in detections:
+        if self.nms_discard(detection_data, detections, df) == False:
+          detections[label] = detection_data
+          detections[label][1].sort(ascending=False)  
+
+      if len(detections) >= self.args.n:
+        break
+
+    self.write_detections(df, detections, image, ".")
 
   '''
   Write the detected objects to an LabelMe XML-style file on disk.
@@ -233,20 +227,19 @@ class RCNNObjectExtractor:
   '''
   def write_detections(self, original_df, prediction_data, image_name, output_dir):
   
-    split_image_name = "%s/%s" % (output_dir, image_name)
-    detections_file = split_image_name.replace("jpg","semi.xml")
-    detections_file = "%s" % (detections_file)
-    output = open("%s" % detections_file, "w")
+    xml_output_name = re.sub(r".jpg", ".semi.xml", image_name) 
+    jpg_name = re.sub(r"-[1-3]","", image_name)
+    output = open("%s/%s" % (output_dir, xml_output_name), "w")
 
     # Open a new plotting output so we can write the annotations
     # directly into the image file.
-    im = plt.imread("%s/%s" % (output_dir, image_name))
+    im = plt.imread("%s/%s" % (output_dir, jpg_name))
     ax = plt.subplot(111)
     currentAxis = plt.gca()
     ax.imshow(im)
   
     output.write("<annotation>\n")
-    output.write("  <filename>%s</filename>\n" % image_name)
+    output.write("  <filename>%s</filename>\n" % jpg_name)
     output.write("  <folder></folder>\n")
     output.write("  <source><sourceImage>Caffe RCNN</sourceImage></source>\n")
     output.write("  <sourceAnnotation>Caffe RCNN</sourceAnnotation>\n")
@@ -256,7 +249,8 @@ class RCNNObjectExtractor:
   
     color=iter(cm.Set1(np.linspace(0,1,len(prediction_data)+1)))
 
-    print "Found the following objects:"
+    if self.args.verbose:
+      print "Found the following objects:"
 
     for idx,detection in enumerate(sorted_predictions):
       # Iterate through the detections and write them into the XML file
@@ -265,7 +259,8 @@ class RCNNObjectExtractor:
   
       df_idx = detection[1][0]
       o = detection[1][1]
-      print "%s" % (o[0:1].to_string())
+      if self.args.verbose:
+        print "%s" % (o[0:1].to_string())
       xmin = original_df.iloc[df_idx]['xmin']
       xmax = original_df.iloc[df_idx]['xmax']
       ymin = original_df.iloc[df_idx]['ymin']
@@ -293,22 +288,21 @@ class RCNNObjectExtractor:
   
     # Close the object annotations plot
     ax.axis("off")
-    plt.savefig("%s-objects.pdf" % (split_image_name[:-4]), bbox_inches='tight')
+    plt.savefig("%s/%s-objects.pdf" % (output_dir, re.sub(r".jpg", "", image_name)), bbox_inches='tight')
     plt.close()
-
-    # Get the size of the image using the identity command
-#    size = subprocess.check_output(['identify', "%s" % split_image_name])
-#    size = size.split(" ")
-#    size = size[2].split("x")
-#  
-#    output.write("  <imagesize>\n")
-#    output.write("    <nrows>%s</nrows>\n" % size[0])
-#    output.write("    <ncols>%s</ncols>\n" % size[1])
-#    output.write("  </imagesize>\n")
-    output.write("</annotation>\n")
-    output.close()
+    size = subprocess.check_output(['identify', "%s/%s" % (output_dir, jpg_name)])
+    size = size.split(" ")
+    size = size[2].split("x")
   
-    print "Wrote predictions to %s" % detections_file
+    output.write("  <imagesize>\n")
+    output.write("    <nrows>%s</nrows>\n" % size[0])
+    output.write("    <ncols>%s</ncols>\n" % size[1])
+    output.write("  </imagesize>\n")
+    output.write("</annotation>")
+    output.close()
+
+    if self.args.verbose:
+      print "Wrote predictions to %s" % xml_output_name
   
   '''
   We need to discard proposals that overlap with higher confidence detections.
@@ -354,6 +348,8 @@ if __name__ == "__main__":
   parser.add_argument("--sub", required=0, help="Look for a specific subject?")
   parser.add_argument("--obj", required=0, help="Look for a specific object?")
   parser.add_argument("--image", required=0, help="Extract from a specific image?")
+  parser.add_argument("--verbose", help="Should the output be verbose?", action="store_true")
+  parser.add_argument("--training", help="Are we extracting training data or test data?", action="store_true", default=True)
 
   if len(sys.argv)==1:
     parser.print_help()
