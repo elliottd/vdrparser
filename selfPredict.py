@@ -4,6 +4,7 @@ import sys
 import subprocess
 import argparse
 from testVDRParser import TestVDRParser
+from trainVDRParser import TrainVDRParser
 from RCNNObjectExtractor import RCNNObjectExtractor
 import aux
 from vdrDescription import GenerateDescriptions
@@ -79,6 +80,10 @@ class Test:
     print "==============================="
     print "Step 2: Predicting VDR"
     print "==============================="
+
+    if not os.path.isfile("%s/%s" % (self.args.images, "trained.model")):
+      self.trainParser()
+
     pargs = argparse.Namespace()
     pargs.path = self.args.images
     pargs.split = "true"
@@ -92,6 +97,26 @@ class Test:
     pargs.test = "false"
     vdrParser = TestVDRParser(pargs)
     vdrParser.testVDRParser()
+
+  '''
+  Use the semi-supervised training data to train a VDR Parsing model.
+  '''
+  def trainParser(self, k=5):
+    print "==============================="
+    print "Step 0: Training the VDR Parser"
+    print "==============================="
+    pargs = argparse.Namespace()
+    pargs.path = self.args.images
+    pargs.split = "true"
+    pargs.model = "mst"
+    pargs.decoder = "non-proj"
+    pargs.runString = "RCNNSemi"
+    pargs.verbose = "false"
+    pargs.semi = "true"
+    pargs.k = k
+    pargs.useImageFeats = "false"
+    vdrParser = TrainVDRParser(pargs)
+    vdrParser.trainParser()
 
   def generateDescriptions(self):
     print "====================================="
