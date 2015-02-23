@@ -58,30 +58,6 @@ class Optimise:
     plt.savefig("parameter-optimisation.pdf")
     plt.close()
 
-#    initk = 1
-#    bestk = 1
-#    maxk = 5
-#    bestmeteor = 0.0
-#
-#    meteorscores = [] # Prime it with two zeroes since we don't consider those
-#    xs = [i for i in xrange(1, maxk)]
-#    
-#    self.extractObjects(12)
-#
-#    for k in range (initk, maxk):
-#      self.trainParser(k) # TODO find the optimal value of K-best
-#      self.predictVDR(k)
-#      meteor = self.generateDescriptions()
-#      if meteor > bestmeteor:
-#        bestmeteor = meteor
-#        bestk = k
-#      meteorscores.append(meteor)
-#
-#    plt.plot(xs, meteorscores, 'r-')
-#    plt.ylabel('Meteor score')
-#    plt.xlabel('k-best parses')
-#    plt.show()
-
     end = timer()
 
     print "Parameter optimisation took %f seconds" % (end - start)
@@ -143,11 +119,11 @@ class Optimise:
       useful_detections.append(conll_file)
         
     # Now we create target-parsed-train-semi from the examples we managed to find in the data
-    handle = open("test_list","w")
+    handle = open("dev_list","w")
     handle.write("cat %s > %s/target-parsed-dev" % (aux.glist_to_str(useful_detections), self.args.images))
     handle.close()
-    subprocess.check_call(["sh", "test_list"])
-    os.remove("test_list")
+    subprocess.check_call(["sh", "dev_list"])
+    os.remove("dev_list")
 
   '''
   Use the semi-supervised training data to train a VDR Parsing model.
@@ -201,6 +177,9 @@ class Optimise:
   Reads the content of the XML file into memory and creates a semi-supervised
   VDR from the data. Attaches the person to the object, given the automatically
   calculated spatial relationship.  Any other objects are root attached.  
+
+  This function ALWAYS writes a fake relationship and parent because it is only
+  creating data for the parser.
   '''
   def __xml2conll__(self, output_directory, filename):
     semi_objects = aux.parse_xml("%s/%s" % (output_directory, re.sub(r".jpg", ".semi.xml", filename)))
