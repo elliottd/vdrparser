@@ -17,6 +17,56 @@ class SemiSupervisedVDR:
   def __init__(self, args):
     self.args = args
 
+  '''
+  Look through the Dependency Parse representation of this sentence to find
+  the best candidates for the subject and object.
+
+  The current implentation looks for the following:
+    nsubj -> Subject
+    dobj -> Object
+
+  A matching token is stripped of any punctuation, lowercased, and lemmatized so
+  there is a better chance of it firing the relevant object detector.
+
+  TODO: can we back-off to words tagged with NN if the sentence does not 
+        contain a verb?
+  '''
+  def extractSubjectObject(self, sentence):
+    for word in sentence:
+      if sub == None and word[7] == "nsubj":
+        sub = word[2].translate(string.maketrans("",""), string.punctuation)
+        sub = sub.lower()
+        sub = WordNetLemmatizer().lemmatize(sub, pos="n")
+      if obj == None and word[7] == "dobj":
+        obj = word[2].translate(string.maketrans("",""), string.punctuation)
+        obj = obj.lower()
+        obj = WordNetLemmatizer().lemmatize(obj, pos="n")
+
+    # The sentence did not contain a verb, so we need to back-off to
+    # using the tokens tagged with NN (word[4]). Brute-force take the first
+    # two tokens tagged with NN.
+    #
+    # Example use : A big cow in a field. -> cow, field.
+    #if sub == None:
+    #  for word in sentence:
+    #    if word[4] == "NN":
+    #      sub = word[2].translate(string.maketrans("",""), string.punctuation)
+    #      sub = sub.lower()
+    #      sub = WordNetLemmatizer().lemmatize(sub, pos="n")
+    #      break
+
+    #if obj == None:
+    #  for word in sentence:
+    #    if word[4] == "NN":
+    #      proposal = word[2].translate(string.maketrans("",""), string.punctuation)
+    #      proposal = proposal.lower()
+    #      proposal = WordNetLemmatizer().lemmatize(proposal, pos="n")
+    #      if proposal != sub:
+    #        obj = proposal
+    #        break  
+
+    return sub, obj
+
   def createTrainingData(self):
   
     # Prepare the RCNN Object Extractions in advance because this is memory
@@ -59,68 +109,30 @@ class SemiSupervisedVDR:
         else:
           sentence = training_parsed[idx]
 
-        for word in sentence:
-          if sub == None and word[7] == "nsubj":
-            sub = word[2].translate(string.maketrans("",""), string.punctuation)
-            sub = sub.lower()
-            sub = WordNetLemmatizer().lemmatize(sub, pos="n")
-          if (obj == None and word[7] == "pobj") or (obj == None and word[7] == "dobj"):
-            obj = word[2].translate(string.maketrans("",""), string.punctuation)
-            obj = obj.lower()
-            obj = WordNetLemmatizer().lemmatize(obj, pos="n")
-
-        # The sentence did not contain a verb, so we need to back-off to
-        # using the tokens tagged with NN (word[4]). Brute-force take the first
-        # two tokens tagged with NN.
-        #
-        # Example use : A big cow in a field. -> cow, field.
-        #if sub == None:
-        #  for word in sentence:
-        #    if word[4] == "NN":
-        #      sub = word[2].translate(string.maketrans("",""), string.punctuation)
-        #      sub = sub.lower()
-        #      sub = WordNetLemmatizer().lemmatize(sub, pos="n")
-        #      break
-
-        #if obj == None:
-        #  for word in sentence:
-        #    if word[4] == "NN":
-        #      proposal = word[2].translate(string.maketrans("",""), string.punctuation)
-        #      proposal = proposal.lower()
-        #      proposal = WordNetLemmatizer().lemmatize(proposal, pos="n")
-        #      if proposal != sub:
-        #        obj = proposal
-        #        break
-  
-        # Extract the most likely background objects from the second sentence in the VLT data
-        #if self.args.vlt:
-        #  sentence = training_parsed[(2*idx)+1]
-        #  for word in sentence:
-        #    if word[4] == "NN":
-        #      others.append(word[2])
+        sub, obj = self.extractSubjectObject(sentence)
 
         # Only try to create a semi-supervised training instance if we have
         # found both a subject and an object.
         detector_output = False
         image_path = training_image.replace(self.args.descriptions, "")
-        if sub != None:
-          if obj != None:
-            if self.args.verbose:
-              print "Searching for %s, %s, and %s in the object detections" % (sub, obj, aux.glist_to_str(others))
-            detector = RCNNObjectExtractor(rcnn_args)
-            detector.args.sub = sub
-            detector.args.obj = obj
-            detector.args.others = others
-            detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub(r".malt",".hdf", image_path))
-            detector_output = detector.process_hdf()
-  
-        if detector_output == False:
+        if sub != None and obj != None:
           if self.args.verbose:
-            print "Didn't find the desired objects, continuing to the next image\n"
-          continue
+            print "Searching for %s and %s in the image" % (sub, obj)
+          detector = RCNNObjectExtractor(rcnn_args)
+          detector.args.sub = sub
+          detector.args.obj = obj
+          detector.args.others = others
+          detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub(r".malt",".hdf", image_path))
+          detector_output = detector.process_hdf()
+          if detector_output == False:
+            if self.args.verbose:
+              print "Didn't find the desired objects, continuing to the next image\n"
+            continue
   
-        conll_file = self.xml2conll(rcnn_args.output, image_path, sub, obj, clusters)
-        useful_detections.append(conll_file)
+          conll_file = self.xml2conll(rcnn_args.output, image_path, sub, obj, clusters)
+          useful_detections.append(conll_file)
+        else:
+          print "Didn't find a subject and object in the description, discarding"
   
     # Now we create target-parsed-train-semi from the examples we managed to find in the data
     handle = open("semi_supervised_list","w")
