@@ -35,9 +35,13 @@ class Train:
    POS Tag and Dependency Parse the descriptions
   '''
   def descriptions(self):
+    if not self.args.descriptions:
+      return
+
     print "==========================================================="
     print "Step 1: POS Tagging and Dependency Parsing the descriptions"
     print "==========================================================="
+
     dargs = argparse.Namespace()
     dargs.path = self.args.descriptions
     dargs.split = "train"
@@ -51,9 +55,13 @@ class Train:
   descriptions and the Caffe-annotated images.
   '''
   def images(self):
+    if not self.args.images:
+      return
+
     print "====================================================================="
     print "Step 2: Extracting objects from images and creating VDR training data"
     print "====================================================================="
+
     iargs = argparse.Namespace()
     iargs.images = self.args.images
     iargs.descriptions = self.args.descriptions
