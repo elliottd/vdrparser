@@ -6,6 +6,9 @@ import argparse
 from collections import defaultdict
 import subprocess
 import aux
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib import cm
@@ -89,7 +92,6 @@ class RCNNObjectExtractor:
           exists = True
 
     return exists
-    
 
   '''
   Search through the list of detected objects using Wordnet hypernyms to guide
@@ -262,7 +264,8 @@ class RCNNObjectExtractor:
               detections[clustered_label] = detection_data
               detections[clustered_label][1].sort(ascending=False)
 
-    if len(detections) > 0:
+    if len(detections) == 2:
+
       self.write_detections(df, detections, split_image_name[-1], self.args.output)
       return True
     return False
