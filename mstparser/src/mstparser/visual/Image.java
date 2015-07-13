@@ -167,6 +167,21 @@ public class Image {
 				}
 				j++;
 			}
+                        if (nearest == null)
+                        {
+      			for (ParserPolygon p2: polygons)
+      			{
+    				double calculation = p1.calculateDistanceFromObject(p2);
+    				if (calculation - 0.0000001 < distance)
+    				{
+    					distance = calculation;
+    					nearest = p2;
+    					nearestIndex = j;
+    				}
+    				j++;
+    			}
+                          
+                        }
 			p1.nearestPolygon = nearest;
 			nearest.nearestPolygon = p1;
 			p1.nearestIndex = nearestIndex;
