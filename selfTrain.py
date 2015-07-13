@@ -31,10 +31,10 @@ class Train:
     self.descriptions()
     self.images()
 
-  '''
-   POS Tag and Dependency Parse the descriptions
-  '''
   def descriptions(self):
+    '''
+     POS Tag and Dependency Parse the descriptions
+    '''
     if not self.args.descriptions:
       return
 
@@ -50,11 +50,11 @@ class Train:
     stanford = DependencyParse(dargs)
     stanford.parse()
 
-  '''
-  Create Visual Dependency Representation training data, given the
-  descriptions and the Caffe-annotated images.
-  '''
   def images(self):
+    '''
+    Create Visual Dependency Representation training data, given the
+    descriptions and the Caffe-annotated images.
+    '''
     if not self.args.images:
       return
 
@@ -77,7 +77,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--images", help="path to the images. Expects one .JPG and one .HDF file per image ")
     parser.add_argument("-d", "--descriptions", help="path to the descriptions. Expects X-{1-N} files per image")
     parser.add_argument("-v", "--verbose", help="Do you want verbose output?", action="store_true")
-    parser.add_argument("-t", "--test", help="Run on the test data? Default is dev data", action="store_true")
     parser.add_argument("--vlt", help="Running on the VLT data set? Has implications for how the descriptions are processed. Default is false.", action="store_true", default=False)
 
     if len(sys.argv)==1:

@@ -15,12 +15,6 @@ class POSTag:
     self.args = args
 
   def tag(self):
-  
-      directory = self.args.path
-  
-      print
-      print("Step 1: POS tagging the data in %s" % directory)
-  
       ''' 
       Process the linguistic data.
       We need to cat everything to make the tagger and parser fast.
@@ -29,7 +23,12 @@ class POSTag:
       Then we need to unpack the tagged and parsed representations into
       individual files. 
       '''
-      
+  
+      directory = self.args.path
+  
+      print
+      print("Step 1: POS tagging the data in %s" % directory)
+  
       filelist = self.concatenate_text(directory, directory+"/"+self.args.split, directory+"/descriptions")
       self.pos_tag(directory, "descriptions")
       self.unfurl_tags(directory+"/descriptions-tagged", filelist, directory, filelist)
@@ -126,11 +125,6 @@ class DependencyParse:
       return definitive_files
 
   def parse(self):
-  
-      directory = self.args.path
-  
-      print("Step 2: dependency parsing the data in %s" % directory)
-  
       ''' 
       Process the linguistic data.
       We need to cat everything to make the tagger and parser fast.
@@ -139,7 +133,11 @@ class DependencyParse:
       Then we need to unpack the tagged and parsed representations into
       individual files. 
       '''
-      
+  
+      directory = self.args.path
+  
+      print("Step 2: dependency parsing the data in %s" % directory)
+  
       self.to_conll_format(directory+"/descriptions-tagged")
       self.malt_parse(directory+"/descriptions-tagged-conll")
       self.unfurl_parsed(directory+"/descriptions-tagged-conll-parsed", self.filelist(), directory)
