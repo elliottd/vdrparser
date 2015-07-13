@@ -32,6 +32,10 @@ class SemiSupervisedVDR:
         contain a verb?
   '''
   def extractSubjectObject(self, sentence):
+
+    sub = None
+    obj = None
+
     for word in sentence:
       if sub == None and word[7] == "nsubj":
         sub = word[2].translate(string.maketrans("",""), string.punctuation)
@@ -47,23 +51,23 @@ class SemiSupervisedVDR:
     # two tokens tagged with NN.
     #
     # Example use : A big cow in a field. -> cow, field.
-    #if sub == None:
-    #  for word in sentence:
-    #    if word[4] == "NN":
-    #      sub = word[2].translate(string.maketrans("",""), string.punctuation)
-    #      sub = sub.lower()
-    #      sub = WordNetLemmatizer().lemmatize(sub, pos="n")
-    #      break
+    if sub == None:
+      for word in sentence:
+        if word[4] == "NN":
+          sub = word[2].translate(string.maketrans("",""), string.punctuation)
+          sub = sub.lower()
+          sub = WordNetLemmatizer().lemmatize(sub, pos="n")
+          break
 
-    #if obj == None:
-    #  for word in sentence:
-    #    if word[4] == "NN":
-    #      proposal = word[2].translate(string.maketrans("",""), string.punctuation)
-    #      proposal = proposal.lower()
-    #      proposal = WordNetLemmatizer().lemmatize(proposal, pos="n")
-    #      if proposal != sub:
-    #        obj = proposal
-    #        break  
+    if obj == None:
+      for word in sentence:
+        if word[4] == "NN":
+          proposal = word[2].translate(string.maketrans("",""), string.punctuation)
+          proposal = proposal.lower()
+          proposal = WordNetLemmatizer().lemmatize(proposal, pos="n")
+          if proposal != sub:
+            obj = proposal
+            break
 
     return sub, obj
 
@@ -141,8 +145,27 @@ class SemiSupervisedVDR:
     subprocess.check_call(["sh", "semi_supervised_list"])
     os.remove("semi_supervised_list")
 
+    self.createAnnotationsFiles(useful_detections)
+
     end = timer()
     print "Created NoisyVDR training data in %f seconds" % (end - start)
+
+  '''
+  The annotations file is read by the VDR Parser to get at the object regions directly.
+  '''
+  def createAnnotationsFiles(self, detections):
+    target = "train"
+    ahandle = open("%s/annotations-%s" % (self.args.images, target), "w")
+    ihandle = open("%s/images-%s" % (self.args.images, target), "w")
+    for f in detections:
+      xmlname = re.sub(r".conll", ".xml", f)
+      jpgname = re.sub(r"-[1-5].semi.conll", ".jpg", f)
+      prefix = "/export/scratch2/elliott/src/private/"
+      ahandle.write("%s/%s\n" % (prefix, xmlname))
+      ihandle.write("%s/%s\n" % (prefix, jpgname))
+
+    ahandle.close()
+    ihandle.close()
   
   def clustered_label(self, name, clusters):
     if name in clusters:
