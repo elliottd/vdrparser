@@ -3,26 +3,32 @@ import re
 import sys
 import subprocess
 import argparse
+from timeit import default_timer as timer
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy
+
 from testVDRParser import TestVDRParser
 from trainVDRParser import TrainVDRParser
 from RCNNObjectExtractor import RCNNObjectExtractor
 import aux
 from vdrDescription import GenerateDescriptions
-import matplotlib.pyplot as plt
-from timeit import default_timer as timer
 
 class cd:
-    """Context manager for changing the current working directory"""
-    """http://stackoverflow.com/questions/431684/how-do-i-cd-in-python"""
-    def __init__(self, newPath):
-        self.newPath = newPath
+  '''Context manager for changing the current working directory
+     http://stackoverflow.com/questions/431684/how-do-i-cd-in-python
+  '''
+  def __init__(self, newPath):
+    self.newPath = newPath
 
-    def __enter__(self):
-        self.savedPath = os.getcwd()
-        os.chdir(self.newPath)
+  def __enter__(self):
+    self.savedPath = os.getcwd()
+    os.chdir(self.newPath)
 
-    def __exit__(self, etype, value, traceback):
-        os.chdir(self.savedPath)
+  def __exit__(self, etype, value, traceback):
+    os.chdir(self.savedPath)
 
 class Optimise:
 
@@ -39,22 +45,36 @@ class Optimise:
     maxn = self.args.maxobjects+1
 
     meteorscores = [] # Prime it with two zeroes since we don't consider those
+    bleuscores = []
+    terscores = []
     xs = [i for i in xrange(2, maxn)]
 
     self.__preparereferences__(self.args.descriptions)
-    self.trainParser()
+    if not os.path.isfile("%s/%s" % (self.args.images, "trained.model")):
+      self.trainParser()
     for n in range (initn, maxn):
       self.extractObjects(n)
       self.predictVDR()
-      meteor = self.generateDescriptions()
+      bleu, meteor, ter = self.generateDescriptions(n)
       if meteor > bestmeteor:
         bestmeteor = meteor
         bestn = n
       meteorscores.append(meteor)
+      bleuscores.append(bleu)
+      terscores.append(ter)
 
-    plt.plot(xs, meteorscores, 'ro-')
-    plt.ylabel('Meteor score')
+    # TODO: this is bad, fix it.
+    # Squash the raw numbers from a jack-knife into a single number,
+    # discarding the std.dev.
+    meteorscores = [numpy.mean(x) for x in meteorscores]
+    bleuscores = [numpy.mean(x) for x in bleuscores]
+    terscores = [numpy.mean(x) for x in terscores]
+
+    plt.plot(xs, meteorscores, 'ro-', label="Meteor")
+    plt.plot(xs, bleuscores, 'bo-', label="BLEU4")
+    plt.ylabel('Score')
     plt.xlabel('Number of detected objects')
+    plt.legend(loc=4)
     plt.savefig("parameter-optimisation.pdf")
     plt.close()
 
@@ -63,11 +83,10 @@ class Optimise:
     print "Parameter optimisation took %f seconds" % (end - start)
     print "Best dev set performance found at N=%d, Meteor=%s" % (bestn, bestmeteor)
 
-
-  '''
-  Use the semi-supervised training data to train a VDR Parsing model.
-  '''
   def trainParser(self, k=5):
+    '''
+    Use the semi-supervised training data to train a VDR Parsing model.
+    '''
     print "==============================="
     print "Step 0: Training the VDR Parser"
     print "==============================="
@@ -80,15 +99,15 @@ class Optimise:
     pargs.verbose = "false"
     pargs.semi = "true"
     pargs.k = k
-    pargs.useImageFeats = "false"
+    pargs.useImageFeats = "true"
     vdrParser = TrainVDRParser(pargs)
     vdrParser.trainParser()
 
-  '''
-  Extract the N-most confident objects from images. These objects represent
-  the image for the sake of the VDR Parsing and Image Description.
-  '''
   def extractObjects(self, n):
+    '''
+    Extract the N-most confident objects from images. These objects represent
+    the image for the sake of the VDR Parsing and Image Description.
+    '''
     
     print "============================================"
     print "Step 1: Extracting Top-%d objects from images" % n
@@ -109,26 +128,44 @@ class Optimise:
     rcnn_args.n = n
     rcnn_args.output = self.args.images
 
-    useful_detections = []
+    detections = []
 
     for f in targetfiles:
       detector = RCNNObjectExtractor(rcnn_args)
       detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub("jpg","hdf", f))
       detector_output = detector.process_hdf()
       conll_file = self.__xml2conll__(rcnn_args.output, f)
-      useful_detections.append(conll_file)
+      detections.append(conll_file)
         
     # Now we create target-parsed-train-semi from the examples we managed to find in the data
-    handle = open("dev_list","w")
-    handle.write("cat %s > %s/target-parsed-dev" % (aux.glist_to_str(useful_detections), self.args.images))
+    handle = open("%s_list" % target,"w")
+    handle.write("cat %s > %s/target-parsed-%s" % (aux.glist_to_str(detections), self.args.images, target))
     handle.close()
-    subprocess.check_call(["sh", "dev_list"])
-    os.remove("dev_list")
+    subprocess.check_call(["sh", "%s_list" % target])
+    os.remove("%s_list" % target)
+    self.createAnnotationsFiles(detections)
 
-  '''
-  Use the semi-supervised training data to train a VDR Parsing model.
-  '''
+  def createAnnotationsFiles(self, detections):
+    '''
+    The annotations file is read by the VDR Parser to get at the object regions directly.
+    '''
+    target = "dev"
+    ahandle = open("%s/annotations-%s" % (self.args.images, target), "w")
+    ihandle = open("%s/images-%s" % (self.args.images, target), "w")
+    for f in detections:
+      xmlname = re.sub(r".jpg.parsed", ".semi.xml", f)
+      jpgname = re.sub(r".jpg.parsed", ".jpg", f)
+      prefix = "/export/scratch2/elliott/src/private/"
+      ahandle.write("%s/%s\n" % (prefix, xmlname))
+      ihandle.write("%s/%s\n" % (prefix, jpgname))
+
+    ahandle.close()
+    ihandle.close()
+
   def predictVDR(self, k=5):
+    '''
+    Use the semi-supervised training data to train a VDR Parsing model.
+    '''
     print "==============================="
     print "Step 2: Predicting VDR"
     print "==============================="
@@ -140,17 +177,16 @@ class Optimise:
     pargs.decoder = "non-proj"
     pargs.semi = "true"
     pargs.runString = "RCNNSemi"
-    pargs.useImageFeats = "false"
-    pargs.verbose = "false"
+    pargs.useImageFeats = "true"
+    pargs.verbose = "true"
     pargs.test = "false"
     vdrParser = TestVDRParser(pargs)
     vdrParser.testVDRParser()
 
-  def generateDescriptions(self):
-    print "====================================="
-    print "Step 3: Generating Image Descriptions"
-    print "====================================="
-
+  def generateDescriptions(self, n):
+    print "==========================================="
+    print "Step 3: Generating Image Descriptions (n=%d)" % n
+    print "==========================================="
 
     gargs = argparse.Namespace()
     gargs.images = "../"+self.args.images
@@ -166,22 +202,32 @@ class Optimise:
     gargs.second = False
     gargs.semi = True
     gargs.verbose = False
+    gargs.gigaword = False
+    gargs.postfix = ""
+
+    bleu = []
+    meteor = []
+    ter = []
 
     with cd("vdrDescription"):
-      g = GenerateDescriptions.RunExperiment(gargs)
-      g.run_experiment()
+      g = GenerateDescriptions.GenerateDescriptions(gargs)
+      g.generate()
+      b, m, t = self.__sentence_level_scores__()
+      bleu.append(b)
+      meteor.append(m)
+      ter.append(t)
 
-    return self.__meteorscore__()
+    return bleu, meteor, ter
 
-  ''' 
-  Reads the content of the XML file into memory and creates a semi-supervised
-  VDR from the data. Attaches the person to the object, given the automatically
-  calculated spatial relationship.  Any other objects are root attached.  
-
-  This function ALWAYS writes a fake relationship and parent because it is only
-  creating data for the parser.
-  '''
   def __xml2conll__(self, output_directory, filename):
+    ''' 
+    Reads the content of the XML file into memory and creates a semi-supervised
+    VDR from the data. Attaches the person to the object, given the automatically
+    calculated spatial relationship.  Any other objects are root attached.  
+
+    This function ALWAYS writes a fake relationship and parent because it is only
+    creating data for the parser.
+    '''
     semi_objects = aux.parse_xml("%s/%s" % (output_directory, re.sub(r".jpg", ".semi.xml", filename)))
     handle = open("%s/%s" % (output_directory, re.sub(r".jpg", ".jpg.parsed", filename)), "w")
   
@@ -198,11 +244,11 @@ class Optimise:
       print "Written semi-supervised CoNLL-X file to %s/%s\n" % (output_directory, re.sub(r".jpg", ".jpg.parsed", filename))
     return "%s/%s" % (output_directory, re.sub(r".jpg", ".jpg.parsed", filename))
 
-  '''
-  Prepares the gold-standard image descriptions into files that multi-bleu.perl
-  can read.
-  '''
   def __preparereferences__(self, descPath, n=3):
+    '''
+    Prepares the gold-standard image descriptions into files that multi-bleu.perl
+    can read.
+    '''
     # Read the list of files into memory
     target = "dev"
     targetfiles = open(descPath+"/"+target).readlines()
@@ -235,22 +281,22 @@ class Optimise:
         output.write(data+".\n")
       output.close()
 
-  '''
-  Returns the BLEU score as calculated for this run of the VDR-based 
-  description model. This is used to optimise model performance.
-  '''
   def __bleuscore__(self):
+    '''
+    Returns the BLEU score as calculated for this run of the VDR-based 
+    description model. This is used to optimise model performance.
+    '''
     bleudata = open("vdrDescription/output/rundata/multibleu-output").readline()
     data = bleudata.split(",")[0]
     bleuscore = data.split("=")[1]
     bleu = float(bleuscore.rstrip())
     return bleu
 
-  '''
-  Returns the Meteor score as calculated for this run of the VDR-based 
-  description model. This is used to optimise model performance.
-  '''
   def __meteorscore__(self):
+    '''
+    Returns the Meteor score as calculated for this run of the VDR-based 
+    description model. This is used to optimise model performance.
+    '''
     multdata = open("vdrDescription/output/rundata/multevaloutput").readlines()
     for line in multdata:
       if line.startswith("RESULT: baseline: METEOR: AVG:"):
@@ -261,6 +307,27 @@ class Optimise:
         meteor = lr[0]+"."+lr[1][0:2]
   
     return meteor
+
+  def __sentence_level_scores__(self):
+    '''
+    Processes the MultEval sentence-level scores to provide sentence-level BLEU, Meteor, and TER results.
+    '''
+      bleu = []
+      meteor = []
+      ter = []
+
+      data = open("output/rundata/running").readlines()
+      data = [x.replace("\n","") for x in data]
+
+      for i in range(0, len(data)):
+        if i % 3 == 0:
+          bleu.append(float(data[i]))
+        if i % 3 == 1:
+          meteor.append(float(data[i]))
+        if i % 3 == 2:
+          ter.append(float(data[i]))
+
+      return numpy.mean(bleu), numpy.mean(meteor), numpy.mean(ter)
    
 if __name__ == "__main__":
 
