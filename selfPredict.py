@@ -3,6 +3,7 @@ import re
 import sys
 import subprocess
 import argparse
+
 from testVDRParser import TestVDRParser
 from trainVDRParser import TrainVDRParser
 from RCNNObjectExtractor import RCNNObjectExtractor
@@ -32,11 +33,11 @@ class Test:
     self.predictVDR()
     self.generateDescriptions()
 
-  '''
-  Extract the N-most confident objects from images. These objects represent
-  the image for the sake of the VDR Parsing and Image Description.
-  '''
   def extractObjects(self):
+    '''
+    Extract the N-most confident objects from images. These objects represent
+    the image for the sake of the VDR Parsing and Image Description.
+    '''
     
     print "============================================"
     print "Step 1: Extracting Top-%d objects from images" % self.args.numobjects
@@ -57,26 +58,45 @@ class Test:
     rcnn_args.n = self.args.numobjects
     rcnn_args.output = self.args.images
 
-    useful_detections = []
+    detections = []
 
     for f in targetfiles:
       detector = RCNNObjectExtractor(rcnn_args)
       detector.args.imagefilename = "%s/%s" % (self.args.images, re.sub("jpg","hdf", f))
       detector_output = detector.process_hdf()
       conll_file = self.__xml2conll__(rcnn_args.output, f)
-      useful_detections.append(conll_file)
+      detections.append(conll_file)
         
     # Now we create target-parsed-train-semi from the examples we managed to find in the data
-    handle = open("test_list","w")
-    handle.write("cat %s > %s/target-parsed-dev" % (aux.glist_to_str(useful_detections), self.args.images))
+    handle = open("%s_list" % target,"w")
+    handle.write("cat %s > %s/target-parsed-%s" % (aux.glist_to_str(detections), self.args.images, target))
     handle.close()
-    subprocess.check_call(["sh", "test_list"])
-    os.remove("test_list")
+    subprocess.check_call(["sh", "%s_list" % target])
+    os.remove("%s_list" % target)
 
-  '''
-  Use the semi-supervised training data to train a VDR Parsing model.
-  '''
+    self.createAnnotationsFiles(detections)
+
+  def createAnnotationsFiles(self, detections):
+    '''
+    The annotations file is read by the VDR Parser to get at the object regions directly.
+    '''
+    target = "test" if self.args.test else "dev"
+    ahandle = open("%s/annotations-%s" % (self.args.images, target), "w")
+    ihandle = open("%s/images-%s" % (self.args.images, target), "w")
+    for f in detections:
+      xmlname = re.sub(r".jpg.parsed", ".semi.xml", f)
+      jpgname = re.sub(r".jpg.parsed", ".jpg", f)
+      prefix = "/export/scratch2/elliott/src/private/"
+      ahandle.write("%s/%s\n" % (prefix, xmlname))
+      ihandle.write("%s/%s\n" % (prefix, jpgname))
+
+    ahandle.close()
+    ihandle.close()
+
   def predictVDR(self):
+    '''
+    Use the semi-supervised training data to train a VDR Parsing model.
+    '''
     print "==============================="
     print "Step 2: Predicting VDR"
     print "==============================="
@@ -92,16 +112,16 @@ class Test:
     pargs.decoder = "non-proj"
     pargs.semi = "true"
     pargs.runString = "RCNNSemi"
-    pargs.useImageFeats = "false"
+    pargs.useImageFeats = "true"
     pargs.verbose = "false"
-    pargs.test = "false"
+    pargs.test = "true" if self.args.test else "false"
     vdrParser = TestVDRParser(pargs)
     vdrParser.testVDRParser()
 
-  '''
-  Use the semi-supervised training data to train a VDR Parsing model.
-  '''
   def trainParser(self, k=5):
+    '''
+    Use the semi-supervised training data to train a VDR Parsing model.
+    '''
     print "==============================="
     print "Step 0: Training the VDR Parser"
     print "==============================="
@@ -123,7 +143,9 @@ class Test:
     print "Step 3: Generating Image Descriptions"
     print "====================================="
 
-    self.__preparemultibleu__(self.args.descriptions, self.args.test)
+    n = 3 if self.args.vlt else 5
+
+    self.__preparemultibleu__(self.args.descriptions, self.args.test, n)
 
     gargs = argparse.Namespace()
     gargs.images = "../"+self.args.images
@@ -133,23 +155,25 @@ class Test:
     gargs.first = True
     gargs.rawdata = "../"+self.args.images
     gargs.clusterfile = "../%s/objectClusters" % self.args.images
-    gargs.test = False
+    gargs.test = self.args.test
     gargs.runString = "auto"
     gargs.dictionaries = '/export/scratch2/elliott/language_pickles/'
     gargs.second = False
     gargs.semi = True
     gargs.verbose = self.args.verbose
+    gargs.gigaword = False
+    gargs.postfix = ""
 
     with cd("vdrDescription"):
-      g = GenerateDescriptions.RunExperiment(gargs)
-      g.run_experiment()
+      g = GenerateDescriptions.GenerateDescriptions(gargs)
+      g.generate()
 
-  ''' 
-  Reads the content of the XML file into memory and creates a semi-supervised
-  VDR from the data. Attaches the person to the object, given the automatically
-  calculated spatial relationship.  Any other objects are root attached.  
-  '''
   def __xml2conll__(self, output_directory, filename):
+    ''' 
+    Reads the content of the XML file into memory and creates a semi-supervised
+    VDR from the data. Attaches the person to the object, given the automatically
+    calculated spatial relationship.  Any other objects are root attached.  
+    '''
     semi_objects = aux.parse_xml("%s/%s" % (output_directory, re.sub(r".jpg", ".semi.xml", filename)))
     handle = open("%s/%s" % (output_directory, re.sub(r".jpg", ".jpg.parsed", filename)), "w")
   
@@ -166,11 +190,11 @@ class Test:
       print "Written semi-supervised CoNLL-X file to %s/%s\n" % (output_directory, re.sub(r".jpg", ".jpg.parsed", filename))
     return "%s/%s" % (output_directory, re.sub(r".jpg", ".jpg.parsed", filename))
 
-  '''
-  Prepares the gold-standard image descriptions into files that multi-bleu.perl
-  can read.
-  '''
   def __preparemultibleu__(self, descPath, testData, n=3):
+    '''
+    Prepares the gold-standard image descriptions into files that multi-bleu.perl
+    can read.
+    '''
     # Read the list of files into memory
     target = "test" if testData else "dev"
     targetfiles = open(descPath+"/"+target).readlines()
@@ -206,6 +230,7 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", help="Do you want verbose output?", action="store_true")
     parser.add_argument("--test", help="Run on the test data? Default is dev data", action="store_true")
     parser.add_argument("--numobjects", help="Number of objects to extract. Default=5", default=5, type=int)
+    parser.add_argument("--vlt", help="VLT data set?", action="store_true")
 
     if len(sys.argv)==1:
       parser.print_help()
